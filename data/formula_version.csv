@@ -1,0 +1,6 @@
+version_id,formula_id,formula_name,version_no,status,is_active,approved_date
+FV-CRM-01-02,F-CRM-01,수분 장벽 크림,2,폐기,false,2024-03-15
+FV-CRM-01-03,F-CRM-01,수분 장벽 크림,3,현행,true,2025-09-01
+FV-TON-02-01,F-TON-02,하이드라 토너,1,개발중,true,
+FV-AMP-03-02,F-AMP-03,시카 앰플,2,현행,true,2025-05-20
+FV-LOT-04-01,F-LOT-04,데일리 로션,1,현행,true,2024-11-11

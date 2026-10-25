@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/contextualization/1.0.0/schema.json",
+  "id": "255d027f-07dc-58a9-8be4-9dd4b1f3af2b",
+  "dataBindingTable": {
+    "workspaceId": "{{WORKSPACE_ID}}",
+    "itemId": "{{LAKEHOUSE_ID}}",
+    "sourceTableName": "raw_material",
+    "sourceSchema": "gold",
+    "sourceType": "LakehouseTable"
+  },
+  "sourceKeyRefBindings": [
+    {
+      "sourceColumnName": "material_code",
+      "targetPropertyId": "637745144080456486"
+    }
+  ],
+  "targetKeyRefBindings": [
+    {
+      "sourceColumnName": "ingredient_id",
+      "targetPropertyId": "75075256553647192"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "814334280360947888",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "Ingredient",
+  "entityIdParts": [
+    "75075256553647192"
+  ],
+  "displayNamePropertyId": "547911352532455084",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "75075256553647192",
+      "name": "ingredient_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc131\ubd84 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "597562960534810140",
+      "name": "inci_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "INCI \uba85\uce6d",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "547911352532455084",
+      "name": "korean_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc131\ubd84 \ud55c\uae00\uba85",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "617029998336603247",
+      "name": "function",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc8fc\uc694 \uae30\ub2a5",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc131\ubd84",
+      "INCI"
+    ],
+    "description": "\ud654\uc7a5\ud488 \uc131\ubd84(INCI \uae30\uc900). \uc5ec\ub7ec \uc6d0\ub8cc\uac00 \uac19\uc740 \uc131\ubd84\uc744 \uac00\uc9c8 \uc218 \uc788\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

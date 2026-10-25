@@ -1,0 +1,9 @@
+material_code,material_name,ingredient_id,supplier_id,lead_time_days,unit_price_krw,cn_registration
+RM-HA-120,소듐하이알루로네이트 1% 용액(저분자),ING-HA,SUP-02,28,185000,완료
+RM-HA-210,소듐하이알루로네이트 파우더,ING-HA,SUP-01,10,240000,필요
+RM-HA-305,소듐하이알루로네이트 1% 용액(고분자),ING-HA,SUP-04,42,172000,완료
+RM-NIA-010,나이아신아마이드 99%,ING-NIA,SUP-03,14,52000,완료
+RM-GLY-001,글리세린 99.5%,ING-GLY,SUP-03,7,4200,완료
+RM-PAN-050,D-판테놀 75%,ING-PAN,SUP-01,14,61000,완료
+RM-CEN-030,병풀추출물 30%,ING-CEN,SUP-01,21,98000,완료
+RM-PHE-002,페녹시에탄올,ING-PHE,SUP-02,21,15000,완료

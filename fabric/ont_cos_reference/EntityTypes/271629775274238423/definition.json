@@ -1,0 +1,80 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "271629775274238423",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "Product",
+  "entityIdParts": [
+    "23055948826681367"
+  ],
+  "displayNamePropertyId": "206127671327175619",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "23055948826681367",
+      "name": "product_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc81c\ud488 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "206127671327175619",
+      "name": "product_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc81c\ud488\uba85",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1144441675535644538",
+      "name": "version_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud604\uc7ac \ucc98\ubc29 \ubc84\uc804 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "636719427011902805",
+      "name": "market",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud310\ub9e4 \uc2dc\uc7a5(KR, CN)",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "224404660757210010",
+      "name": "sales_status",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud310\ub9e4 \uc0c1\ud0dc",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc81c\ud488",
+      "SKU"
+    ],
+    "description": "\ud310\ub9e4 \uc81c\ud488(SKU). \uc2dc\uc7a5\ubcc4\ub85c \ub2e4\ub978 \uc81c\ud488 ID\ub97c \uac00\uc9c4\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

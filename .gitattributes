@@ -1,0 +1,2 @@
+# Keep CSV/JSON bytes stable across platforms.
+* -text

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "848277994088357521",
+  "name": "for_project",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "809381868353644588"
+  },
+  "target": {
+    "entityTypeId": "1101636112565504642"
+  },
+  "semanticEnrichment": {
+    "description": "\uc548\uc815\uc131 \uc2dc\ud5d8\uc774 \uc18d\ud55c \uac1c\ubc1c \uacfc\uc81c",
+    "customAttributes": {}
+  }
+}

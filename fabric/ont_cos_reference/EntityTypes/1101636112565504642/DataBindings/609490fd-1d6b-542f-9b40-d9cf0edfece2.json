@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "609490fd-1d6b-542f-9b40-d9cf0edfece2",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "project_id",
+        "targetPropertyId": "369812786617145862"
+      },
+      {
+        "sourceColumnName": "project_name",
+        "targetPropertyId": "507678409162465039"
+      },
+      {
+        "sourceColumnName": "version_id",
+        "targetPropertyId": "929811372641019543"
+      },
+      {
+        "sourceColumnName": "stage",
+        "targetPropertyId": "102912102827731377"
+      },
+      {
+        "sourceColumnName": "owner",
+        "targetPropertyId": "196466027119330034"
+      },
+      {
+        "sourceColumnName": "target_launch",
+        "targetPropertyId": "136092552370635917"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "dev_project",
+      "sourceSchema": "gold"
+    }
+  }
+}

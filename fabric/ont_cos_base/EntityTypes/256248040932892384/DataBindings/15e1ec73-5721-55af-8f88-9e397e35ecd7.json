@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "15e1ec73-5721-55af-8f88-9e397e35ecd7",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "material_code",
+        "targetPropertyId": "637745144080456486"
+      },
+      {
+        "sourceColumnName": "material_name",
+        "targetPropertyId": "327898548769101761"
+      },
+      {
+        "sourceColumnName": "ingredient_id",
+        "targetPropertyId": "998757513637670034"
+      },
+      {
+        "sourceColumnName": "supplier_id",
+        "targetPropertyId": "931722656854464576"
+      },
+      {
+        "sourceColumnName": "lead_time_days",
+        "targetPropertyId": "859116462881748503"
+      },
+      {
+        "sourceColumnName": "unit_price_krw",
+        "targetPropertyId": "1106905677102155787"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "raw_material",
+      "sourceSchema": "gold"
+    }
+  }
+}

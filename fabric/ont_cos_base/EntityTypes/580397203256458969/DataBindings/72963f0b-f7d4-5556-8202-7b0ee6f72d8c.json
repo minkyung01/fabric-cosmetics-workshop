@@ -1,0 +1,32 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "72963f0b-f7d4-5556-8202-7b0ee6f72d8c",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "supplier_id",
+        "targetPropertyId": "120647460931277708"
+      },
+      {
+        "sourceColumnName": "supplier_name",
+        "targetPropertyId": "1079531304423751804"
+      },
+      {
+        "sourceColumnName": "country",
+        "targetPropertyId": "89091724791000361"
+      },
+      {
+        "sourceColumnName": "risk_grade",
+        "targetPropertyId": "851913345786875504"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "supplier",
+      "sourceSchema": "gold"
+    }
+  }
+}

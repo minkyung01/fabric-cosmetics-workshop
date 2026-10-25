@@ -1,0 +1,5 @@
+supplier_id,supplier_name,country,risk_grade
+SUP-01,한빛바이오,KR,낮음
+SUP-02,Aqua Derm Chemicals,FR,보통
+SUP-03,그린팜소재,KR,낮음
+SUP-04,Nordic Actives,SE,보통

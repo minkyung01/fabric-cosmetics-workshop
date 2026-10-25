@@ -1,0 +1,44 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "b99de675-42ed-5b33-aaf2-f468a27e5db8",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "po_id",
+        "targetPropertyId": "26425149005695663"
+      },
+      {
+        "sourceColumnName": "material_code",
+        "targetPropertyId": "955289691621788794"
+      },
+      {
+        "sourceColumnName": "supplier_id",
+        "targetPropertyId": "369476113768611523"
+      },
+      {
+        "sourceColumnName": "qty_kg",
+        "targetPropertyId": "125800760044914520"
+      },
+      {
+        "sourceColumnName": "order_date",
+        "targetPropertyId": "85968885814492094"
+      },
+      {
+        "sourceColumnName": "eta",
+        "targetPropertyId": "575211724345588472"
+      },
+      {
+        "sourceColumnName": "status",
+        "targetPropertyId": "952622958140360855"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "purchase_order",
+      "sourceSchema": "gold"
+    }
+  }
+}

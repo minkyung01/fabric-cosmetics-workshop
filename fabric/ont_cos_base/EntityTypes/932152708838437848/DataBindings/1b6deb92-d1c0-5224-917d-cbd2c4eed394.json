@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "1b6deb92-d1c0-5224-917d-cbd2c4eed394",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "version_id",
+        "targetPropertyId": "1030678882379538756"
+      },
+      {
+        "sourceColumnName": "formula_id",
+        "targetPropertyId": "349720352768452713"
+      },
+      {
+        "sourceColumnName": "formula_name",
+        "targetPropertyId": "57801564730216231"
+      },
+      {
+        "sourceColumnName": "version_no",
+        "targetPropertyId": "549460278358336093"
+      },
+      {
+        "sourceColumnName": "status",
+        "targetPropertyId": "65259531180514514"
+      },
+      {
+        "sourceColumnName": "approved_date",
+        "targetPropertyId": "772874826517557493"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "formula_version",
+      "sourceSchema": "gold"
+    }
+  }
+}

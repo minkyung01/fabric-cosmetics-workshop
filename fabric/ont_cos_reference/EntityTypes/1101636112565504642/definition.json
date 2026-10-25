@@ -1,0 +1,91 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "1101636112565504642",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "DevProject",
+  "entityIdParts": [
+    "369812786617145862"
+  ],
+  "displayNamePropertyId": "507678409162465039",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "369812786617145862",
+      "name": "project_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uac1c\ubc1c \uacfc\uc81c ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "507678409162465039",
+      "name": "project_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uacfc\uc81c\uba85",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "929811372641019543",
+      "name": "version_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uac1c\ubc1c \uc911\uc778 \ucc98\ubc29 \ubc84\uc804 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "102912102827731377",
+      "name": "stage",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud604\uc7ac \ub2e8\uacc4",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "196466027119330034",
+      "name": "owner",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub2f4\ub2f9 \uc870\uc9c1",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "136092552370635917",
+      "name": "target_launch",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "DateTime",
+      "semanticEnrichment": {
+        "description": "\ubaa9\ud45c \ucd9c\uc2dc\uc77c",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uac1c\ubc1c \uacfc\uc81c",
+      "\ud504\ub85c\uc81d\ud2b8"
+    ],
+    "description": "\uc2e0\uc81c\ud488 \uac1c\ubc1c \uacfc\uc81c",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

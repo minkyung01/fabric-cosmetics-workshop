@@ -1,0 +1,32 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "5ad22e4c-3bdf-57d5-b401-d9a03edc0289",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "ingredient_id",
+        "targetPropertyId": "75075256553647192"
+      },
+      {
+        "sourceColumnName": "inci_name",
+        "targetPropertyId": "597562960534810140"
+      },
+      {
+        "sourceColumnName": "korean_name",
+        "targetPropertyId": "547911352532455084"
+      },
+      {
+        "sourceColumnName": "function",
+        "targetPropertyId": "617029998336603247"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "ingredient",
+      "sourceSchema": "gold"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "2de4a26e-57ff-59c5-901e-20e14e263628",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "plan_id",
+        "targetPropertyId": "753416519475469959"
+      },
+      {
+        "sourceColumnName": "product_id",
+        "targetPropertyId": "851707348187282176"
+      },
+      {
+        "sourceColumnName": "planned_date",
+        "targetPropertyId": "37310914586356702"
+      },
+      {
+        "sourceColumnName": "qty_ea",
+        "targetPropertyId": "625421255743582461"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "production_plan",
+      "sourceSchema": "gold"
+    }
+  }
+}
