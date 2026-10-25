@@ -2,7 +2,7 @@
 
 For each participant pNNN this creates (or reuses) workspace cos-pNNN on the given capacity and:
   - a schema-enabled Lakehouse lh_cos, with data/*.csv uploaded to Files/workshop/data
-  - the 4 notebooks bound to lh_cos (01_prepare_data is run once to build the gold tables)
+  - the 5 notebooks bound to lh_cos (01_prepare_data is run once to build the gold tables)
   - an Eventhouse eh_cos (KQL database eh_cos) for the Operations agent
   - the base ontology ont_cos (participants complete it in chapter 01), or the completed one with --reference-ontology
 Existing items are reused; notebooks are only overwritten with --update-notebooks.
@@ -14,7 +14,8 @@ Examples
     python admin/provision.py --capacity <capacity-id> --participants p001 --reference-ontology
     python admin/provision.py --capacity <capacity-id> --participants p001-p003 --dry-run
 
-users.csv (optional): participant,upn   e.g.  p001,p001@contoso.com
+SQL database sqldb_cos is created manually by a workspace Admin/Member (see admin/README.md).
+users.csv (optional): participant,upn   e.g.  p001,p001@example.com
 """
 import argparse
 import base64
@@ -31,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 API = "https://api.fabric.microsoft.com/v1"
 ONELAKE = "https://onelake.dfs.fabric.microsoft.com"
-NOTEBOOKS = ["01_prepare_data", "02_answers", "03_supply_change", "nb_apply_review"]
+NOTEBOOKS = ["01_prepare_data", "02_answers", "03_supply_change", "nb_apply_review", "04_publish_serving"]
 LAKEHOUSE, EVENTHOUSE, ONTOLOGY = "lh_cos", "eh_cos", "ont_cos"
 _tokens = {}
 

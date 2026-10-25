@@ -1,8 +1,8 @@
 # 05. 승인 후 조치 — 검토 요청 기록
 
-[목차](../README.md) \| 이전: [04. Operations Agent](04-operations-agent.md) \| 다음: [06. Purview 거버넌스](06-purview.md)
+[목차](../README.md) \| 이전: [04. Operations Agent](04-operations-agent.md) \| 다음: [06. SQL Serving DB](06-serving-db.md)
 
-마지막 장면입니다.
+알림을 승인된 기록으로 연결하는 장면입니다. 다음 장에서는 이 결과를 업무용 DB로 제공합니다.
 
 > **공급 지연 반영 → 감시 조건 충족 → Teams 제안 → 담당자 승인 → 검토 요청 기록**
 
@@ -45,7 +45,7 @@ FROM ops.review_request ORDER BY target_id;
 | `PP-1102` | 생산계획 | 구매·생산계획 | -20 | RM-HA-210 CN 등록 필요 — 등록 또는 일정 조정 검토 |
 | `ST-0711` | 안정성시험 | 처방개발 | -32 | RM-HA-210 대체 사용 검토 |
 
-`request_status`는 모두 `요청됨`, `requested_by`는 승인한 사람입니다.
+`request_status`는 모두 `요청됨`입니다. `requested_by`는 Notebook 실행 컨텍스트의 사용자이며, Teams에서 승인한 사람을 증명하는 필드가 아닙니다. 실제 운영의 승인자 감사는 별도의 승인 기록과 연결해야 합니다.
 
 ``` sql
 SELECT * FROM ops.action_log ORDER BY action_at;
@@ -91,4 +91,4 @@ MaterialSupplyEvent
 
 ## 다음 단계
 
-[06. Purview 거버넌스](06-purview.md)에서 연구 데이터의 민감도와 관리 상태를 다루는 방법을 봅니다.
+[06. SQL Serving DB](06-serving-db.md)에서 승인된 요청을 담당자용 조회·상태 관리로 연결합니다.

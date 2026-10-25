@@ -2,7 +2,7 @@
 
 [목차](../README.md) \| [관리자 가이드](README.md)
 
-Contoso 코스메틱 연구소의 **가상 데이터**입니다. 실제 회사·공급사·처방과 관계없습니다. 기준일은 **2026-11-02**입니다.
+Caldova 코스메틱 연구소의 **가상 데이터**입니다. Microsoft의 가상 제약 회사 Caldova를 화장품 R&D 시나리오로 각색했으며 실제 회사·공급사·처방과 관계없습니다. 기준일은 **2026-11-02**입니다.
 
 ## 테이블
 
@@ -31,6 +31,15 @@ CSV는 `data/`(UTF-8, BOM 없음)에 있고 `01_prepare_data`가 `gold.<table>`�
 | `ops.action_log` | `nb_apply_review` | 승인 조치 이력 |
 
 Eventhouse `eh_cos`의 `MaterialSupplyEvent`는 이벤트 상태 이력(`open` → `review_requested`)을 담습니다. 열 정의는 [04장](../docs/04-operations-agent.md)에 있습니다.
+
+SQL database `sqldb_cos`의 업무 데이터는 [06장](../docs/06-serving-db.md)에서 생성합니다.
+
+| 객체 | 원본·관리 주체 | 내용 |
+|---|---|---|
+| `serving.review_request` | `04_publish_serving`이 승인 요청으로 게시 SQL 생성 → SQL DB에서 실행 | `request_id` 기본 키, 이벤트·대상 유일 키, 담당 팀, 여유일, 제안, `요청됨/검토중` 상태 |
+| `serving.workflow_history` | `serving.usp_start_review` | SQL 상태 변경 전후·로그인·UTC 시간 |
+
+배합비는 게시하지 않습니다. Lakehouse `ops.review_request`는 승인 시점 스냅샷, SQL은 게시 후 업무 상태를 소유합니다. 재게시에는 신규 ID만 추가하여 SQL 상태를 보존합니다. SQL의 상태는 Lakehouse·Eventhouse로 자동 역동기화되지 않습니다. `requested_by`는 Notebook 실행 사용자로서 Teams 승인자 증빙이 아니며, SQL 이력의 `changed_by`는 상태를 바꾼 SQL 로그인입니다.
 
 ## Ontology
 

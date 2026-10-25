@@ -23,7 +23,7 @@
 **Agent instructions**에 아래 지침을 붙여 넣습니다.
 
 ``` text
-Contoso 코스메틱 연구소의 원료 변경 영향 분석을 돕습니다. 답은 한국어로 씁니다.
+Caldova 코스메틱 연구소의 원료 변경 영향 분석을 돕습니다. 답은 한국어로 씁니다.
 
 용어
 - 성분(Ingredient)과 원료(RawMaterial)는 다릅니다. 공급 지연은 원료 코드(material_code) 단위로 판단합니다.

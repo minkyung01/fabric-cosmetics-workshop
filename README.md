@@ -2,68 +2,66 @@
 
 > **원료 공급 일정이 바뀌었다. 어떤 처방·제품이 영향을 받으며, 무엇을 검토해야 할까?**
 
-가상의 화장품 회사 **Contoso 코스메틱** 연구소에서, 원료 공급사가 히알루론산 원료 `RM-HA-120`의 입고를 **35일 늦춘다**고 알려 온 상황을 다룹니다.
+가상의 **Caldova 코스메틱** 연구소에서, 원료 공급사가 히알루론산 원료 `RM-HA-120`의 입고를 **35일 늦춘다**고 알려 온 상황을 다룹니다.
 사람이 질문해서 영향을 찾는 데서 시작해, 에이전트가 변화를 감시하고 대응을 제안하는 단계까지 확장합니다.
 
-**업무를 이해하고(Ontology) → 영향을 찾아내고(Graph·Data Agent) → 먼저 알려주고(Operations Agent) → 승인 후 조치한다(Notebook)**
+> [Caldova](https://github.com/Caldova)는 Microsoft가 만든 가상 **제약 회사**입니다. Contoso를 일괄 대체하는 이름이라는 뜻은 아니며, 이 교재에서는 이름을 빌려 **화장품 R&D 업무로 각색**했습니다.
+
+**업무를 모델링하고(Ontology) → 영향을 찾아내고(Graph·Data Agent) → 먼저 알려주고(Operations Agent) → 승인 후 기록하고(Notebook) → 업무에 제공한다(SQL database)**
 
 ## 이 실습에서 완성하는 것
 
 | 기능 | 역할 | 이 실습에서 만드는 것 |
 |---|---|---|
-| **Ontology** | "우리 업무에서 무엇을 뜻하는가?" | 성분·원료·처방 버전·시험·공급사의 의미와 관계, 업무 규칙(폐기 버전 제외 등) |
-| **Graph** | "무엇과 어떤 경로로 연결되는가?" | 변경 원료 → 처방 버전 → 제품·생산 계획·개발 과제까지 영향 경로 |
-| **Data Agent** | "내가 궁금한 것을 질문한다" | 같은 영향 질문을 자연어로 묻고 Graph 탐색 결과와 비교 |
-| **Operations Agent** | "정해진 조건을 감시하고 먼저 알려준다" | 공급 지연 이벤트를 감시해 Teams로 검토 대상과 대응 제안 |
-| **승인 후 Notebook** | 담당자 승인 → 기록 | 영향 대상마다 원료 변경 검토 요청과 조치 이력 기록 (실제 구매·처방 변경 없음) |
-| **Purview 연계 거버넌스** | 민감 데이터 관리 | 처방 배합비(영업 비밀)의 민감도 레이블·DLP 범위 확인 (데모) |
+| **Ontology · Lesson 01** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 엔터티 9개의 키·속성·원본 데이터 바인딩을 확인하고, 처방↔원료·대체 원료 관계를 연결해 관계 10개 완성. 유효 버전·시장별 등록 조건을 같은 모델에서 재사용 |
+| **Graph · Lesson 02** | 업무 모델의 **인스턴스와 다단계 의존성**을 탐색 | 원료 → 처방 버전 → 제품·생산 계획·시험·개발 과제의 경로를 GQL로 조회. 폐기 버전 제외 전후와 공급사 관점의 연쇄 영향을 비교 |
+| **Data Agent · Lesson 03** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | Ontology·Graph를 원본으로 연결하고 자연어 질문 → 생성 질의 → 정답 Notebook을 대조. 연결 관계와 실제 일정 위험을 구분 |
+| **Operations Agent · Lesson 04** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
+| **승인 후 Notebook · Lesson 05** | 사람의 승인과 기록 작업을 연결 | 영향 대상 3건의 검토 요청·조치 이력과 이벤트 상태 기록. 실제 구매·처방 변경은 하지 않음 |
+| **SQL database in Fabric · Lesson 06** | 분석 결과를 **업무용 Serving DB**로 제공 | 승인된 검토 요청을 게시하고 담당 팀별 조회 → 검토 착수 → 상태 변경 이력을 T-SQL로 처리. 재게시해도 업무 상태 유지 |
+| **Microsoft Purview · Lesson 07** | 민감 데이터의 분류와 정책을 업무 흐름에 연결 | 참가자가 게시된 민감도 레이블을 직접 적용·확인. 사전 구성된 환경에서는 DLP 정책 팁과 카탈로그 검색까지 확장 |
+
+**Ontology는 용어집만이 아닙니다.** `RawMaterial`이라는 단어에 뜻을 붙이는 것에서 끝나지 않고, `material_code`로 업무 대상을 식별하고 원본 열에 바인딩하며 `uses_material`로 처방과 연결합니다. Graph·에이전트가 같은 연결과 맥락을 재사용하는 기반입니다. 다만 설명에 쓴 규칙이 자동 실행되거나 접근 권한을 대신하지는 않습니다. 이 키트의 여유일 계산·판정은 명시적인 질의와 Notebook에서 실행합니다.
 
 ## 아키텍처
 
-```mermaid
-flowchart LR
-    subgraph LH["Lakehouse lh_cos"]
-        G["gold 스키마<br/>성분·원료·공급사·처방 버전·배합·제품<br/>개발 과제·안정성 시험·생산 계획·발주"]
-        O["ops 스키마<br/>material_impact · review_request · action_log"]
-    end
-    G --> ONT["Ontology ont_cos<br/>업무 의미·관계·규칙"]
-    ONT --> GR["Graph<br/>영향 경로 탐색 (GQL)"]
-    ONT --> DA["Data Agent da_cos<br/>자연어 질문"]
-    GR --> DA
-    N3["03_supply_change<br/>지연 반영·영향 계산"] --> G
-    N3 --> O
-    N3 --> EH["Eventhouse eh_cos<br/>MaterialSupplyEvent"]
-    EH --> OA["Operations Agent oa_cos<br/>5분 주기 감시"]
-    OA --> T["Teams<br/>검토 대상·대응 제안"]
-    T -->|"담당자 승인"| NB["nb_apply_review<br/>검토 요청·조치 이력"]
-    NB --> O
-    NB --> EH
-    PV["Microsoft Purview<br/>민감도 레이블·DLP"] -.-> LH
-```
+![Lesson과 Fabric 기능별 아키텍처: 준비 데이터 → Ontology → Graph → Data Agent, 공급 이벤트 → Operations Agent → Teams 승인 → Notebook → SQL Serving DB. Purview는 데이터 관리 계층](assets/architecture.svg)
+
+[원본 SVG](assets/architecture.svg) · [편집 가능한 Excalidraw](assets/architecture.excalidraw) · [공식 아이콘 출처·사용 조건](assets/icon-attribution.md)
+
+| 흐름 | Lesson → Fabric 항목 | 경계 |
+|---|---|---|
+| 업무 이해·질의 | 00 Lakehouse → 01 Ontology → 02 Graph → 03 Data Agent | 원본 바인딩과 Graph 투영은 구분. Graph는 갱신 전까지 스냅샷 |
+| 감시·승인 | 04 Notebook → Eventhouse → Operations Agent → 05 Teams 승인·Notebook | 사람이 승인한 뒤에만 검토 요청 기록 |
+| 업무 제공 | 05 Lakehouse 승인 결과 → 06 SQL database | Notebook이 게시 SQL 생성 → 참가자가 SQL DB에서 실행. 자동 동기화가 아님 |
+| 거버넌스·적용 | 07 Purview → 08 적용 논의 | 레이블은 기본 실습, DLP·카탈로그는 환경 조건부 확장 |
 
 ## 시작 전 확인
 
 | 항목 | 내용 |
 |---|---|
 | 작업 영역 | 관리자가 준비한 `cos-pNNN` (예: `cos-p001`). Contributor 이상 권한 |
-| 준비된 항목 | Lakehouse `lh_cos`(gold 테이블 11개), Notebook 4개, Eventhouse `eh_cos`, 기본 Ontology `ont_cos` |
+| 준비된 항목 | Lakehouse `lh_cos`(gold 테이블 11개), Notebook 5개, Eventhouse `eh_cos`, 기본 Ontology `ont_cos`. SQL DB `sqldb_cos`는 관리자가 별도로 준비 |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
+| Purview 실습 | 참가자 Pro/PPU, 항목 편집 권한, 사용 가능한 게시 레이블. DLP·카탈로그 확장 조건은 [관리자 가이드](admin/README.md) 확인 |
 
-## 진행 순서 (오전 3시간)
+## 진행 순서
 
-| 시간 | 장 | 내용 | 진행 방식 |
-|---|---|---|---|
-| 15분 | [00. 시나리오와 미션](docs/00-scenario.md) | 완성된 업무 흐름 시연·미션 소개·작업 영역 확인 | 시연 |
-| 30분 | [01. Ontology](docs/01-ontology.md) | 기본 모델에 관계·업무 규칙 보완 | **핵심 실습** |
-| 35분 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 영향 대상 구분 | **핵심 실습** |
-| 10분 | — | 휴식 | |
-| 20분 | [03. Data Agent](docs/03-data-agent.md) | Graph·Ontology 기반 Data Agent로 같은 문제 질문하기 | 신기능 체험 |
-| 35분 | [04. Operations Agent](docs/04-operations-agent.md) | 지침·Playbook 구성, 감시 시작, 공급 지연 반영 | 짧은 실습 + 데모 |
-| 15분 | [05. 승인과 조치 기록](docs/05-approval.md) | Teams 승인 → Notebook으로 검토 요청·조치 이력 기록 | 확장 데모 |
-| 10분 | [06. Purview 거버넌스](docs/06-purview.md) | 연구 데이터의 민감도·관리 상태 다루기 | 10분 데모 |
-| 10분 | [07. Data Highway 2.0 논의와 마무리](docs/07-discussion.md) | 적용 논의, 감시 중지 | 토론 |
+| Lesson(장) | 내용 |
+|---|---|
+| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개와 준비된 작업 영역 확인 |
+| [01. Ontology](docs/01-ontology.md) | 엔터티·키·원본 바인딩 이해, 관계와 업무 맥락 완성 |
+| [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
+| [03. Data Agent](docs/03-data-agent.md) | Graph·Ontology 기반 자연어 질문과 근거 검증 |
+| [04. Operations Agent](docs/04-operations-agent.md) | 지침·Playbook 구성, 감시 시작, 공급 지연 반영 |
+| [05. 승인과 조치 기록](docs/05-approval.md) | Teams 승인 → Notebook으로 검토 요청·조치 이력 기록 |
+| [06. SQL Serving DB](docs/06-serving-db.md) | 승인 결과 게시, 담당 팀별 조회, 검토 상태 변경·이력 확인 |
+| [07. Purview 거버넌스](docs/07-purview.md) | 민감도 레이블 직접 적용, 준비된 DLP·카탈로그 확장 |
+| [08. Data Highway 2.0 논의와 마무리](docs/08-discussion.md) | 적용 논의, 감시 중지 |
+
+운영자는 환경과 목적에 맞게 Lesson을 조합할 수 있습니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 정책·계정 준비와 실행 대기 시간은 [관리자 가이드](admin/README.md)에서 별도로 확인합니다.
 
 ## 실습 파일
 
@@ -74,21 +72,16 @@ flowchart LR
 | `notebooks/02_answers.ipynb` | Graph·Data Agent 질문의 정답을 Spark SQL로 확인 |
 | `notebooks/03_supply_change.ipynb` | 공급 지연 반영 → 영향 분석 → Eventhouse 이벤트 전송 |
 | `notebooks/nb_apply_review.ipynb` | 승인 후 검토 요청·조치 이력 기록 (Operations Agent 액션) |
+| `notebooks/04_publish_serving.ipynb` | 승인된 요청을 SQL DB에 게시할 T-SQL 생성 (참가자가 DB 편집기에서 실행) |
+| `fabric/sql/serving.sql` | SQL Serving 스키마·검토 착수 프로시저 |
 | `fabric/ont_cos_base/` | 참가자가 시작하는 기본 Ontology 정의 |
 | `fabric/ont_cos_reference/` | 완성된 참고 Ontology 정의 (막혔을 때 대체용) |
 | `notebooks/src/*.py` | Notebook의 읽기 쉬운 원본. `.ipynb`는 여기서 생성 |
-
-## 로컬 점검 (키트 수정 시)
-
-```powershell
-python tools/build_notebooks.py
-python tools/build_ontology.py
-python -m unittest discover -s tests -v
-```
 
 ## 관리자용
 
 - [관리자 준비 가이드](admin/README.md) — 테넌트 설정, 작업 영역 일괄 준비, 사전 점검, 초기화, 정리
 - [데이터 설계와 정답](admin/data-design.md) — 테이블, 업무 규칙, 각 장의 기대 결과
+- [로컬 점검·산출물 재생성](admin/README.md#로컬-점검키트-유지보수자용) — 관리자·콘텐츠 유지보수자용. 참가자 PC에서는 실행할 필요 없음
 
 > 모든 회사·제품·원료·공급사·수치는 실습용 **가상 데이터**입니다. 시장별 원료 등록 상태는 사내 가상 기준이며 실제 법규·규제 정보가 아닙니다.

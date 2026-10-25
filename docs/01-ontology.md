@@ -1,8 +1,19 @@
-# 01. Ontology — 업무 의미와 관계 보완
+# 01. Ontology — 데이터에 연결된 업무 모델 완성
 
 [목차](../README.md) \| 이전: [00. 시나리오와 미션](00-scenario.md) \| 다음: [02. Graph](02-graph.md)
 
 관리자가 배포한 기본 Ontology `ont_cos`에는 엔터티 9개와 관계 8개가 있습니다. 그런데 이 모델로는 **"이 원료를 쓰는 처방은?"에 답할 수 없습니다.** 처방 버전과 원료를 잇는 관계가 빠져 있기 때문입니다. 이 장에서는 빠진 관계와 업무 규칙을 채워, 2장에서 영향 경로를 끝까지 따라갈 수 있게 합니다.
+
+**Ontology는 단순 glossary가 아니라 데이터 위의 공유 업무 모델입니다.** 키로 식별되는 업무 대상, 속성과 관계, 원본 매핑을 함께 정의하므로 소비자마다 테이블·조인을 다시 해석하는 일을 줄입니다.
+
+| 모델 요소 | 이 실습에서 확인하는 것 | 다음 Lesson에서 쓰이는 곳 |
+|---|---|---|
+| 엔터티·키 | `RawMaterial.material_code`는 구매 단위 원료의 식별자 | Graph에서 `RM-HA-120` 인스턴스 탐색 |
+| 속성·데이터 바인딩 | `is_active`를 `gold.formula_version.is_active`에 연결 | 폐기 버전 제외 필터와 에이전트 질의 |
+| 관계·관계 바인딩 | `uses_material`을 `formula_line`에 연결 | 원료 → 처방 → 제품·시험의 다단계 영향 경로 |
+| 업무 맥락 | 필요일·대체 승인·CN 등록 조건을 공유 | Data Agent 지침과 명시적 계산을 대조 |
+
+이 키트는 업무 규칙을 설명과 지침으로 제공하고 Notebook에서 실행합니다. 새 Ontology 경험의 별도 Rules 기능을 자동 배포하거나, 설명만으로 계산·접근 통제를 실행하는 구성은 아닙니다.
 
 ## 시작 전 확인
 
@@ -92,6 +103,7 @@
 - `uses_material`, `alternative_to` 관계가 있고 관계는 모두 10개입니다.
 - `FormulaVersion.is_active`, `RawMaterial.cn_registration` 속성이 바인딩되어 있습니다.
 - 업무 규칙 3개가 엔터티 설명에 들어 있습니다.
+- 엔터티 이름만 바꾸는 것과 키·속성·관계를 원본 데이터에 바인딩하는 것의 차이를 설명할 수 있습니다.
 
 ## Troubleshooting
 
@@ -104,6 +116,7 @@
 
 - [Ontology agent 사용·Plan/Act 모드](https://learn.microsoft.com/en-us/fabric/iq/ontology/how-to-use-ontology-agent)
 - [관계 타입과 매핑 테이블](https://learn.microsoft.com/en-us/fabric/iq/ontology/how-to-create-relationship-types)
+- [Ontology의 업무 맥락·데이터 바인딩·규칙](https://learn.microsoft.com/en-us/fabric/iq/ontology/overview)
 
 ## 다음 단계
 
