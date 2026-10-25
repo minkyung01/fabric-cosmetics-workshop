@@ -144,7 +144,7 @@ MaterialSupplyEvent
 - `03_supply_change`가 "이미 보낸 이벤트"라고 하면 `run_tag`를 `r2`처럼 바꿔 다시 실행합니다. 지연 일수는 원래 ETA 기준으로 계산하므로 다시 실행해도 누적되지 않습니다.
 - "MaterialSupplyEvent 테이블이 없다"는 오류가 나면 2단계를 먼저 실행합니다.
 - Eventhouse를 찾지 못하면 `eventhouse_name` 매개 변수와 Eventhouse 이름이 같은지 확인합니다.
-- Teams 앱이 없거나 메시지를 받을 수 없는 환경이면 강사 화면 시연으로 대신합니다.
+- Teams 앱이 없거나 메시지를 받을 수 없으면 앱 사용 권한과 Fabric·Teams 로그인 계정을 관리자와 확인합니다. 해결 전에는 알림·승인 단계를 완료한 것으로 표시하지 않습니다.
 
 ## 공식 문서
 

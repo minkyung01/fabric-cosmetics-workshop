@@ -4,6 +4,8 @@
 
 앞에서 확인한 영향 대상을 이번에는 **자연어로 질문**해 찾습니다. 기본 경로는 **Ontology 업무 맥락 → Lakehouse SQL**입니다. Ontology 자체가 질의 실행 엔드포인트이거나 Graph 저장소인 것은 아닙니다. 별도 Graph model을 연결하면 GQL 질의와도 비교할 수 있습니다.
 
+01장에서 사용한 **Ontology Agent의 Plan 모드도 모델 설명과 데이터 질의에 답할 수 있습니다.** 이번 장에서는 Ontology 편집 화면의 대화가 아니라, **별도 Data Agent 항목**에 같은 Ontology 문맥과 원본을 연결해 질문하는 경험을 구성합니다.
+
 ## 시작 전 확인
 
 - 1장에서 `ont_cos`의 관계와 속성을 완성했고, `lh_cos`의 SQL analytics endpoint에서 `gold` 테이블을 조회할 수 있습니다. Graph는 필수가 아닙니다.
@@ -71,7 +73,7 @@ Caldova 코스메틱 연구소의 원료 변경 영향 분석을 돕습니다. �
 - "데이터에 접근할 수 없다"는 답이 나오면 `lh_cos` 읽기 권한과 Ontology 원본 바인딩을 확인합니다.
 - 답이 지침과 다르게 폐기 버전을 포함하면 질문에 `is_active가 true인 버전만`을 덧붙여 다시 묻고, 지침의 문장이 저장되었는지 확인합니다.
 - 엔터티 정의가 오래되면 Ontology 문맥 **Refresh**를 실행하고 내려받은 문맥·실행 단계를 확인합니다. 문맥 편집은 Ontology에서 합니다.
-- 확장 모델의 일부 엔터티만 Data Agent에 노출하는 선택 기능은 현재 지원되지 않습니다. 기본 `ont_cos`와 확장 `ont_cos_extended`는 별도 에이전트로 비교합니다([확장 실습](../admin/extended-model.md)).
+- 확장 모델의 일부 엔터티만 Data Agent에 노출하는 선택 기능은 현재 지원되지 않습니다. 기본 `ont_cos`와 확장 `ont_cos_extended`는 별도 에이전트로 비교합니다([확장 실습](extensions/ontology.md)).
 
 ## 공식 문서
 

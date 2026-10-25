@@ -124,7 +124,7 @@ print(f"{event_id}: 영향 {len(targets)}건")
 # ## 3. Eventhouse로 보내기
 #
 # 같은 작업 영역에서 이름으로 Eventhouse `eh_cos`를 찾아 `MaterialSupplyEvent`에 `open` 행을 추가합니다.
-# 같은 `event_id`가 이미 있으면 다시 보내지 않습니다. 시연을 처음부터 다시 하려면 `run_tag`를 `r2`처럼 바꿉니다.
+# 같은 `event_id`가 이미 있으면 다시 보내지 않습니다. 새 이벤트로 실습을 반복하려면 `run_tag`를 `r2`처럼 바꿉니다.
 #
 # **예상 결과:** `SUP-20261102-RM-HA-120-r1: MaterialSupplyEvent에 open 추가`와 1행짜리 표가 나옵니다.
 
@@ -167,7 +167,7 @@ if send_to_eventhouse:
     if not targets:
         print("영향 대상이 없어 이벤트를 보내지 않았습니다.")
     elif exists:
-        print(f"{event_id}: 이미 보낸 이벤트입니다. 다시 시연하려면 run_tag를 바꾸세요.")
+        print(f"{event_id}: 이미 보낸 이벤트입니다. 새 이벤트로 실습을 반복하려면 run_tag를 바꾸세요.")
     else:
         kusto("mgmt", f""".set-or-append MaterialSupplyEvent <|
 print event_id = {kql_text(event_id)}, event_time = now(), event_status = 'open',

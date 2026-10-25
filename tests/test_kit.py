@@ -20,6 +20,7 @@ from unittest.mock import Mock
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 DOCS = sorted((ROOT / "docs").glob("*.md"))
+ALL_DOCS = sorted((ROOT / "docs").rglob("*.md"))
 NOTEBOOKS = ["01_prepare_data", "02_answers", "03_supply_change", "nb_apply_review", "04_publish_serving"]
 PLACEHOLDERS = ("{{WORKSPACE_ID}}", "{{LAKEHOUSE_ID}}")
 
@@ -145,7 +146,7 @@ class Docs(unittest.TestCase):
             self.assertIn(f"docs/{doc.name}", readme)
 
     def test_relative_links_resolve(self):
-        for md in [ROOT / "README.md", *DOCS, *sorted((ROOT / "admin").glob("*.md")),
+        for md in [ROOT / "README.md", *ALL_DOCS, *sorted((ROOT / "admin").glob("*.md")),
                    ROOT / "assets" / "icon-attribution.md"]:
             text = md.read_text(encoding="utf-8")
             for link in re.findall(r"\]\(([^)]+)\)", text):
@@ -167,7 +168,7 @@ class Docs(unittest.TestCase):
                 self.assertIn(f"({DOCS[i + 1].name})", lines[2], doc.name)
 
     def test_notebook_names_in_docs_exist(self):
-        for md in [ROOT / "README.md", *DOCS, *sorted((ROOT / "admin").glob("*.md"))]:
+        for md in [ROOT / "README.md", *ALL_DOCS, *sorted((ROOT / "admin").glob("*.md"))]:
             for name in re.findall(r"`(\d\d_[a-z_]+|nb_[a-z_]+)`", md.read_text(encoding="utf-8")):
                 self.assertIn(name, NOTEBOOKS, f"{md.name}: {name}")
 
@@ -192,6 +193,29 @@ class Docs(unittest.TestCase):
             text = md.read_text(encoding="utf-8")
             self.assertNotIn("Contoso 코스메틱", text, md.name)
         self.assertIn("Caldova 코스메틱", (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8"))
+
+    def test_introduction_does_not_reveal_impact_answers(self):
+        scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
+        for spoiler in ("정답 미리 보기", "PP-1101", "PP-1102", "PP-1103", "ST-0711", "29일", "영향 대상 3건"):
+            self.assertNotIn(spoiler, scenario)
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertNotIn("영향 대상 3건", readme)
+        self.assertIn("대상 ID·연결 경로·일정 근거·검토할 조치", scenario)
+        self.assertIn("PP-1101", (ROOT / "admin" / "data-design.md").read_text(encoding="utf-8"))
+
+    def test_participant_guides_do_not_require_instructor_demos_or_admin_commands(self):
+        for md in [ROOT / "README.md", *ALL_DOCS]:
+            text = md.read_text(encoding="utf-8")
+            with self.subTest(document=md.relative_to(ROOT)):
+                self.assertNotRegex(text, r"강사|시연|## 관리자 준비|관리자 사전 준비|provision\.py|--capacity")
+        extension = ROOT / "docs" / "extensions" / "ontology.md"
+        self.assertIn("docs/extensions/ontology.md", (ROOT / "README.md").read_text(encoding="utf-8"))
+        extension_text = extension.read_text(encoding="utf-8")
+        self.assertIn("<details>", extension_text)
+        self.assertEqual(extension_text.count("<details>"), extension_text.count("</details>"))
+        self.assertIn("--extended-ontology", (ROOT / "admin" / "extended-model.md").read_text(encoding="utf-8"))
+        for path in (ROOT / "notebooks" / "src").glob("*.py"):
+            self.assertNotRegex(path.read_text(encoding="utf-8"), r"강사|시연|관리자 사전 실행")
 
 
 class Serving(unittest.TestCase):
@@ -297,6 +321,7 @@ class Architecture(unittest.TestCase):
         self.assertNotIn("LESSON 08", text)
         self.assertNotIn("Lesson 번호", text)
         self.assertNotIn("공식 Fabric 아이콘 사용", text)
+        self.assertNotIn("영향 3건", text)
         self.assertIn("teams-icon", ids)
         for edge in ("ontology-graph", "graph-dataagent"):
             self.assertEqual(next(e for e in scene["elements"] if e["id"] == edge)["strokeStyle"], "dashed")

@@ -113,6 +113,8 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 
 **대상은 관리자·교재 유지보수자입니다. 참가자는 로컬 Python·Git 환경을 준비할 필요가 없습니다.** 아래 명령은 저장소 루트에서 실행합니다.
 
+참가자에게는 [README](../README.md)와 `docs/`의 실습 절차를 안내합니다. 00장에서는 영향 대상 ID·건수를 미리 공개하지 않고 탐색 질문과 판단 근거를 기록하게 합니다. 단계별 예상 결과·참고 Notebook은 직접 실행 후 대조하는 데 사용합니다.
+
 ```powershell
 python tools/build_notebooks.py
 python tools/build_ontology.py
@@ -121,6 +123,10 @@ python -m unittest discover -s tests -v
 ```
 
 Notebook·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Lesson 순서, CSV와 기대 영향 계산, 게시 SQL 생성 등을 오프라인으로 점검합니다. **Fabric 배포·SQL 엔진 동작·Teams 승인·Purview 정책 평가를 대신하지 않습니다.** 실제 테넌트 사전 점검을 별도로 수행합니다.
+
+배포 정의는 `fabric/ont_cos_base`(시작 모델), `fabric/ont_cos_reference`(핵심 완성 모델), `fabric/ont_cos_extended`(선택 확장 모델)에 있습니다. 준비 Notebook의 기본 과정 실행은 관리자가 사전에 마치며, 참가자가 초기화를 요청하면 진행 중인 `ops` 결과 삭제 여부를 먼저 확인합니다.
+
+아키텍처는 `tools/build_architecture.py`에서 수정한 뒤 SVG·Excalidraw를 함께 재생성합니다. 직접 편집은 [Microsoft Excalidraw](https://aka.ms/excalidraw)에서 가능하지만 생성기 변경 없이 산출물만 수정하면 재생성 시 덮어씁니다. 아이콘 원본·사용 조건은 [출처 문서](../assets/icon-attribution.md)에 보관합니다.
 
 ## 3. 사전 점검 체크리스트
 

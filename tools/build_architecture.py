@@ -22,7 +22,7 @@ CARDS = [
     ("dataagent", "03", "Data Agent", "data_agent_48_item.svg", 1255, 190,
      ["da_cos · Ontology → SQL", "선택: Graph → GQL 비교"], "#5C2D91", "#E8DAEF"),
     ("signal", "04", "Notebook", "notebook_48_item.svg", 70, 510,
-     ["03_supply_change", "지연 반영 · 영향 3건 계산"], "#F7630C", "#FFF4CE"),
+     ["03_supply_change", "지연 반영 · 영향 대상 계산"], "#F7630C", "#FFF4CE"),
     ("eventhouse", "04", "Eventhouse", "event_house_48_item.svg", 465, 510,
      ["eh_cos · MaterialSupplyEvent", "open → review_requested"], "#F7630C", "#FFF4CE"),
     ("operations", "04", "Operations Agent", "operations_agent_48_item.svg", 860, 510,

@@ -97,7 +97,7 @@
 </text>
 <text x="88" y="633" font-size="17" fill="#000000">
 <tspan x="88" dy="0">03_supply_change</tspan>
-<tspan x="88" dy="25.5">지연 반영 · 영향 3건 계산</tspan>
+<tspan x="88" dy="25.5">지연 반영 · 영향 대상 계산</tspan>
 </text>
 <rect x="465" y="510" width="310" height="180" rx="12" stroke="#F7630C" fill="#FFF4CE" />
 <text x="483" y="536" font-size="16" fill="#000000" font-weight="600">

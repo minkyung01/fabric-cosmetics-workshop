@@ -23,4 +23,4 @@ Microsoft는 아키텍처 다이어그램·교육 자료·문서에서의 아이
 
 Teams SVG는 [Microsoft 공식 Office CDN](https://res.cdn.office.net/files/fabric-cdn-prod_20261014.001/assets/brand-icons/product/svg/teams_48x1.svg)에서 원본 그대로 가져왔습니다. CDN 버전은 [microsoft/fluentui의 공식 상수](https://github.com/microsoft/fluentui/blob/master/packages/style-utilities/src/cdn.ts)로 확인했습니다(2026-10-25). Fabric 아이콘 패키지의 MIT 라이선스가 Teams 자산에도 적용된다고 주장하지 않습니다. [Microsoft 365 아이콘 사용 조건](https://learn.microsoft.com/en-us/previous-versions/microsoft-365/solutions/architecture-icons-templates)의 문서·교육·아키텍처 용도로만 제품을 표시하며, Microsoft 상표·제품 식별 자산의 권리를 이전하는 것은 아닙니다.
 
-`tools/build_architecture.py`가 README용 `architecture.svg`와 아이콘을 내장한 편집용 `architecture.excalidraw`를 생성합니다. 편집은 [Microsoft Excalidraw](https://aka.ms/excalidraw)에서 가능합니다. 생성기를 수정하지 않고 산출물만 편집하면 재생성 때 덮어쓰므로 유지보수 시 원본 변경도 반영합니다.
+아키텍처 편집·재생성 절차는 [관리자 가이드](../admin/README.md#로컬-점검키트-유지보수자용)에 있습니다.

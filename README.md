@@ -16,7 +16,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | **Graph** | 업무 모델의 **인스턴스와 다단계 의존성**을 탐색 | 원료 → 처방 버전 → 제품·생산 계획·시험·개발 과제의 경로를 GQL로 조회. Ontology에 반드시 필요한 저장소가 아니라 경로 탐색을 위한 선택 계층 |
 | **Data Agent** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | Ontology 맥락을 사용해 Lakehouse에 SQL 질의. 선택적으로 Graph의 GQL과 비교하고, 생성 질의·정답 Notebook으로 근거 검증 |
 | **Operations Agent** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
-| **Notebook** | 사람의 승인과 기록 작업을 연결 | 영향 대상 3건의 검토 요청·조치 이력과 이벤트 상태 기록. 실제 구매·처방 변경은 하지 않음 |
+| **Notebook** | 사람의 승인과 기록 작업을 연결 | 찾아낸 영향 대상의 검토 요청·조치 이력과 이벤트 상태 기록. 실제 구매·처방 변경은 하지 않음 |
 | **SQL database in Fabric** | 분석 결과를 **업무용 Serving DB**로 제공 | 승인된 검토 요청을 게시하고 담당 팀별 조회 → 검토 착수 → 상태 변경 이력을 T-SQL로 처리. 재게시해도 업무 상태 유지 |
 | **Microsoft Purview** | 민감 데이터의 분류와 정책을 업무 흐름에 연결 | 참가자가 게시된 민감도 레이블을 직접 적용·확인. 사전 구성된 환경에서는 DLP 정책 팁과 카탈로그 검색까지 확장 |
 
@@ -40,14 +40,14 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
-| Purview 실습 | 참가자 Pro/PPU, 항목 편집 권한, 사용 가능한 게시 레이블. DLP·카탈로그 확장 조건은 [관리자 가이드](admin/README.md) 확인 |
+| Purview 실습 | Pro/PPU, 항목 편집 권한, 사용 가능한 게시 레이블. 수행 가능한 확장 범위는 [07장](docs/07-purview.md)에서 확인 |
 
 ## 진행 순서
 
 | Lesson(장) | 내용 |
 |---|---|
 | [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개와 준비된 작업 영역 확인 |
-| [01. Ontology](docs/01-ontology.md) | 엔터티·키·원본 바인딩 이해, 관계와 업무 맥락 완성 |
+| [01. Ontology](docs/01-ontology.md) | 엔터티·키·원본 바인딩 이해, Plan 모드로 모델 설명·데이터 질의, 변경안 검토 후 Act로 적용 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
 | [03. Data Agent](docs/03-data-agent.md) | Ontology 맥락·Lakehouse SQL 기반 질문, 선택적으로 Graph와 비교 |
 | [04. Operations Agent](docs/04-operations-agent.md) | 지침·Playbook 구성, 감시 시작, 공급 지연 반영 |
@@ -55,32 +55,27 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | [06. SQL Serving DB](docs/06-serving-db.md) | 승인 결과 게시, 담당 팀별 조회, 검토 상태 변경·이력 확인 |
 | [07. Purview 거버넌스](docs/07-purview.md) | 민감도 레이블 직접 적용, 준비된 DLP·카탈로그 확장 |
 
-운영자는 환경과 목적에 맞게 Lesson을 조합할 수 있습니다. Graph를 생략해도 01 → 03장으로 진행할 수 있습니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 마지막에는 Operations Agent 감시와 Spark 세션을 중지합니다.
+Graph를 사용하지 않는 실습 경로는 01 → 03장으로 진행합니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 각 단계에서는 먼저 직접 실행한 뒤 예상 결과와 대조합니다. 마지막에는 Operations Agent 감시와 Spark 세션을 중지합니다.
 
-복잡한 업무 모델까지 다루려면 [26개 엔터티 확장 실습](admin/extended-model.md)을 선택합니다. 핵심 9개 모델과 별도 항목으로 배포하며, **총 28개 테이블**을 사용합니다. 정책·계정 준비와 미리 보기 제약은 [관리자 가이드](admin/README.md)에서 확인합니다.
+확장 모델이 준비된 작업 영역에서는 [26개 엔터티 확장 실습](docs/extensions/ontology.md)도 진행할 수 있습니다. 핵심 9개 모델과 별도 항목이며, **총 28개 테이블**을 사용합니다.
 
 ## 실습 파일
 
 | 경로 | 내용 |
 |---|---|
-| `data/*.csv` | 가상 데이터 11개 테이블 ([데이터 설계](admin/data-design.md)) |
-| `notebooks/01_prepare_data.ipynb` | CSV → `gold` 테이블 생성, `ops` 초기화 (관리자 사전 실행, 초기화용) |
-| `notebooks/02_answers.ipynb` | Graph·Data Agent 질문의 정답을 Spark SQL로 확인 |
+| `data/*.csv` | 시나리오에 사용하는 가상 데이터 11개 테이블 |
+| `notebooks/01_prepare_data.ipynb` | CSV → `gold` 테이블 생성·초기화. 기본 과정에서는 준비된 데이터를 확인하며, 재실행 시 기존 `ops` 결과가 삭제되므로 주의 |
+| `notebooks/02_answers.ipynb` | 직접 질의한 뒤 결과를 대조하는 참고 Notebook |
 | `notebooks/03_supply_change.ipynb` | 공급 지연 반영 → 영향 분석 → Eventhouse 이벤트 전송 |
 | `notebooks/nb_apply_review.ipynb` | 승인 후 검토 요청·조치 이력 기록 (Operations Agent 액션) |
 | `notebooks/04_publish_serving.ipynb` | 승인된 요청을 SQL DB에 게시할 T-SQL 생성 (참가자가 DB 편집기에서 실행) |
 | `fabric/sql/serving.sql` | SQL Serving 스키마·검토 착수 프로시저 |
-| `fabric/ont_cos_base/` | 참가자가 시작하는 기본 Ontology 정의 |
-| `fabric/ont_cos_reference/` | 완성된 참고 Ontology 정의 (막혔을 때 대체용) |
-| `data/extended/*.csv`, `fabric/ont_cos_extended/` | 선택 확장용 테이블 17개와 26개 엔터티·40개 관계의 완성 모델 |
+| `data/extended/*.csv` | 선택 확장용 가상 데이터 17개 테이블 |
 | `fabric/sql/extended-queries.sql` | 확장 모델의 로트·재고·등록·설비·검토 담당 경로를 검증하는 읽기 전용 SQL |
-| `notebooks/src/*.py` | Notebook의 읽기 쉬운 원본. `.ipynb`는 여기서 생성 |
+| `notebooks/src/*.py` | Notebook의 읽기 쉬운 Python 원본 |
 
-## 관리자용
+## 환경 준비 안내
 
-- [관리자 준비 가이드](admin/README.md) — 테넌트 설정, 작업 영역 일괄 준비, 사전 점검, 초기화, 정리
-- [데이터 설계와 정답](admin/data-design.md) — 테이블, 업무 규칙, 각 장의 기대 결과
-- [미리 보기 기능 제약·호환성](admin/preview-limitations.md) — Ontology 새/기존 경험, Graph 적격성, 에이전트·권한·갱신 주기
-- [로컬 점검·산출물 재생성](admin/README.md#로컬-점검키트-유지보수자용) — 관리자·콘텐츠 유지보수자용. 참가자 PC에서는 실행할 필요 없음
+이 README와 `docs/`는 실습자용입니다. 테넌트 설정·배포·초기화·운영 점검은 별도의 [관리자 가이드](admin/README.md)에 있습니다. 준비된 작업 영역을 사용하는 실습자는 로컬 Python·Git이나 관리자 스크립트를 실행할 필요가 없습니다.
 
 > Caldova는 Microsoft가 만든 가상 제약 회사이며, 이 교재에서는 **화장품 R&D 업무로 각색**했습니다. 회사·제품·원료·공급사·수치는 실습용 **가상 데이터**입니다. 시장별 원료 등록 상태는 사내 가상 기준이며 실제 법규·규제 정보가 아닙니다.

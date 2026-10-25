@@ -21,7 +21,7 @@
 
 `admin/provision.py`는 저장소의 정의를 REST API로 제출하며 **새 경험으로 자동 마이그레이션하지 않습니다.** 핵심·확장 모델 모두 먼저 테스트 작업 영역에 배포해 열기·키·데이터 바인딩을 확인합니다. 기존 경험 의존 경로를 종료일 이후 그대로 재사용하지 않습니다.
 
-API 정의를 수용하지 않는 환경은 오류를 무시하거나 빈 모델을 완성으로 표시하지 않습니다. [핵심 모델 표](../docs/01-ontology.md)와 [확장 모델 표](extended-model.md)를 기준으로 새 경험에서 엔터티와 Lakehouse 바인딩을 수동 생성하고, 관계 정의는 `tools/build_ontology.py`를 기준으로 연결합니다. 마이그레이션한 에이전트·규칙/Activator 알림은 연결·재생성 여부를 별도 점검합니다.
+API 정의를 수용하지 않는 환경은 오류를 무시하거나 빈 모델을 완성으로 표시하지 않습니다. [핵심 모델 표](../docs/01-ontology.md)와 [확장 모델 표](../docs/extensions/ontology.md#추가-엔터티와-바인딩)를 기준으로 새 경험에서 엔터티와 Lakehouse 바인딩을 수동 생성하고, 관계 정의는 `tools/build_ontology.py`를 기준으로 연결합니다. 마이그레이션한 에이전트·규칙/Activator 알림은 연결·재생성 여부를 별도 점검합니다.
 
 ## 3. 엔터티 개수보다 원본·투영·컨텍스트 제약을 확인
 
@@ -38,7 +38,13 @@ API 정의를 수용하지 않는 환경은 오류를 무시하거나 빈 모델
 | Graph 탐색 UI | 가변 길이 경로 빌더는 최대 8홉 | GQL 편집기 자체의 일괄 8홉 제한으로 설명하지 않음 |
 | Graph 쓰기 | GQL DML/DDL 미지원 | 업무 갱신은 Notebook·SQL DB 등 원본에서 수행 |
 
-## 4. Data Agent
+## 4. Ontology Agent와 Data Agent
+
+**Ontology Agent의 Plan 모드**는 발견·초안·검증·설명·원본 질의를 지원하지만 Ontology·작업 영역을 변경하지 않습니다. 설명이나 읽기 질의를 위해 Act로 전환시키지 않습니다. 적용할 변경을 검토한 뒤에만 Act를 사용합니다. 원본 접근은 사용자 권한을 따르며, 한 대화는 한 작업 영역의 한 Ontology를 대상으로 합니다. 핵심·확장 Ontology를 가로지르는 질의를 지원한다고 설명하지 않습니다.
+
+Ontology Agent의 기본 반환 한도는 SQL/KQL/GQL 1,000행, DAX 200행입니다. 응답이 전체 데이터라고 가정하지 말고 실제 질의·반환 범위를 확인합니다. 이번 실습의 4행 결과는 이 한도 안이며 `02_answers`와 대조합니다. 공식 근거는 [Ontology Agent의 Plan/Act·설명·질의·권한](https://learn.microsoft.com/en-us/fabric/iq/ontology/how-to-use-ontology-agent)입니다.
+
+**별도 Data Agent 항목의 제약**은 다음과 같습니다.
 
 - Ontology는 **컨텍스트 원본**입니다. 실제 실행은 바인딩된 원본의 SQL/KQL/DAX이며 요청 사용자 권한을 사용합니다. Graph model을 별도로 연결한 경우에만 해당 원본의 GQL 경로와 구분합니다.
 - 새 Ontology 문맥 경험은 preview runtime을 사전 확인합니다. 원본별 설명·질의 지침·예제는 지원되는 기반 원본을 마운트해 설정하며 Ontology로 역기록되지 않습니다.
