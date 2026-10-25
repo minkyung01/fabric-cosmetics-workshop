@@ -1,0 +1,24 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "7efe78fb-23c5-5be6-be94-931cdc7320d9",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "market_code",
+        "targetPropertyId": "559160754367078968"
+      },
+      {
+        "sourceColumnName": "market_name",
+        "targetPropertyId": "284770118220117221"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "market",
+      "sourceSchema": "gold"
+    }
+  }
+}

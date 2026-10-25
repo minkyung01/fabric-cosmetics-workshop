@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "200765201979464243",
+  "name": "inspection_uses_spec",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "725098497486594227"
+  },
+  "target": {
+    "entityTypeId": "5999726048517764"
+  },
+  "semanticEnrichment": {
+    "description": "\uac80\uc0ac \uae30\uc900 \uaddc\uaca9",
+    "customAttributes": {}
+  }
+}

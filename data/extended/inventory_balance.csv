@@ -1,0 +1,5 @@
+balance_id,lot_id,warehouse_id,qty_kg,availability
+INV-01,LOT-120-A,WH-01,8.0,가용
+INV-02,LOT-120-B,WH-01,5.0,격리
+INV-03,LOT-210-A,WH-02,20.0,가용
+INV-04,LOT-210-A,WH-01,10.0,가용

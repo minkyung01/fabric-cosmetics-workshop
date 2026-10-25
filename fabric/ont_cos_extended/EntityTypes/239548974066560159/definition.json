@@ -1,0 +1,57 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "239548974066560159",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "Warehouse",
+  "entityIdParts": [
+    "918612957212446715"
+  ],
+  "displayNamePropertyId": "317909564649303960",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "918612957212446715",
+      "name": "warehouse_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ucc3d\uace0 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1009205593416007329",
+      "name": "site_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc81c\uc870\uc18c ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "317909564649303960",
+      "name": "warehouse_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ucc3d\uace0\uba85",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\ucc3d\uace0"
+    ],
+    "description": "\uc81c\uc870\uc18c \ub0b4 \uc6d0\ub8cc \ucc3d\uace0",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

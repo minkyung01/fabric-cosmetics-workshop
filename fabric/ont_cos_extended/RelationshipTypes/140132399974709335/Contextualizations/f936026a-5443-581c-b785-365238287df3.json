@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/contextualization/1.0.0/schema.json",
+  "id": "f936026a-5443-581c-b785-365238287df3",
+  "dataBindingTable": {
+    "workspaceId": "{{WORKSPACE_ID}}",
+    "itemId": "{{LAKEHOUSE_ID}}",
+    "sourceTableName": "inventory_balance",
+    "sourceSchema": "gold",
+    "sourceType": "LakehouseTable"
+  },
+  "sourceKeyRefBindings": [
+    {
+      "sourceColumnName": "balance_id",
+      "targetPropertyId": "240260791335107923"
+    }
+  ],
+  "targetKeyRefBindings": [
+    {
+      "sourceColumnName": "warehouse_id",
+      "targetPropertyId": "918612957212446715"
+    }
+  ]
+}

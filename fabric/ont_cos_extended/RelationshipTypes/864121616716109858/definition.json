@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "864121616716109858",
+  "name": "warehouse_at_site",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "239548974066560159"
+  },
+  "target": {
+    "entityTypeId": "1086206073259654372"
+  },
+  "semanticEnrichment": {
+    "description": "\ucc3d\uace0\uc758 \uc81c\uc870\uc18c",
+    "customAttributes": {}
+  }
+}

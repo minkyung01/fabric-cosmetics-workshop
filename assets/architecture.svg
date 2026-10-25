@@ -1,21 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1640" height="1420" viewBox="0 0 1640 1420" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1640" height="1350" viewBox="0 0 1640 1350" role="img" aria-labelledby="title desc">
 <title id="title">Caldova cosmetics workshop — Lesson / Fabric architecture</title>
-<desc id="desc">Lessons 00–03 model and query business data; 04–05 detect, propose, approve and record reviews; 06 publishes to SQL database; 07 classifies data with Purview; 08 discusses adoption.</desc>
+<desc id="desc">Lessons 00–03 model and query business data; 04–05 detect, propose, approve and record reviews; 06 publishes to SQL database; 07 classifies data with Purview. Graph is optional; Data Agent uses ontology context to query Lakehouse SQL.</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
-<rect width="1640" height="1420" fill="#fff"/>
+<rect width="1640" height="1350" fill="#fff"/>
 <g font-family="Segoe UI, Malgun Gothic, sans-serif">
 <text x="40" y="57" font-size="32" fill="#000000" font-weight="600">
 <tspan x="40" dy="0">Caldova | 원료 변경 대응 에이전트</tspan>
 </text>
-<text x="40" y="99" font-size="21" fill="#000000">
-<tspan x="40" dy="0">Lesson 번호 → Fabric 기능 → 실습 항목 → 데이터 흐름</tspan>
-</text>
 <rect x="40" y="130" width="1560" height="300" rx="12" stroke="#cbd5e1" fill="none" />
 <text x="70" y="166" font-size="21" fill="#000000" font-weight="600">
-<tspan x="70" dy="0">업무 모델과 질의  |  Lesson 00 → 01 → 02 → 03</tspan>
+<tspan x="70" dy="0">업무 모델과 질의  |  Lesson 00 → 01 → 03  /  02 Graph는 선택</tspan>
 </text>
 <text x="70" y="411" font-size="17" fill="#000000">
-<tspan x="70" dy="0">Ontology는 업무 대상·관계·원본 매핑을 제공하고, Graph는 Materialize한 인스턴스 경로를 탐색합니다.</tspan>
+<tspan x="70" dy="0">Ontology 문맥으로 Lakehouse SQL 질의. 점선은 선택 Graph 경로이며 필요한 엔터티·관계만 투영합니다.</tspan>
 </text>
 <rect x="40" y="450" width="1560" height="300" rx="12" stroke="#cbd5e1" fill="none" />
 <text x="70" y="486" font-size="21" fill="#000000" font-weight="600">
@@ -32,9 +29,9 @@
 <tspan x="70" dy="0">게시 SQL은 참가자가 실행합니다. 재게시로 SQL의 검토 상태를 덮어쓰지 않으며, 원본으로 자동 역동기화하지 않습니다.</tspan>
 </text>
 <path d="M 380 280 L 465 280" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
-<path d="M 775 280 L 860 280" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
-<path d="M 1170 280 L 1255 280" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
-<path d="M 620 190 L 620 178 L 1410 178 L 1410 190" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<path d="M 775 280 L 860 280" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<path d="M 1170 280 L 1255 280" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<path d="M 620 190 L 620 178 L 1410 178 L 1410 190" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
 <path d="M 380 600 L 465 600" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
 <path d="M 775 600 L 860 600" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
 <path d="M 1170 600 L 1255 600" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
@@ -51,7 +48,7 @@
 <tspan x="148" dy="0">Lakehouse</tspan>
 </text>
 <text x="88" y="313" font-size="17" fill="#000000">
-<tspan x="88" dy="0">lh_cos · gold 11개 테이블</tspan>
+<tspan x="88" dy="0">lh_cos · gold 11 / 확장 28</tspan>
 <tspan x="88" dy="25.5">업무 데이터 · 키 · 원본</tspan>
 </text>
 <rect x="465" y="190" width="310" height="180" rx="12" stroke="#5C2D91" fill="#E8DAEF" />
@@ -63,8 +60,8 @@
 <tspan x="543" dy="0">Ontology</tspan>
 </text>
 <text x="483" y="313" font-size="17" fill="#000000">
-<tspan x="483" dy="0">ont_cos · 엔터티 9 / 관계 10</tspan>
-<tspan x="483" dy="25.5">키 · 속성 · 원본 바인딩</tspan>
+<tspan x="483" dy="0">핵심 9개 / 확장 26개 엔터티</tspan>
+<tspan x="483" dy="25.5">키 · 속성 · Lakehouse 바인딩</tspan>
 </text>
 <rect x="860" y="190" width="310" height="180" rx="12" stroke="#5C2D91" fill="#E8DAEF" />
 <text x="878" y="216" font-size="16" fill="#000000" font-weight="600">
@@ -72,7 +69,7 @@
 </text>
 <image x="876" y="233" width="48" height="48" preserveAspectRatio="xMidYMid meet" xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0idXJsKCNpNTYwYzJiLWk4YTQ4YTktcGFpbnQwX2xpbmVhcl82MjIyMF82OTgpIiBkPSJNNSAxMGE1IDUgMCAwIDEgNS01aDI4YTUgNSAwIDAgMSA1IDV2MjhhNSA1IDAgMCAxLTUgNUgxMGE1IDUgMCAwIDEtNS01eiIvPjxwYXRoIGZpbGw9InVybCgjaTU2MGMyYi1pOGE0OGE5LXBhaW50MV9yYWRpYWxfNjIyMjBfNjk4KSIgZmlsbC1vcGFjaXR5PSIuMiIgZD0iTTUgMTBhNSA1IDAgMCAxIDUtNWgyOGE1IDUgMCAwIDEgNSA1djI4YTUgNSAwIDAgMS01IDVIMTBhNSA1IDAgMCAxLTUtNXoiLz48cGF0aCBmaWxsPSJ1cmwoI2k1NjBjMmItaThhNDhhOS1wYWludDJfbGluZWFyXzYyMjIwXzY5OCkiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTM4IDZIMTBhNCA0IDAgMCAwLTQgNHYyOGE0IDQgMCAwIDAgNCA0aDI4YTQgNCAwIDAgMCA0LTRWMTBhNCA0IDAgMCAwLTQtNE0xMCA1YTUgNSAwIDAgMC01IDV2MjhhNSA1IDAgMCAwIDUgNWgyOGE1IDUgMCAwIDAgNS01VjEwYTUgNSAwIDAgMC01LTV6IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz48cGF0aCBmaWxsPSJ1cmwoI2k1NjBjMmItaThhNDhhOS1wYWludDNfbGluZWFyXzYyMjIwXzY5OCkiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTI0IDExYTIuMjUgMi4yNSAwIDAgMSAyLjIzNiAyLjQ4N2w1LjgxOCAzLjM1OUEyLjI1IDIuMjUgMCAxIDEgMzMuMjUgMjFxLS4xNjUtLjAwMi0uMzIzLS4wMjZMMzEuMTggMjRsMS43NDcgMy4wMjVxLjE1OC0uMDI0LjMyMi0uMDI1YTIuMjUgMi4yNSAwIDEgMS0xLjE5NiA0LjE1M2wtNS44MTcgMy4zNTlxLjAxMi4xMTYuMDEzLjIzNmEyLjI1IDIuMjUgMCAxIDEtNC40ODctLjIzN2wtNS44MTctMy4zNThhMi4yNSAyLjI1IDAgMSAxLS44NzQtNC4xMjhMMTYuODIgMjRsLTEuNzQ3LTMuMDI2YTIgMiAwIDAgMS0uMzIyLjAyNiAyLjI1IDIuMjUgMCAxIDEgMS4xOTUtNC4xNTNsNS44MTgtMy4zNTlBMi4yNSAyLjI1IDAgMCAxIDI0IDExbS03LjAyNyAxNy45MjJjLjAxNS4xMDcuMDI3LjIxNi4wMjcuMzI4IDAgLjI1LS4wNDMuNDg4LS4xMTguNzEybDUuMDY4IDIuOTI2LTIuOTYtNS4xM3ptOS4wNzYgMy45NjYgNS4wNjgtMi45MjZBMi4zIDIuMyAwIDAgMSAzMSAyOS4yNXEuMDAxLS4xNjcuMDI2LS4zMjhsLTIuMDE1LTEuMTYzem0tNS43Ni01Ljg4IDIuOTYxIDUuMTI5di02LjAxOWEyLjIgMi4yIDAgMCAxLS43MS0uNDA5em01LjE3LTEuMjk5YTIuMiAyLjIgMCAwIDEtLjcwOS40MXY2LjAxOGwyLjk2LTUuMTI4em0tOC44ODIgMS43MSAxLjY2Mi0uOTU5LS41NTMtLjk2em0xMy4xODQtLjk2IDEuNjYyLjk2LTEuMTA4LTEuOTE5ek0xOC41NSAyNGwuOTg4IDEuNzEgMi4yNS0xLjNhMi4zIDIuMyAwIDAgMS0uMDM4LS40MXEuMDAxLS4yMDguMDM4LS40MDVsLTIuMjU0LTEuMjk2em03LjY2LS40MDZxLjAzOC4xOTYuMDM5LjQwNS0uMDAxLjIxLS4wNC40MWwyLjI1MiAxLjMuOTg2LTEuNzA5LS45ODMtMS43MDN6bS04LjUyNS0xLjA5NS41NDYtLjk1LTEuNjQtLjk0M3ptMTIuMDgtLjk1LjU0OS45NSAxLjA5Mi0xLjg5M3ptLTUuMjYtNi4xMDlhMi4zIDIuMyAwIDAgMS0uNTA2LjA2cS0uMjYyLS4wMDItLjUwOC0uMDZsLTMuMjA4IDUuNTU4IDIuMjUxIDEuMjk0YTIuMjQgMi4yNCAwIDAgMSAyLjkyOS4wMDFsMi4yNS0xLjI5NXptLTcuNjI0IDIuNTk3Yy4wNzUuMjI0LjExOC40NjMuMTE4LjcxM3EtLjAwMi4xNzQtLjAzLjM0M2wyLjAxMyAxLjE1NyAyLjk2Ny01LjEzOXptMTIuMTM0IDIuMjEzIDIuMDEyLTEuMTU3YTIuMjUgMi4yNSAwIDAgMSAuMDg5LTEuMDU2bC01LjA2OC0yLjkyNnoiIGNsaXAtcnVsZT0iZXZlbm9kZCIvPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iaTU2MGMyYi1pOGE0OGE5LXBhaW50MF9saW5lYXJfNjIyMjBfNjk4IiB4MT0iMTUuNTU2IiB4Mj0iMjAuMzYyIiB5MT0iNSIgeTI9IjQzLjQ1NSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIHN0b3AtY29sb3I9IiNmZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFQkVCRUIiLz48L2xpbmVhckdyYWRpZW50PjxyYWRpYWxHcmFkaWVudCBpZD0iaTU2MGMyYi1pOGE0OGE5LXBhaW50MV9yYWRpYWxfNjIyMjBfNjk4IiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoMjAuMDU1NiAzMC4wODMzNSAtMjYuMDMzNjggMTcuMzU1OCAxNy4xMzkgMTQuODk2KSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iLjE3NyIgc3RvcC1jb2xvcj0iI2ZmZiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI0I4QjhCOCIvPjwvcmFkaWFsR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJpNTYwYzJiLWk4YTQ4YTktcGFpbnQyX2xpbmVhcl82MjIyMF82OTgiIHgxPSIxNy4yNzEiIHgyPSIyMi4zODciIHkxPSI1IiB5Mj0iNDMuMzczIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agc3RvcC1jb2xvcj0iI0JCQiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzg4OCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJpNTYwYzJiLWk4YTQ4YTktcGFpbnQzX2xpbmVhcl82MjIyMF82OTgiIHgxPSIxMi41IiB4Mj0iMzguMzA0IiB5MT0iMTEiIHkyPSIzMy44MjgiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjNzc1MUI4Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNUE0MDlDIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PC9zdmc+"/>
 <text x="938" y="259" font-size="22" fill="#000000" font-weight="600">
-<tspan x="938" dy="0">Graph model</tspan>
+<tspan x="938" dy="0">Graph (선택)</tspan>
 </text>
 <text x="878" y="313" font-size="17" fill="#000000">
 <tspan x="878" dy="0">ont_cos_graph_… · GQL</tspan>
@@ -87,8 +84,8 @@
 <tspan x="1333" dy="0">Data Agent</tspan>
 </text>
 <text x="1273" y="313" font-size="17" fill="#000000">
-<tspan x="1273" dy="0">da_cos · Ontology + Graph</tspan>
-<tspan x="1273" dy="25.5">자연어 → 생성 질의 → 검증</tspan>
+<tspan x="1273" dy="0">da_cos · Ontology → SQL</tspan>
+<tspan x="1273" dy="25.5">선택: Graph → GQL 비교</tspan>
 </text>
 <rect x="70" y="510" width="310" height="180" rx="12" stroke="#F7630C" fill="#FFF4CE" />
 <text x="88" y="536" font-size="16" fill="#000000" font-weight="600">
@@ -130,8 +127,9 @@
 <text x="1273" y="536" font-size="16" fill="#000000" font-weight="600">
 <tspan x="1273" dy="0">LESSON 05</tspan>
 </text>
-<text x="1273" y="579" font-size="22" fill="#000000" font-weight="600">
-<tspan x="1273" dy="0">Teams 승인</tspan>
+<image x="1271" y="553" width="48" height="48" preserveAspectRatio="xMidYMid meet" xlink:href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxLjk5OTkgMjBIMzMuOTk5OUMzNy4zMTM2IDIwIDM5Ljk5OTkgMjIuNjg2MyAzOS45OTk5IDI2VjM2QzM5Ljk5OTkgMzkuMzEzNyAzNy4zMTM2IDQyIDMzLjk5OTkgNDJDMzAuNjg2MiA0MiAyNy45OTk5IDM5LjMxMzcgMjcuOTk5OSAzNlYyNkMyNy45OTk5IDIyLjY4NjMgMjUuMzEzNiAyMCAyMS45OTk5IDIwWiIgZmlsbD0idXJsKCNwYWludDBfcmFkaWFsXzM1M18xNDg0NSkiLz4KPHBhdGggZD0iTTcuOTk5ODggMjRDNy45OTk4OCAyMC42ODYzIDEwLjY4NjIgMTggMTMuOTk5OSAxOEgyMS45OTk5QzI1LjMxMzYgMTggMjcuOTk5OSAyMC42ODYzIDI3Ljk5OTkgMjRWMzZDMjcuOTk5OSAzOS4zMTM3IDMwLjY4NjIgNDIgMzMuOTk5OSA0MkwxNy45OTk4IDQxLjk5OTlDMTIuNDc3IDQxLjk5OTkgNy45OTk4OCAzNy41MjI4IDcuOTk5ODggMzEuOTk5OVYyNFoiIGZpbGw9InVybCgjcGFpbnQxX3JhZGlhbF8zNTNfMTQ4NDUpIi8+CjxwYXRoIGQ9Ik03Ljk5OTg4IDI0QzcuOTk5ODggMjAuNjg2MyAxMC42ODYyIDE4IDEzLjk5OTkgMThIMjEuOTk5OUMyNS4zMTM2IDE4IDI3Ljk5OTkgMjAuNjg2MyAyNy45OTk5IDI0VjM2QzI3Ljk5OTkgMzkuMzEzNyAzMC42ODYyIDQyIDMzLjk5OTkgNDJMMTcuOTk5OCA0MS45OTk5QzEyLjQ3NyA0MS45OTk5IDcuOTk5ODggMzcuNTIyOCA3Ljk5OTg4IDMxLjk5OTlWMjRaIiBmaWxsPSJ1cmwoI3BhaW50Ml9saW5lYXJfMzUzXzE0ODQ1KSIgZmlsbC1vcGFjaXR5PSIwLjciLz4KPHBhdGggZD0iTTcuOTk5ODggMjRDNy45OTk4OCAyMC42ODYzIDEwLjY4NjIgMTggMTMuOTk5OSAxOEgyMS45OTk5QzI1LjMxMzYgMTggMjcuOTk5OSAyMC42ODYzIDI3Ljk5OTkgMjRWMzZDMjcuOTk5OSAzOS4zMTM3IDMwLjY4NjIgNDIgMzMuOTk5OSA0MkwxNy45OTk4IDQxLjk5OTlDMTIuNDc3IDQxLjk5OTkgNy45OTk4OCAzNy41MjI4IDcuOTk5ODggMzEuOTk5OVYyNFoiIGZpbGw9InVybCgjcGFpbnQzX3JhZGlhbF8zNTNfMTQ4NDUpIiBmaWxsLW9wYWNpdHk9IjAuNyIvPgo8cGF0aCBkPSJNMzIuOTk5OSAxOEMzNS43NjEzIDE4IDM3Ljk5OTkgMTUuNzYxNCAzNy45OTk5IDEzQzM3Ljk5OTkgMTAuMjM4NiAzNS43NjEzIDggMzIuOTk5OSA4QzMwLjIzODUgOCAyNy45OTk5IDEwLjIzODYgMjcuOTk5OSAxM0MyNy45OTk5IDE1Ljc2MTQgMzAuMjM4NSAxOCAzMi45OTk5IDE4WiIgZmlsbD0idXJsKCNwYWludDRfcmFkaWFsXzM1M18xNDg0NSkiLz4KPHBhdGggZD0iTTMyLjk5OTkgMThDMzUuNzYxMyAxOCAzNy45OTk5IDE1Ljc2MTQgMzcuOTk5OSAxM0MzNy45OTk5IDEwLjIzODYgMzUuNzYxMyA4IDMyLjk5OTkgOEMzMC4yMzg1IDggMjcuOTk5OSAxMC4yMzg2IDI3Ljk5OTkgMTNDMjcuOTk5OSAxNS43NjE0IDMwLjIzODUgMTggMzIuOTk5OSAxOFoiIGZpbGw9InVybCgjcGFpbnQ1X3JhZGlhbF8zNTNfMTQ4NDUpIiBmaWxsLW9wYWNpdHk9IjAuNDYiLz4KPHBhdGggZD0iTTMyLjk5OTkgMThDMzUuNzYxMyAxOCAzNy45OTk5IDE1Ljc2MTQgMzcuOTk5OSAxM0MzNy45OTk5IDEwLjIzODYgMzUuNzYxMyA4IDMyLjk5OTkgOEMzMC4yMzg1IDggMjcuOTk5OSAxMC4yMzg2IDI3Ljk5OTkgMTNDMjcuOTk5OSAxNS43NjE0IDMwLjIzODUgMTggMzIuOTk5OSAxOFoiIGZpbGw9InVybCgjcGFpbnQ2X3JhZGlhbF8zNTNfMTQ4NDUpIiBmaWxsLW9wYWNpdHk9IjAuNCIvPgo8cGF0aCBkPSJNMTcuOTk5OSAxNkMyMS4zMTM2IDE2IDIzLjk5OTkgMTMuMzEzNyAyMy45OTk5IDEwQzIzLjk5OTkgNi42ODYyOSAyMS4zMTM2IDQgMTcuOTk5OSA0QzE0LjY4NjIgNCAxMS45OTk5IDYuNjg2MjkgMTEuOTk5OSAxMEMxMS45OTk5IDEzLjMxMzcgMTQuNjg2MiAxNiAxNy45OTk5IDE2WiIgZmlsbD0idXJsKCNwYWludDdfcmFkaWFsXzM1M18xNDg0NSkiLz4KPHBhdGggZD0iTTE3Ljk5OTkgMTZDMjEuMzEzNiAxNiAyMy45OTk5IDEzLjMxMzcgMjMuOTk5OSAxMEMyMy45OTk5IDYuNjg2MjkgMjEuMzEzNiA0IDE3Ljk5OTkgNEMxNC42ODYyIDQgMTEuOTk5OSA2LjY4NjI5IDExLjk5OTkgMTBDMTEuOTk5OSAxMy4zMTM3IDE0LjY4NjIgMTYgMTcuOTk5OSAxNloiIGZpbGw9InVybCgjcGFpbnQ4X3JhZGlhbF8zNTNfMTQ4NDUpIiBmaWxsLW9wYWNpdHk9IjAuNiIvPgo8cGF0aCBkPSJNMTcuOTk5OSAxNkMyMS4zMTM2IDE2IDIzLjk5OTkgMTMuMzEzNyAyMy45OTk5IDEwQzIzLjk5OTkgNi42ODYyOSAyMS4zMTM2IDQgMTcuOTk5OSA0QzE0LjY4NjIgNCAxMS45OTk5IDYuNjg2MjkgMTEuOTk5OSAxMEMxMS45OTk5IDEzLjMxMzcgMTQuNjg2MiAxNiAxNy45OTk5IDE2WiIgZmlsbD0idXJsKCNwYWludDlfcmFkaWFsXzM1M18xNDg0NSkiIGZpbGwtb3BhY2l0eT0iMC41Ii8+CjxwYXRoIGQ9Ik0xNi43NSAyM0g3LjI1QzUuNDU1MDcgMjMgNCAyNC40NTUxIDQgMjYuMjVWMzUuNzVDNCAzNy41NDQ5IDUuNDU1MDcgMzkgNy4yNSAzOUgxNi43NUMxOC41NDQ5IDM5IDIwIDM3LjU0NDkgMjAgMzUuNzVWMjYuMjVDMjAgMjQuNDU1MSAxOC41NDQ5IDIzIDE2Ljc1IDIzWiIgZmlsbD0idXJsKCNwYWludDEwX3JhZGlhbF8zNTNfMTQ4NDUpIi8+CjxwYXRoIGQ9Ik0xNi43NSAyM0g3LjI1QzUuNDU1MDcgMjMgNCAyNC40NTUxIDQgMjYuMjVWMzUuNzVDNCAzNy41NDQ5IDUuNDU1MDcgMzkgNy4yNSAzOUgxNi43NUMxOC41NDQ5IDM5IDIwIDM3LjU0NDkgMjAgMzUuNzVWMjYuMjVDMjAgMjQuNDU1MSAxOC41NDQ5IDIzIDE2Ljc1IDIzWiIgZmlsbD0idXJsKCNwYWludDExX3JhZGlhbF8zNTNfMTQ4NDUpIiBmaWxsLW9wYWNpdHk9IjAuNyIvPgo8cGF0aCBkPSJNMTUuNDc5MiAyOC4xMDU0SDEzLjAzMjFWMzUuNTcxNEgxMC45NjczVjI4LjEwNTRIOC41MjAxNFYyNi40Mjg2SDE1LjQ3OTJWMjguMTA1NFoiIGZpbGw9IndoaXRlIi8+CjxkZWZzPgo8cmFkaWFsR3JhZGllbnQgaWQ9InBhaW50MF9yYWRpYWxfMzUzXzE0ODQ1IiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDM5Ljc5NjcgMjIuMTczOSkgc2NhbGUoMTMuNDc4NCAzMy4yNjk0KSI+CjxzdG9wIHN0b3AtY29sb3I9IiNBOThBRkYiLz4KPHN0b3Agb2Zmc2V0PSIwLjE0IiBzdG9wLWNvbG9yPSIjOEM3NUZGIi8+CjxzdG9wIG9mZnNldD0iMC41NjUiIHN0b3AtY29sb3I9IiM1RjUwRTIiLz4KPHN0b3Agb2Zmc2V0PSIwLjkiIHN0b3AtY29sb3I9IiMzQzJDQjgiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDFfcmFkaWFsXzM1M18xNDg0NSIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSg4LjgxMjM4IDE2LjQpIHJvdGF0ZSg2OC4xNTM5KSBzY2FsZSgzMi43NTIgMzMuMTIzMSkiPgo8c3RvcCBzdG9wLWNvbG9yPSIjODVDMkZGIi8+CjxzdG9wIG9mZnNldD0iMC42OSIgc3RvcC1jb2xvcj0iIzc1ODhGRiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM2NDU5RkUiLz4KPC9yYWRpYWxHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJwYWludDJfbGluZWFyXzM1M18xNDg0NSIgeDE9IjIwLjU5MzYiIHkxPSIxOCIgeDI9IjIwLjU5MzYiIHkyPSI0MiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBvZmZzZXQ9IjAuODAxMTU5IiBzdG9wLWNvbG9yPSIjNjg2NEY2IiBzdG9wLW9wYWNpdHk9IjAiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNTE0OURFIi8+CjwvbGluZWFyR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQzX3JhZGlhbF8zNTNfMTQ4NDUiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjcuNDk5OSAxNy4yKSByb3RhdGUoMTEzLjMyNikgc2NhbGUoMTkuMjE4NiAxNS40MjczKSI+CjxzdG9wIHN0b3AtY29sb3I9IiNCRDk2RkYiLz4KPHN0b3Agb2Zmc2V0PSIwLjY4NjY4NSIgc3RvcC1jb2xvcj0iI0JEOTZGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQ0X3JhZGlhbF8zNTNfMTQ4NDUiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzIuOTk5OSAxMS41NzE0KSByb3RhdGUoLTkwKSBzY2FsZSgxMCAxMi42MjE2KSI+CjxzdG9wIG9mZnNldD0iMC4yNjgyMDEiIHN0b3AtY29sb3I9IiM2ODY4RjciLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzkyM0IxIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQ1X3JhZGlhbF8zNTNfMTQ4NDUiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjguODY3NSAxMC41NDQpIHJvdGF0ZSg0MC4wNTE2KSBzY2FsZSg3LjE0NjI5IDEwLjMzNjMpIj4KPHN0b3Agb2Zmc2V0PSIwLjI3MDcxMSIgc3RvcC1jb2xvcj0iI0ExRDNGRiIvPgo8c3RvcCBvZmZzZXQ9IjAuODEzMzkzIiBzdG9wLWNvbG9yPSIjQTFEM0ZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDZfcmFkaWFsXzM1M18xNDg0NSIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSgzNi45ODIxIDEwLjM2ODYpIHJvdGF0ZSgtNDEuNjU4MSkgc2NhbGUoOC41MTI3NSAyMC44ODI0KSI+CjxzdG9wIHN0b3AtY29sb3I9IiNFM0FDRkQiLz4KPHN0b3Agb2Zmc2V0PSIwLjgxNjA0MSIgc3RvcC1jb2xvcj0iIzlGQTJGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQ3X3JhZGlhbF8zNTNfMTQ4NDUiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTcuOTk5OSA4LjI4NTcxKSByb3RhdGUoLTkwKSBzY2FsZSgxMiAxNS4xNDYpIj4KPHN0b3Agb2Zmc2V0PSIwLjI2ODIwMSIgc3RvcC1jb2xvcj0iIzgyODJGRiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMzOTIzQjEiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDhfcmFkaWFsXzM1M18xNDg0NSIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSgxMy4wNDExIDcuMDUyODQpIHJvdGF0ZSg0MC4wNTE2KSBzY2FsZSg4LjU3NTU0IDEyLjQwMzUpIj4KPHN0b3Agb2Zmc2V0PSIwLjI3MDcxMSIgc3RvcC1jb2xvcj0iI0ExRDNGRiIvPgo8c3RvcCBvZmZzZXQ9IjAuODEzMzkzIiBzdG9wLWNvbG9yPSIjQTFEM0ZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDlfcmFkaWFsXzM1M18xNDg0NSIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSgyMi43Nzg2IDYuODQyMykgcm90YXRlKC00MS42NTgxKSBzY2FsZSgxMC4yMTUzIDI1LjA1ODkpIj4KPHN0b3Agc3RvcC1jb2xvcj0iI0UzQUNGRCIvPgo8c3RvcCBvZmZzZXQ9IjAuODE2MDQxIiBzdG9wLWNvbG9yPSIjOUZBMkZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDEwX3JhZGlhbF8zNTNfMTQ4NDUiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoNCAyMykgcm90YXRlKDQ1KSBzY2FsZSgyMi42Mjc0KSI+CjxzdG9wIG9mZnNldD0iMC4wNDY4NzUiIHN0b3AtY29sb3I9IiM2ODhFRkYiLz4KPHN0b3Agb2Zmc2V0PSIwLjk0Njg3NSIgc3RvcC1jb2xvcj0iIzIzMEY5NCIvPgo8L3JhZGlhbEdyYWRpZW50Pgo8cmFkaWFsR3JhZGllbnQgaWQ9InBhaW50MTFfcmFkaWFsXzM1M18xNDg0NSIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSgxMiAzMi42KSByb3RhdGUoOTApIHNjYWxlKDExLjIgMTMuMDcwMikiPgo8c3RvcCBvZmZzZXQ9IjAuNTcwNjQ3IiBzdG9wLWNvbG9yPSIjNjk2NUY2IiBzdG9wLW9wYWNpdHk9IjAiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjOEY4RkZGIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjwvZGVmcz4KPC9zdmc+Cg=="/>
+<text x="1333" y="579" font-size="22" fill="#000000" font-weight="600">
+<tspan x="1333" dy="0">Teams 승인</tspan>
 </text>
 <text x="1273" y="633" font-size="17" fill="#000000">
 <tspan x="1273" dy="0">Fabric Operations Agent 채팅</tspan>
@@ -198,11 +196,5 @@
 </text>
 <text x="40" y="1318" font-size="18" fill="#000000">
 <tspan x="40" dy="0">관련 쓰기: 03_supply_change → gold ETA · ops.material_impact  /  nb_apply_review → Eventhouse 상태 이력</tspan>
-</text>
-<text x="40" y="1362" font-size="22" fill="#000000" font-weight="600">
-<tspan x="40" dy="0">LESSON 08  Data Highway 2.0 적용 논의 · 감시 중지</tspan>
-</text>
-<text x="40" y="1397" font-size="15" fill="#000000">
-<tspan x="40" dy="0">공식 Fabric 아이콘 사용. Ontology는 전용 아이콘 대신 Fabric 플랫폼 아이콘을 표기. Teams는 텍스트 표기.</tspan>
 </text>
 </g></svg>

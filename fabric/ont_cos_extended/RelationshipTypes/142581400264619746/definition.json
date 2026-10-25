@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "142581400264619746",
+  "name": "receives_lot",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "1060601844732288951"
+  },
+  "target": {
+    "entityTypeId": "1061453953783422658"
+  },
+  "semanticEnrichment": {
+    "description": "\uc785\uace0 \ub85c\ud2b8",
+    "customAttributes": {}
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "1060601844732288951",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "GoodsReceipt",
+  "entityIdParts": [
+    "1085548855226606005"
+  ],
+  "displayNamePropertyId": "1085548855226606005",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "1085548855226606005",
+      "name": "receipt_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc785\uace0 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "401417062197130811",
+      "name": "po_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ubc1c\uc8fc ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "904941658566977077",
+      "name": "lot_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub85c\ud2b8 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "187857422081634529",
+      "name": "received_date",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "DateTime",
+      "semanticEnrichment": {
+        "description": "\uc785\uace0\uc77c",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "178753976047359754",
+      "name": "qty_kg",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "Double",
+      "semanticEnrichment": {
+        "description": "\uc785\uace0\ub7c9 kg",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc785\uace0"
+    ],
+    "description": "\uad6c\ub9e4 \ubc1c\uc8fc\uc758 \ubd80\ubd84 \uc785\uace0 \uc774\ub825",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

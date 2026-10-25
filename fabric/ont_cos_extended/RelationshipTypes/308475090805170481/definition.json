@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "308475090805170481",
+  "name": "lot_of_material",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "1061453953783422658"
+  },
+  "target": {
+    "entityTypeId": "256248040932892384"
+  },
+  "semanticEnrichment": {
+    "description": "\ub85c\ud2b8\uc758 \uc6d0\ub8cc",
+    "customAttributes": {}
+  }
+}

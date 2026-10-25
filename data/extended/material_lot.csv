@@ -1,0 +1,4 @@
+lot_id,material_code,supplier_id,spec_id,expiry_date,disposition
+LOT-120-A,RM-HA-120,SUP-02,SPEC-120,2027-10-01,사용가능
+LOT-120-B,RM-HA-120,SUP-02,SPEC-120,2027-10-01,격리
+LOT-210-A,RM-HA-210,SUP-01,SPEC-210,2027-09-01,사용가능

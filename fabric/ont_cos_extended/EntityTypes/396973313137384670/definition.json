@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "396973313137384670",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "Market",
+  "entityIdParts": [
+    "559160754367078968"
+  ],
+  "displayNamePropertyId": "284770118220117221",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "559160754367078968",
+      "name": "market_code",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc2dc\uc7a5 \ucf54\ub4dc",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "284770118220117221",
+      "name": "market_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc2dc\uc7a5\uba85",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc2dc\uc7a5"
+    ],
+    "description": "\uc81c\ud488 \ud310\ub9e4\u00b7\uc6d0\ub8cc \ub4f1\ub85d\uc744 \uad6c\ubd84\ud558\ub294 \uc2dc\uc7a5",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

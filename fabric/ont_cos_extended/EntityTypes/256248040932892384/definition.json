@@ -1,0 +1,103 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "256248040932892384",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "RawMaterial",
+  "entityIdParts": [
+    "637745144080456486"
+  ],
+  "displayNamePropertyId": "327898548769101761",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "637745144080456486",
+      "name": "material_code",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc6d0\ub8cc \ucf54\ub4dc",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "327898548769101761",
+      "name": "material_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc6d0\ub8cc\uba85",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "998757513637670034",
+      "name": "ingredient_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc131\ubd84 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "931722656854464576",
+      "name": "supplier_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uacf5\uae09\uc0ac ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "859116462881748503",
+      "name": "lead_time_days",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "BigInt",
+      "semanticEnrichment": {
+        "description": "\ubc1c\uc8fc\ubd80\ud130 \uc785\uace0\uae4c\uc9c0 \ub9ac\ub4dc\ud0c0\uc784(\uc77c)",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1106905677102155787",
+      "name": "unit_price_krw",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "BigInt",
+      "semanticEnrichment": {
+        "description": "kg\ub2f9 \ub2e8\uac00(\uc6d0)",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "257532321276083695",
+      "name": "cn_registration",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc911\uad6d \uc2dc\uc7a5 \uc6d0\ub8cc \ub4f1\ub85d \uc0c1\ud0dc(\uc0ac\ub0b4 \uac00\uc0c1 \uae30\uc900). \uc644\ub8cc\uc77c \ub54c\ub9cc CN \ud310\ub9e4 \uc81c\ud488\uc5d0 \uc0ac\uc6a9",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc6d0\ub8cc",
+      "\uc6d0\uc7ac\ub8cc",
+      "RM"
+    ],
+    "description": "\uad6c\ub9e4 \ub2e8\uc704\uc758 \uc6d0\ub8cc. \uac19\uc740 \uc131\ubd84\uc774\ub77c\ub3c4 \uacf5\uae09\uc0ac\u00b7\uaddc\uaca9\uc774 \ub2e4\ub974\uba74 \ub2e4\ub978 \uc6d0\ub8cc\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/contextualization/1.0.0/schema.json",
+  "id": "2a03e2b6-5608-57bc-9a87-b8067730fec4",
+  "dataBindingTable": {
+    "workspaceId": "{{WORKSPACE_ID}}",
+    "itemId": "{{LAKEHOUSE_ID}}",
+    "sourceTableName": "dev_project",
+    "sourceSchema": "gold",
+    "sourceType": "LakehouseTable"
+  },
+  "sourceKeyRefBindings": [
+    {
+      "sourceColumnName": "project_id",
+      "targetPropertyId": "369812786617145862"
+    }
+  ],
+  "targetKeyRefBindings": [
+    {
+      "sourceColumnName": "version_id",
+      "targetPropertyId": "1030678882379538756"
+    }
+  ]
+}

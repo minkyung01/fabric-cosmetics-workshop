@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "643c5206-e28b-50ee-b312-0c8fc47d6166",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "inspection_id",
+        "targetPropertyId": "245067162092576854"
+      },
+      {
+        "sourceColumnName": "lot_id",
+        "targetPropertyId": "1009555205413399438"
+      },
+      {
+        "sourceColumnName": "spec_id",
+        "targetPropertyId": "879306149062598909"
+      },
+      {
+        "sourceColumnName": "result",
+        "targetPropertyId": "54218608181731177"
+      },
+      {
+        "sourceColumnName": "inspected_date",
+        "targetPropertyId": "730176812835578075"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "quality_inspection",
+      "sourceSchema": "gold"
+    }
+  }
+}

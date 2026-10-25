@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "9ce41fac-4ff2-5867-bb72-aeba1065c4b1",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "qualification_id",
+        "targetPropertyId": "620022808197826449"
+      },
+      {
+        "sourceColumnName": "supplier_id",
+        "targetPropertyId": "405461203037075796"
+      },
+      {
+        "sourceColumnName": "market_code",
+        "targetPropertyId": "589441288867705001"
+      },
+      {
+        "sourceColumnName": "status",
+        "targetPropertyId": "941856462582711190"
+      },
+      {
+        "sourceColumnName": "valid_until",
+        "targetPropertyId": "192161400341688049"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "supplier_qualification",
+      "sourceSchema": "gold"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "521146630687533826",
+  "name": "material_registered_in",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "879166355268257716"
+  },
+  "target": {
+    "entityTypeId": "396973313137384670"
+  },
+  "semanticEnrichment": {
+    "description": "\uc6d0\ub8cc \ub4f1\ub85d \uc2dc\uc7a5",
+    "customAttributes": {}
+  }
+}

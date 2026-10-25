@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "892580808605082045",
+  "name": "qualifies_supplier",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "1014746082862363858"
+  },
+  "target": {
+    "entityTypeId": "580397203256458969"
+  },
+  "semanticEnrichment": {
+    "description": "\ud3c9\uac00 \ub300\uc0c1 \uacf5\uae09\uc0ac",
+    "customAttributes": {}
+  }
+}

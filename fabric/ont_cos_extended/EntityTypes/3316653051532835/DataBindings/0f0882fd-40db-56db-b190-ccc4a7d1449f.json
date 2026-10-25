@@ -1,0 +1,28 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "0f0882fd-40db-56db-b190-ccc4a7d1449f",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "team_id",
+        "targetPropertyId": "824657241432707223"
+      },
+      {
+        "sourceColumnName": "organization_id",
+        "targetPropertyId": "368466829502459053"
+      },
+      {
+        "sourceColumnName": "team_name",
+        "targetPropertyId": "71243003388757621"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "team",
+      "sourceSchema": "gold"
+    }
+  }
+}

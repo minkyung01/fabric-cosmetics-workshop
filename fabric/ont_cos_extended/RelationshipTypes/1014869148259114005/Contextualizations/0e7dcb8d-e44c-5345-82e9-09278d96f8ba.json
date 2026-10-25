@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/contextualization/1.0.0/schema.json",
+  "id": "0e7dcb8d-e44c-5345-82e9-09278d96f8ba",
+  "dataBindingTable": {
+    "workspaceId": "{{WORKSPACE_ID}}",
+    "itemId": "{{LAKEHOUSE_ID}}",
+    "sourceTableName": "production_line",
+    "sourceSchema": "gold",
+    "sourceType": "LakehouseTable"
+  },
+  "sourceKeyRefBindings": [
+    {
+      "sourceColumnName": "line_id",
+      "targetPropertyId": "91937528983585353"
+    }
+  ],
+  "targetKeyRefBindings": [
+    {
+      "sourceColumnName": "site_id",
+      "targetPropertyId": "311188819914060428"
+    }
+  ]
+}

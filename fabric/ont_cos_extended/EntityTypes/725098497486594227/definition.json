@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "725098497486594227",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "QualityInspection",
+  "entityIdParts": [
+    "245067162092576854"
+  ],
+  "displayNamePropertyId": "245067162092576854",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "245067162092576854",
+      "name": "inspection_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uac80\uc0ac ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1009555205413399438",
+      "name": "lot_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub85c\ud2b8 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "879306149062598909",
+      "name": "spec_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uaddc\uaca9 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "54218608181731177",
+      "name": "result",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc801\ud569\u00b7\ubd80\uc801\ud569",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "730176812835578075",
+      "name": "inspected_date",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "DateTime",
+      "semanticEnrichment": {
+        "description": "\uac80\uc0ac\uc77c",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\ud488\uc9c8\uac80\uc0ac"
+    ],
+    "description": "\uaddc\uaca9\uc744 \uae30\uc900\uc73c\ub85c \uc218\ud589\ud55c \ub85c\ud2b8 \uac80\uc0ac",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "28176da8-5d05-51dd-9904-55d857dac896",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "lot_id",
+        "targetPropertyId": "235680059444829283"
+      },
+      {
+        "sourceColumnName": "material_code",
+        "targetPropertyId": "234249737695698689"
+      },
+      {
+        "sourceColumnName": "supplier_id",
+        "targetPropertyId": "493815637199317221"
+      },
+      {
+        "sourceColumnName": "spec_id",
+        "targetPropertyId": "395958174398469826"
+      },
+      {
+        "sourceColumnName": "expiry_date",
+        "targetPropertyId": "679508268045202409"
+      },
+      {
+        "sourceColumnName": "disposition",
+        "targetPropertyId": "116519270812802251"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "material_lot",
+      "sourceSchema": "gold"
+    }
+  }
+}

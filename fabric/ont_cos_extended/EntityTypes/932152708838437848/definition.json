@@ -1,0 +1,103 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "932152708838437848",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "FormulaVersion",
+  "entityIdParts": [
+    "1030678882379538756"
+  ],
+  "displayNamePropertyId": "1030678882379538756",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "1030678882379538756",
+      "name": "version_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ucc98\ubc29 \ubc84\uc804 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "349720352768452713",
+      "name": "formula_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ucc98\ubc29 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "57801564730216231",
+      "name": "formula_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ucc98\ubc29\uba85",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "549460278358336093",
+      "name": "version_no",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "BigInt",
+      "semanticEnrichment": {
+        "description": "\ubc84\uc804 \ubc88\ud638",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "65259531180514514",
+      "name": "status",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud604\ud589\u00b7\uac1c\ubc1c\uc911\u00b7\ud3d0\uae30",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1061153407131640141",
+      "name": "is_active",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "Boolean",
+      "semanticEnrichment": {
+        "description": "\uc601\ud5a5 \ubd84\uc11d \ub300\uc0c1 \uc5ec\ubd80. \ud604\ud589\u00b7\uac1c\ubc1c\uc911\uc774\uba74 true, \ud3d0\uae30\uba74 false",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "772874826517557493",
+      "name": "approved_date",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "DateTime",
+      "semanticEnrichment": {
+        "description": "\ucc98\ubc29 \uc2b9\uc778\uc77c(\uac1c\ubc1c\uc911\uc774\uba74 \ube44\uc5b4 \uc788\uc74c)",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\ucc98\ubc29",
+      "\ucc98\ubc29 \ubc84\uc804",
+      "\ud3ec\ubbac\ub7ec"
+    ],
+    "description": "\ucc98\ubc29\uc758 \ud2b9\uc815 \ubc84\uc804. \uc81c\ud488\uacfc \uac1c\ubc1c \uacfc\uc81c\ub294 \ucc98\ubc29 \ubc84\uc804\uc744 \uac00\ub9ac\ud0a8\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

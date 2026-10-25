@@ -1,6 +1,6 @@
 # 07. Purview 거버넌스 — 민감도 레이블 적용과 정책 확인
 
-[목차](../README.md) \| 이전: [06. SQL Serving DB](06-serving-db.md) \| 다음: [08. Data Highway 2.0 논의](08-discussion.md)
+[목차](../README.md) \| 이전: [06. SQL Serving DB](06-serving-db.md)
 
 에이전트가 연구 데이터를 읽고 업무 DB까지 연결하면 **무엇을 분류하고 어디까지 제공할지** 결정해야 합니다. 참가자가 직접 레이블을 적용하는 기본 실습과, 준비된 정책·카탈로그를 활용하는 확장 실습을 구분합니다. 참가자가 Purview 관리자가 되거나 테넌트 정책을 새로 만들 필요는 없습니다.
 
@@ -79,6 +79,10 @@ DLP 상세 화면을 볼 수 없는 참가자는 관리자와 함께 확인합�
 - [Fabric의 민감도 레이블](https://learn.microsoft.com/en-us/fabric/fundamentals/apply-sensitivity-labels)
 - [DLP 정책 팁 확인·응답](https://learn.microsoft.com/en-us/fabric/governance/data-loss-prevention-respond)
 
-## 다음 단계
+## 실습 마무리
 
-[08. Data Highway 2.0 논의](08-discussion.md)에서 오늘 만든 흐름을 실제 업무에 어떻게 적용할지 이야기합니다.
+1. `oa_cos`에서 **Stop**을 누릅니다. 켜 두면 5분마다 규칙 질의가 실행되어 용량을 사용합니다. 이 장을 생략하는 경우에도 종료 시 감시를 중지합니다.
+2. 열려 있는 Notebook의 Spark 세션을 중지합니다.
+3. 정책·작업 영역·SQL 이력 정리는 [관리자 가이드](../admin/README.md)에 따라 관리자가 수행합니다. 기존 운영 정책·레이블은 변경하지 않습니다.
+
+[목차](../README.md)로 돌아갑니다.

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "6f8c2496-c34c-5832-bae6-ebfb31035840",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "change_id",
+        "targetPropertyId": "1112747034220231164"
+      },
+      {
+        "sourceColumnName": "material_code",
+        "targetPropertyId": "786772141393736497"
+      },
+      {
+        "sourceColumnName": "project_id",
+        "targetPropertyId": "287184556424371726"
+      },
+      {
+        "sourceColumnName": "team_id",
+        "targetPropertyId": "134505386591274474"
+      },
+      {
+        "sourceColumnName": "status",
+        "targetPropertyId": "265923666268410668"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "change_request",
+      "sourceSchema": "gold"
+    }
+  }
+}

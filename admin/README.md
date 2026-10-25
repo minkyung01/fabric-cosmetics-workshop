@@ -4,16 +4,18 @@
 
 Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참가자는 보지 않아도 됩니다. 예시는 `p001` 기준이며 참가자마다 `pNNN`을 바꿔 반복합니다. 데이터 구조와 정답은 [데이터 설계](data-design.md)를 봅니다.
 
+**사전 필독:** [미리 보기 제약·호환성](preview-limitations.md). Ontology 새/기존 경험과 API 정의 호환성, **2027-01-31 기존 경험 종료**, Graph 선택 투영·적격성, Data Agent 문맥 갱신·권한, Operations Agent 감시·실행 권한을 확인합니다. 엔터티가 많은 시나리오는 [26개 엔터티 선택 확장](extended-model.md)을 별도로 준비합니다.
+
 ## 준비할 리소스
 
 | 리소스 | 값 |
 |---|---|
 | Microsoft Fabric 용량 | **유료 F 용량**. Operations agent는 Trial 용량을 지원하지 않습니다. 12명 동시 실습 기준 F64 이상 권장 |
 | 참가자 작업 영역 | `cos-pNNN` (참가자는 **Contributor** 이상) |
-| Lakehouse | `lh_cos` (**schemas 켬**), `Files/workshop/data`에 CSV 11개 |
+| Lakehouse | `lh_cos` (**schemas 켬**), `Files/workshop/data`에 핵심 CSV 11개. 선택 확장은 17개 추가, 총 28개 |
 | Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review`, `04_publish_serving` |
 | Eventhouse | `eh_cos` (KQL Database 이름 동일) |
-| Ontology | `ont_cos` — 기본 모델(엔터티 9, 관계 8) 또는 참고 모델(관계 10) |
+| Ontology | `ont_cos` — 기본 모델(엔터티 9, 관계 8) 또는 참고 모델(관계 10). 확장은 별도 `ont_cos_extended`(엔터티 26, 관계 40) |
 | Microsoft Teams | 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
 | SQL database | `sqldb_cos` — 작업 영역 Admin/Member가 수동 생성. 참가자별 DB 권장 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. DLP·카탈로그 확장은 아래 별도 조건 확인 |
@@ -65,6 +67,7 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 | 옵션 | 용도 |
 |---|---|
 | `--reference-ontology` | 완성 모델(`fabric/ont_cos_reference`)을 `ont_cos`로 배포합니다. Ontology agent를 쓸 수 없는 환경이나 01장을 끝내지 못한 참가자용입니다. 기존 `ont_cos`를 먼저 지워야 합니다. |
+| `--extended-ontology` | 확장 CSV 17개를 추가 업로드하고 별도 `ont_cos_extended` 완성 모델을 배포합니다. 기존 작업 영역은 `--update-notebooks`도 필요하며 승인 실습 전에 준비합니다([확장 가이드](extended-model.md)). |
 | `--skip-prepare` | `01_prepare_data` 실행을 건너뜁니다. 참가자가 직접 실행하게 할 때 씁니다. |
 | `--update-notebooks` | 이미 있는 Notebook을 저장소 최신 버전으로 덮어씁니다. |
 | `--prefix` | 작업 영역 이름 접두사(기본 `cos-`) |
@@ -125,16 +128,17 @@ Notebook·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Less
 
 | 장 | 확인할 값 |
 |---|---|
-| 준비 | `gold` 테이블 11개, `ops` 스키마 비어 있음 |
+| 준비 | 핵심 `gold` 테이블 11개(선택 확장 28개), `ops` 스키마 비어 있음. API 생성 모델의 경험·바인딩 확인 |
 | 01 | 관계 10개, `FormulaVersion.is_active`, `RawMaterial.cn_registration` 추가 |
 | 02 | Graph Q1 4행 → `is_active` 필터 3행, 생산 계획 `PP-1101`·`PP-1102`·`PP-1103`, `ST-0711` |
 | 02 | `02_answers` Q5 지연 전 여유 8·15·64·3일 |
-| 03 | `da_cos` 질문 1–3이 정답과 일치 |
+| 03 | Graph 없이도 `da_cos`가 Ontology 문맥으로 Lakehouse SQL 실행, 질문 1–3이 정답과 일치 |
 | 04 | `03_supply_change`: `ops.material_impact` 4행 중 영향 3행(-27·-20·-32일), 이벤트 `SUP-20261102-RM-HA-120-r1` open 1행, Teams 메시지 5–10분 |
 | 05 | `nb_apply_review` Succeeded, `ops.review_request` 3행, `ops.action_log` 1행, `open → review_requested` |
 | 06 | `sqldb_cos` 요청 3행, 팀별 조회 2/1행, 검토 착수 후 이력 1행. 중복 착수는 오류, 재게시 0행 추가·검토중 상태 유지 |
 | 07 기본 | 참가자 계정으로 `lh_cos` 레이블 적용·재열기 |
 | 07 확장 | 구성한 범위에 한해 DLP 정책 팁 또는 카탈로그 검색을 확인 |
+| 모델 확장 | 선택한 경우에만 `ont_cos_extended` 26개/40개, QX1–QX4 결과 2/1/3/3행. 기본 영향 3건 유지 |
 
 ## 4. 다시 시연하기
 

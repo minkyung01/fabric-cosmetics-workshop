@@ -46,7 +46,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
 | 항목 | 이름 | 비고 |
 |---|---|---|
-| Lakehouse | `lh_cos` | `gold` 스키마 아래 테이블 11개 |
+| Lakehouse | `lh_cos` | `gold` 스키마 아래 핵심 테이블 11개(선택 확장 준비 시 28개) |
 | Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review` | 기본 Lakehouse가 `lh_cos` |
 | Notebook | `04_publish_serving` | 승인 후 게시 SQL 생성, 기본 Lakehouse `lh_cos` |
 | Eventhouse | `eh_cos` | KQL 데이터베이스 `eh_cos` 포함 |

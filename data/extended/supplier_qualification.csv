@@ -1,0 +1,4 @@
+qualification_id,supplier_id,market_code,status,valid_until
+SQ-01,SUP-01,CN,승인,2027-12-31
+SQ-02,SUP-02,CN,승인,2027-06-30
+SQ-03,SUP-04,CN,검토중,2026-12-31

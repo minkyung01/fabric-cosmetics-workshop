@@ -1,0 +1,4 @@
+team_id,organization_id,team_name
+TEAM-FORM,ORG-RD,처방개발
+TEAM-REG,ORG-RD,등록검토
+TEAM-PLAN,ORG-OPS,구매·생산계획

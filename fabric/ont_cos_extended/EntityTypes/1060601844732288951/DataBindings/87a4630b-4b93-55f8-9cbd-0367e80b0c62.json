@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "87a4630b-4b93-55f8-9cbd-0367e80b0c62",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "receipt_id",
+        "targetPropertyId": "1085548855226606005"
+      },
+      {
+        "sourceColumnName": "po_id",
+        "targetPropertyId": "401417062197130811"
+      },
+      {
+        "sourceColumnName": "lot_id",
+        "targetPropertyId": "904941658566977077"
+      },
+      {
+        "sourceColumnName": "received_date",
+        "targetPropertyId": "187857422081634529"
+      },
+      {
+        "sourceColumnName": "qty_kg",
+        "targetPropertyId": "178753976047359754"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "goods_receipt",
+      "sourceSchema": "gold"
+    }
+  }
+}

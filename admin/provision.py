@@ -5,6 +5,7 @@ For each participant pNNN this creates (or reuses) workspace cos-pNNN on the giv
   - the 5 notebooks bound to lh_cos (01_prepare_data is run once to build the gold tables)
   - an Eventhouse eh_cos (KQL database eh_cos) for the Operations agent
   - the base ontology ont_cos (participants complete it in chapter 01), or the completed one with --reference-ontology
+  - optional 17 additional CSVs and a separate ont_cos_extended with --extended-ontology
 Existing items are reused; notebooks are only overwritten with --update-notebooks.
 
 Uses the Azure CLI login (az login [--tenant ...]); no secrets are stored.
@@ -15,6 +16,7 @@ Examples
     python admin/provision.py --capacity <capacity-id> --participants p001-p003 --dry-run
 
 SQL database sqldb_cos is created manually by a workspace Admin/Member (see admin/README.md).
+Before deployment, check Ontology old/new experience compatibility in admin/preview-limitations.md.
 users.csv (optional): participant,upn   e.g.  p001,p001@example.com
 """
 import argparse
@@ -146,6 +148,15 @@ def definition_parts(folder, replacements):
     return parts
 
 
+def data_files(extended):
+    files = sorted((ROOT / "data").glob("*.csv"))
+    if extended:
+        files += sorted((ROOT / "data" / "extended").glob("*.csv"))
+    if len(files) != (28 if extended else 11):
+        raise ValueError("Expected 11 core CSVs and, when selected, 17 extension CSVs")
+    return files
+
+
 def upload(fab, base, rel_path, data):
     storage = "https://storage.azure.com"
     url = f"{base}/{urllib.parse.quote(rel_path)}"
@@ -172,6 +183,8 @@ def provision(fab, pid, args, users):
     if fab.dry_run and ws.startswith("0000"):
         ontology = "reference" if args.reference_ontology else "base"
         print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks, run 01_prepare_data, {EVENTHOUSE}, {ontology} ontology {ONTOLOGY}")
+        if args.extended_ontology:
+            print("  [dry-run] 28 CSVs total, deploy ont_cos_extended as a separate ontology")
         return
 
     if pid in users:
@@ -184,6 +197,8 @@ def provision(fab, pid, args, users):
                        {"principal": {"id": oid, "type": "User"}, "role": args.role})
 
     items = {(i["type"], i["displayName"]): i["id"] for i in fab.get_all(f"/workspaces/{ws}/items")}
+    if args.extended_ontology and ("Notebook", "01_prepare_data") in items and not args.update_notebooks:
+        raise ValueError("--extended-ontology on an existing workspace requires --update-notebooks before preparing 28 tables")
     lh = items.get(("Lakehouse", LAKEHOUSE))
     if not lh:
         _, created = fab.change(f"create lakehouse {LAKEHOUSE} (schemas)", "POST", f"/workspaces/{ws}/lakehouses",
@@ -194,7 +209,7 @@ def provision(fab, pid, args, users):
     if not fab.dry_run:
         for folder in (f"{ONELAKE}/{ws}/{lh}/Files/workshop", base):
             fab.call("PUT", folder + "?resource=directory", raw=b"", resource="https://storage.azure.com")
-        files = sorted((ROOT / "data").glob("*.csv"))
+        files = data_files(args.extended_ontology)
         for path in files:
             upload(fab, base, path.name, path.read_bytes())
         print(f"  upload Files/workshop/data ({len(files)} csv)")
@@ -226,13 +241,16 @@ def provision(fab, pid, args, users):
     if ("Eventhouse", EVENTHOUSE) not in items:
         fab.change(f"create eventhouse {EVENTHOUSE}", "POST", f"/workspaces/{ws}/eventhouses", {"displayName": EVENTHOUSE})
 
-    if ("Ontology", ONTOLOGY) in items:
-        print(f"  {ONTOLOGY} exists; ontology not deployed (delete it first to redeploy)")
-    else:
-        folder = "ont_cos_reference" if args.reference_ontology else "ont_cos_base"
+    models = [(ONTOLOGY, "ont_cos_reference" if args.reference_ontology else "ont_cos_base")]
+    if args.extended_ontology:
+        models.append(("ont_cos_extended", "ont_cos_extended"))
+    for display_name, folder in models:
+        if ("Ontology", display_name) in items:
+            print(f"  {display_name} exists; ontology not deployed (delete it first to redeploy)")
+            continue
         parts = definition_parts(ROOT / "fabric" / folder, {"{{WORKSPACE_ID}}": ws, "{{LAKEHOUSE_ID}}": lh})
-        fab.change(f"deploy {folder} as {ONTOLOGY}", "POST", f"/workspaces/{ws}/items",
-                   {"displayName": ONTOLOGY, "type": "Ontology", "definition": {"parts": parts}})
+        fab.change(f"deploy {folder} as {display_name}", "POST", f"/workspaces/{ws}/items",
+                   {"displayName": display_name, "type": "Ontology", "definition": {"parts": parts}})
 
 
 def main():
@@ -247,6 +265,8 @@ def main():
     parser.add_argument("--skip-prepare", action="store_true", help="do not run 01_prepare_data")
     parser.add_argument("--reference-ontology", action="store_true",
                         help="deploy the completed ontology instead of the base one (fallback for chapter 01)")
+    parser.add_argument("--extended-ontology", action="store_true",
+                        help="also upload 17 extension CSVs and deploy a separate 26-entity ont_cos_extended")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     users = {}

@@ -11,23 +11,23 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-WIDTH, HEIGHT = 1640, 1420
+WIDTH, HEIGHT = 1640, 1350
 CARDS = [
     ("source", "00", "Lakehouse", "lakehouse_48_item.svg", 70, 190,
-     ["lh_cos · gold 11개 테이블", "업무 데이터 · 키 · 원본"], "#0078D4", "#CFE4FA"),
+     ["lh_cos · gold 11 / 확장 28", "업무 데이터 · 키 · 원본"], "#0078D4", "#CFE4FA"),
     ("ontology", "01", "Ontology", "fabric_48_color.svg", 465, 190,
-     ["ont_cos · 엔터티 9 / 관계 10", "키 · 속성 · 원본 바인딩"], "#5C2D91", "#E8DAEF"),
-    ("graph", "02", "Graph model", "graph_model_instance_48_item.svg", 860, 190,
+     ["핵심 9개 / 확장 26개 엔터티", "키 · 속성 · Lakehouse 바인딩"], "#5C2D91", "#E8DAEF"),
+    ("graph", "02", "Graph (선택)", "graph_model_instance_48_item.svg", 860, 190,
      ["ont_cos_graph_… · GQL", "다단계 경로 · 유효 버전 필터"], "#5C2D91", "#E8DAEF"),
     ("dataagent", "03", "Data Agent", "data_agent_48_item.svg", 1255, 190,
-     ["da_cos · Ontology + Graph", "자연어 → 생성 질의 → 검증"], "#5C2D91", "#E8DAEF"),
+     ["da_cos · Ontology → SQL", "선택: Graph → GQL 비교"], "#5C2D91", "#E8DAEF"),
     ("signal", "04", "Notebook", "notebook_48_item.svg", 70, 510,
      ["03_supply_change", "지연 반영 · 영향 3건 계산"], "#F7630C", "#FFF4CE"),
     ("eventhouse", "04", "Eventhouse", "event_house_48_item.svg", 465, 510,
      ["eh_cos · MaterialSupplyEvent", "open → review_requested"], "#F7630C", "#FFF4CE"),
     ("operations", "04", "Operations Agent", "operations_agent_48_item.svg", 860, 510,
      ["oa_cos · Playbook", "5분 주기 감시 · 대응 제안"], "#F7630C", "#FFF4CE"),
-    ("teams", "05", "Teams 승인", None, 1255, 510,
+    ("teams", "05", "Teams 승인", "teams_48x1.svg", 1255, 510,
      ["Fabric Operations Agent 채팅", "근거 확인 → Proceed / Confirm"], "#F7630C", "#FFF4CE"),
     ("approved", "05", "Notebook", "notebook_48_item.svg", 70, 870,
      ["nb_apply_review", "승인된 검토 요청 · 조치 기록"], "#107C10", "#DFF6DD"),
@@ -39,8 +39,8 @@ CARDS = [
      ["sqldb_cos · serving", "팀별 조회 · 검토 착수 · 이력"], "#107C10", "#DFF6DD"),
 ]
 LANES = [
-    ("model", 130, 300, "업무 모델과 질의  |  Lesson 00 → 01 → 02 → 03",
-     "Ontology는 업무 대상·관계·원본 매핑을 제공하고, Graph는 Materialize한 인스턴스 경로를 탐색합니다."),
+    ("model", 130, 300, "업무 모델과 질의  |  Lesson 00 → 01 → 03  /  02 Graph는 선택",
+     "Ontology 문맥으로 Lakehouse SQL 질의. 점선은 선택 Graph 경로이며 필요한 엔터티·관계만 투영합니다."),
     ("monitor", 450, 300, "변화 감지와 승인  |  Lesson 04 → 05",
      "계산과 제안을 분리합니다. Notebook이 ETA·여유일을 계산하고, 에이전트는 근거와 승인할 작업을 알립니다."),
     ("serve", 810, 300, "승인 사실에서 업무 Serving으로  |  Lesson 05 → 06",
@@ -48,9 +48,9 @@ LANES = [
 ]
 EDGES = [
     ("source-ontology", [(380, 280), (465, 280)], False),
-    ("ontology-graph", [(775, 280), (860, 280)], False),
-    ("graph-dataagent", [(1170, 280), (1255, 280)], False),
-    ("ontology-context", [(620, 190), (620, 178), (1410, 178), (1410, 190)], True),
+    ("ontology-graph", [(775, 280), (860, 280)], True),
+    ("graph-dataagent", [(1170, 280), (1255, 280)], True),
+    ("ontology-context", [(620, 190), (620, 178), (1410, 178), (1410, 190)], False),
     ("signal-event", [(380, 600), (465, 600)], False),
     ("event-operations", [(775, 600), (860, 600)], False),
     ("operations-teams", [(1170, 600), (1255, 600)], False),
@@ -80,7 +80,8 @@ def build():
         f'width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-labelledby="title desc">',
         '<title id="title">Caldova cosmetics workshop — Lesson / Fabric architecture</title>',
         '<desc id="desc">Lessons 00–03 model and query business data; 04–05 detect, propose, approve '
-        'and record reviews; 06 publishes to SQL database; 07 classifies data with Purview; 08 discusses adoption.</desc>',
+        'and record reviews; 06 publishes to SQL database; 07 classifies data with Purview. '
+        'Graph is optional; Data Agent uses ontology context to query Lakehouse SQL.</desc>',
         '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" '
         'markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>',
         f'<rect width="{WIDTH}" height="{HEIGHT}" fill="#fff"/>',
@@ -120,7 +121,6 @@ def build():
                    f'preserveAspectRatio="xMidYMid meet" xlink:href="{encoded}"/>')
 
     text("heading", 40, 25, "Caldova | 원료 변경 대응 에이전트", 32, True)
-    text("subheading", 40, 78, "Lesson 번호 → Fabric 기능 → 실습 항목 → 데이터 흐름", 21)
     for key, y, h, title, caption in LANES:
         box(key, 40, y, 1560, h, container=True)
         text(key + "-title", 70, y + 15, title, 21, True)
@@ -158,9 +158,6 @@ def build():
          "lh_cos · sqldb_cos 레이블 직접 적용  /  환경 조건부: DLP 정책 팁 · Unified Catalog 검색", 20)
     text("writeback-note", 40, 1300,
          "관련 쓰기: 03_supply_change → gold ETA · ops.material_impact  /  nb_apply_review → Eventhouse 상태 이력", 18)
-    text("discussion", 40, 1340, "LESSON 08  Data Highway 2.0 적용 논의 · 감시 중지", 22, True)
-    text("icon-note", 40, 1382,
-         "공식 Fabric 아이콘 사용. Ontology는 전용 아이콘 대신 Fabric 플랫폼 아이콘을 표기. Teams는 텍스트 표기.", 15)
     svg.append("</g></svg>")
     scene = {"type": "excalidraw", "version": 2, "source": "fabric-cosmetics-workshop",
              "elements": elements, "appState": {"viewBackgroundColor": "#ffffff"}, "files": files}

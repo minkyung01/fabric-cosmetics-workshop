@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "1134868418419940211",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "InventoryBalance",
+  "entityIdParts": [
+    "240260791335107923"
+  ],
+  "displayNamePropertyId": "240260791335107923",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "240260791335107923",
+      "name": "balance_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc7ac\uace0 \uc794\ub7c9 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "101463256275872520",
+      "name": "lot_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub85c\ud2b8 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "773970643745787578",
+      "name": "warehouse_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ucc3d\uace0 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "770219131384601383",
+      "name": "qty_kg",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "Double",
+      "semanticEnrichment": {
+        "description": "\uc794\ub7c9 kg",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "842630085303764439",
+      "name": "availability",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uac00\uc6a9\u00b7\uaca9\ub9ac",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc7ac\uace0"
+    ],
+    "description": "\uae30\uc900\uc77c\uc758 \ub85c\ud2b8\u00b7\ucc3d\uace0\ubcc4 \uc7ac\uace0 \uc2a4\ub0c5\uc0f7. \ud575\uc2ec \uc77c\uc815 \uc601\ud5a5 \uacc4\uc0b0\uc5d0\ub294 \ud569\uc0b0\ud558\uc9c0 \uc54a\ub294\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

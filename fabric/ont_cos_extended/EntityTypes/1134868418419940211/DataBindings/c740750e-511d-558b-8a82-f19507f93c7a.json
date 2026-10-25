@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "c740750e-511d-558b-8a82-f19507f93c7a",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "balance_id",
+        "targetPropertyId": "240260791335107923"
+      },
+      {
+        "sourceColumnName": "lot_id",
+        "targetPropertyId": "101463256275872520"
+      },
+      {
+        "sourceColumnName": "warehouse_id",
+        "targetPropertyId": "773970643745787578"
+      },
+      {
+        "sourceColumnName": "qty_kg",
+        "targetPropertyId": "770219131384601383"
+      },
+      {
+        "sourceColumnName": "availability",
+        "targetPropertyId": "842630085303764439"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "inventory_balance",
+      "sourceSchema": "gold"
+    }
+  }
+}

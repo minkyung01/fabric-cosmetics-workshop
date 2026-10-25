@@ -1,0 +1,68 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "556317554831996351",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "ProductionPlan",
+  "entityIdParts": [
+    "753416519475469959"
+  ],
+  "displayNamePropertyId": "753416519475469959",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "753416519475469959",
+      "name": "plan_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc0dd\uc0b0 \uacc4\ud68d ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "851707348187282176",
+      "name": "product_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc81c\ud488 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "37310914586356702",
+      "name": "planned_date",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "DateTime",
+      "semanticEnrichment": {
+        "description": "\uc0dd\uc0b0 \uacc4\ud68d\uc77c",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "625421255743582461",
+      "name": "qty_ea",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "BigInt",
+      "semanticEnrichment": {
+        "description": "\uacc4\ud68d \uc218\ub7c9(\uac1c)",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc0dd\uc0b0 \uacc4\ud68d"
+    ],
+    "description": "\uc81c\ud488 \uc0dd\uc0b0 \uacc4\ud68d. \uacc4\ud68d\uc77c\uc5d0 \uc6d0\ub8cc\uac00 \ud544\uc694\ud558\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

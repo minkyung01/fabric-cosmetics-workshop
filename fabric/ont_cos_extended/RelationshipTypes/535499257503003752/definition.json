@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "535499257503003752",
+  "name": "receipt_for_order",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "1060601844732288951"
+  },
+  "target": {
+    "entityTypeId": "278049204425661700"
+  },
+  "semanticEnrichment": {
+    "description": "\ubd80\ubd84 \uc785\uace0\uc758 \ubc1c\uc8fc",
+    "customAttributes": {}
+  }
+}

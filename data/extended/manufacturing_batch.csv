@@ -1,0 +1,4 @@
+batch_id,plan_id,line_id,version_id,status
+BATCH-01,PP-1101,LINE-01,FV-CRM-01-03,예정
+BATCH-02,PP-1102,LINE-02,FV-CRM-01-03,예정
+BATCH-03,PP-1103,LINE-01,FV-AMP-03-02,예정

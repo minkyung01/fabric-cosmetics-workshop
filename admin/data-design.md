@@ -22,6 +22,28 @@ CSV는 `data/`(UTF-8, BOM 없음)에 있고 `01_prepare_data`가 `gold.<table>`�
 | `production_plan` | 4 | `plan_id` | `product_id`, `planned_date`, `qty_ea` |
 | `purchase_order` | 6 | `po_id` | `material_code`, `supplier_id`, `order_date`, `eta`, `status` |
 
+선택 확장 데이터는 `data/extended/`에 있습니다. 핵심 11개에 아래 17개를 더해 총 28개 테이블로 준비하며 [확장 실습](extended-model.md)에서 사용합니다. 핵심 영향 계산에는 추가하지 않습니다.
+
+| 테이블 | 행 | 키 | 주요 열 |
+|---|---:|---|---|
+| `organization` | 2 | `organization_id` | `organization_name` |
+| `team` | 3 | `team_id` | `organization_id`, `team_name` |
+| `supplier_qualification` | 3 | `qualification_id` | `supplier_id`, `market_code`, `status`, `valid_until` |
+| `material_spec` | 3 | `spec_id` | `material_code`, `spec_name` |
+| `material_lot` | 3 | `lot_id` | `material_code`, `supplier_id`, `spec_id`, `disposition` |
+| `goods_receipt` | 2 | `receipt_id` | `po_id`, `lot_id`, `received_date`, `qty_kg` |
+| `quality_inspection` | 3 | `inspection_id` | `lot_id`, `spec_id`, `result`, `inspected_date` |
+| `warehouse` | 2 | `warehouse_id` | `site_id`, `warehouse_name` |
+| `inventory_balance` | 4 | `balance_id` | `lot_id`, `warehouse_id`, `qty_kg`, `availability` |
+| `manufacturing_site` | 2 | `site_id` | `organization_id`, `site_name` |
+| `production_line` | 2 | `line_id` | `site_id`, `line_name` |
+| `manufacturing_batch` | 3 | `batch_id` | `plan_id`, `line_id`, `version_id`, `status` |
+| `market` | 2 | `market_code` | `market_name` |
+| `material_registration` | 4 | `registration_id` | `material_code`, `market_code`, `status` |
+| `product_registration` | 3 | `registration_id` | `product_id`, `market_code`, `status` |
+| `change_request` | 2 | `change_id` | `material_code`, `project_id`, `team_id`, `status` |
+| `change_assessment` | 3 | `assessment_id` | `change_id`, `version_id`, `team_id`, `status` |
+
 실습 중 생기는 `ops` 테이블:
 
 | 테이블 | 만드는 Notebook | 내용 |
@@ -68,7 +90,7 @@ SQL database `sqldb_cos`의 업무 데이터는 [06장](../docs/06-serving-db.md
 | `orders` | PurchaseOrder → RawMaterial | `purchase_order` | 있음 |
 | `alternative_to` | RawMaterial → RawMaterial | `material_alternative` | **없음 (01장에서 추가)** |
 
-기본 모델에는 `FormulaVersion.is_active`, `RawMaterial.cn_registration` 속성도 없습니다. `tools/build_ontology.py`가 `fabric/ont_cos_base`와 `fabric/ont_cos_reference`를 만듭니다.
+기본 모델에는 `FormulaVersion.is_active`, `RawMaterial.cn_registration` 속성도 없습니다. `tools/build_ontology.py`가 `fabric/ont_cos_base`, `fabric/ont_cos_reference`, 선택 확장 `fabric/ont_cos_extended`를 만듭니다. 확장은 위 9개 엔터티·10개 관계를 보존하고 17개 엔터티·30개 관계를 더합니다. 원본·키 표, 업무 경로·정답·핵심과의 경계는 [확장 가이드](extended-model.md)에 있습니다.
 
 ## 업무 규칙
 

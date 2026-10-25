@@ -1,0 +1,3 @@
+receipt_id,po_id,lot_id,received_date,qty_kg
+GR-01,PO-5501,LOT-120-A,2026-10-30,8.0
+GR-02,PO-5501,LOT-120-B,2026-10-31,5.0

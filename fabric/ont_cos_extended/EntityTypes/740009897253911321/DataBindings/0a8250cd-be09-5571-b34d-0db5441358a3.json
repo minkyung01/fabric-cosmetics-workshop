@@ -1,0 +1,32 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "0a8250cd-be09-5571-b34d-0db5441358a3",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "registration_id",
+        "targetPropertyId": "248762174100555129"
+      },
+      {
+        "sourceColumnName": "product_id",
+        "targetPropertyId": "59301258174556980"
+      },
+      {
+        "sourceColumnName": "market_code",
+        "targetPropertyId": "680325563944967126"
+      },
+      {
+        "sourceColumnName": "status",
+        "targetPropertyId": "648411883671633987"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "product_registration",
+      "sourceSchema": "gold"
+    }
+  }
+}

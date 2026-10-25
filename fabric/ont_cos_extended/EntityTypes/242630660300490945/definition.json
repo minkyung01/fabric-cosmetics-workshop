@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "242630660300490945",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "ChangeAssessment",
+  "entityIdParts": [
+    "636900318160243565"
+  ],
+  "displayNamePropertyId": "636900318160243565",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "636900318160243565",
+      "name": "assessment_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud3c9\uac00 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "422561966397697503",
+      "name": "change_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ubcc0\uacbd ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "867738765069361465",
+      "name": "version_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ucc98\ubc29 \ubc84\uc804 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "176254668647404710",
+      "name": "team_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud3c9\uac00 \ub2f4\ub2f9 \ud300 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1121346874482477137",
+      "name": "status",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ud3c9\uac00 \uc0c1\ud0dc",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\ubcc0\uacbd \ud3c9\uac00"
+    ],
+    "description": "\ubcc0\uacbd \uac74\ubcc4 \ucc98\ubc29 \ud3c9\uac00\uc640 \ub2f4\ub2f9 \ud300",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

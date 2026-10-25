@@ -1,0 +1,28 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "94ba2050-355f-5e86-95ad-263917bf5913",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "spec_id",
+        "targetPropertyId": "176561782297069586"
+      },
+      {
+        "sourceColumnName": "material_code",
+        "targetPropertyId": "414440634021170202"
+      },
+      {
+        "sourceColumnName": "spec_name",
+        "targetPropertyId": "60063794590494116"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "material_spec",
+      "sourceSchema": "gold"
+    }
+  }
+}

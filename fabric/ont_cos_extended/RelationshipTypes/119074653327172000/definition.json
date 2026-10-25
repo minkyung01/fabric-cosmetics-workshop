@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "119074653327172000",
+  "name": "registers_material",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "879166355268257716"
+  },
+  "target": {
+    "entityTypeId": "256248040932892384"
+  },
+  "semanticEnrichment": {
+    "description": "\ub4f1\ub85d \ub300\uc0c1 \uc6d0\ub8cc",
+    "customAttributes": {}
+  }
+}

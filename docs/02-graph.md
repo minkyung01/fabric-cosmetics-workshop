@@ -2,7 +2,7 @@
 
 [목차](../README.md) \| 이전: [01. Ontology](01-ontology.md) \| 다음: [03. Data Agent](03-data-agent.md)
 
-Ontology는 설계도이고, **Graph**는 실제 인스턴스(원료 `RM-HA-120`, 처방 버전 `FV-CRM-01-03` …)를 노드로, 연결을 에지로 저장한 것입니다. 이 장에서는 변경 원료에서 출발해 제품·생산 계획·개발 과제까지 경로를 따라가고, **질의와 필터를 바꿔 진짜 영향 대상만 남기는** 연습을 합니다.
+Ontology는 원본에 바인딩된 업무 모델이며 **Graph가 필수는 아닙니다.** 이 장에서는 선택적으로 인스턴스(원료 `RM-HA-120`, 처방 버전 `FV-CRM-01-03` …)를 노드·에지로 투영해 다단계 경로를 탐색합니다. **질의와 필터를 바꿔 진짜 영향 대상만 남기는** 연습입니다. Graph를 쓰지 않는 환경은 `02_answers`로 대상을 확인한 뒤 [03장](03-data-agent.md)의 Ontology·Lakehouse 경로로 진행할 수 있습니다.
 
 ## 시작 전 확인
 
@@ -12,9 +12,11 @@ Ontology는 설계도이고, **Graph**는 실제 인스턴스(원료 `RM-HA-120`
 ## 1. Graph 만들기
 
 1. `ont_cos`의 리본에서 **Manage graph**를 누릅니다. "Preparing graph..." 후 **Choose what to project**에서 엔터티와 관계의 **Status**가 모두 **Eligible**인지 확인합니다.
-2. **Continue** → **Materialize**를 누릅니다. 위쪽 탭에 `ont_cos_graph_`로 시작하는 Graph model이 열립니다. 데이터가 작아 보통 수 분 안에 끝납니다.
+2. 핵심 모델의 엔터티 9개·관계 10개를 선택하고 **Continue** → **Materialize**를 누릅니다. 위쪽 탭에 `ont_cos_graph_`로 시작하는 Graph model이 열립니다. 완료 상태를 확인한 뒤 진행합니다. 데이터 크기뿐 아니라 용량·반영 대기에도 영향을 받습니다.
 
 **확인할 결과:** 엔터티 9개·관계 10개가 Eligible이고, 작업 영역에 `ont_cos_graph_…` 항목이 생깁니다. 이 항목은 Ontology가 관리하므로 직접 고치지 않습니다.
+
+확장 모델을 사용해도 모든 엔터티를 투영할 필요는 없습니다. 우선 핵심 경로만 선택합니다. **Ontology 바인딩 가능 여부와 Graph 투영 적격성은 별개**이며 현재 Graph 투영에는 키·매핑, 엔터티/관계별 단일 기반 테이블, 지원되는 Lakehouse/미러링 Delta 원본이 필요합니다. 다중 바인딩이나 의미 체계 모델을 쓴다고 모두 투영 가능한 것은 아닙니다.
 
 ## 2. 탐색 화면에서 경로 펼치기
 
@@ -101,11 +103,12 @@ RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registra
 
 ## Troubleshooting
 
-- **Manage graph**에서 엔터티가 **Ineligible**이면 대개 키가 없는 엔터티입니다. 해당 엔터티 **Configure**의 **Entity type key**를 확인합니다.
+- **Manage graph**에서 **Ineligible**이면 키뿐 아니라 원본 종류·바인딩 수·지원 속성 형식을 확인합니다. [관리자 제약사항](../admin/preview-limitations.md)의 투영 적격성 항목을 참고합니다.
 - 관계가 **Not mapped**로 나오면 관계 설정에서 양쪽 Property와 원본 열을 확인합니다.
-- 질의가 0행이면 레이블·속성 이름의 대소문자를 Graph model의 스키마(노드·에지 목록)와 비교합니다. 레이블은 엔터티 타입 이름, 에지는 관계 이름입니다.
+- 질의가 0행이면 레이블·속성 이름의 대소문자를 Graph model의 스키마(노드·에지 목록)와 비교합니다. 예제는 엔터티 타입·관계 이름을 사용하며, 네임스페이스 접두사가 붙은 환경은 실제 레이블에 맞춰 수정합니다.
 - `is_active`가 없다는 오류가 나면 01장 3단계를 마친 뒤 **Manage graph**로 다시 Materialize합니다. Graph는 Materialize 시점의 데이터 스냅샷입니다.
 - 01장을 끝내지 못했다면 `WHERE fv.status <> '폐기'`로 대신합니다.
+- 원본 ETA만 바뀌었다면 Graph 항목의 **… → Schedule → Refresh now**로 갱신합니다. 스키마 변경 후 재투영과 원본 데이터 새로 고침을 구분합니다.
 
 ## 공식 문서
 

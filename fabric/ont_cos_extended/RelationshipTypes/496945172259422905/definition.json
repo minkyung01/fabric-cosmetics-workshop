@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "496945172259422905",
+  "name": "batch_for_plan",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "312264786357649115"
+  },
+  "target": {
+    "entityTypeId": "556317554831996351"
+  },
+  "semanticEnrichment": {
+    "description": "\ubc30\uce58\uc758 \uc0dd\uc0b0 \uacc4\ud68d",
+    "customAttributes": {}
+  }
+}

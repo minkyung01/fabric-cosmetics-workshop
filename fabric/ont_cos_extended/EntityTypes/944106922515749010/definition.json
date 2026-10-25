@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "944106922515749010",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "ChangeRequest",
+  "entityIdParts": [
+    "1112747034220231164"
+  ],
+  "displayNamePropertyId": "1112747034220231164",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "1112747034220231164",
+      "name": "change_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ubcc0\uacbd ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "786772141393736497",
+      "name": "material_code",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc6d0\ub8cc \ucf54\ub4dc",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "287184556424371726",
+      "name": "project_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uac1c\ubc1c \uacfc\uc81c ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "134505386591274474",
+      "name": "team_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc8fc\uad00 \ud300 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "265923666268410668",
+      "name": "status",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ubcc0\uacbd \uac80\ud1a0 \uc0c1\ud0dc",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uae30\uc874 \ubcc0\uacbd \uac74"
+    ],
+    "description": "\uae30\uc900\uc77c \uc774\uc804\ubd80\ud130 \uc874\uc7ac\ud558\ub294 \ubcc0\uacbd \uac80\ud1a0. \uc2b9\uc778 \uc561\uc158\uc758 ops.review_request\uc640 \ubcc4\uac1c\uc774\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

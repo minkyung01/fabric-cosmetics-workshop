@@ -1,0 +1,28 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "fde88716-a866-566d-90ca-406871de7eed",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "line_id",
+        "targetPropertyId": "91937528983585353"
+      },
+      {
+        "sourceColumnName": "site_id",
+        "targetPropertyId": "85385474779059134"
+      },
+      {
+        "sourceColumnName": "line_name",
+        "targetPropertyId": "1121897706450205863"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "production_line",
+      "sourceSchema": "gold"
+    }
+  }
+}

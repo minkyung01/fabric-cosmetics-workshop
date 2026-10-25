@@ -1,0 +1,69 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "580397203256458969",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "Supplier",
+  "entityIdParts": [
+    "120647460931277708"
+  ],
+  "displayNamePropertyId": "1079531304423751804",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "120647460931277708",
+      "name": "supplier_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uacf5\uae09\uc0ac ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1079531304423751804",
+      "name": "supplier_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uacf5\uae09\uc0ac\uba85",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "89091724791000361",
+      "name": "country",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uad6d\uac00 \ucf54\ub4dc",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "851913345786875504",
+      "name": "risk_grade",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uacf5\uae09 \ub9ac\uc2a4\ud06c \ub4f1\uae09(\uc0ac\ub0b4 \ud3c9\uac00)",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uacf5\uae09\uc0ac",
+      "\ubca4\ub354"
+    ],
+    "description": "\uc6d0\ub8cc \uacf5\uae09\uc0ac",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

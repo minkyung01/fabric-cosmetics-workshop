@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "903117265967379106",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "Organization",
+  "entityIdParts": [
+    "413652811614768080"
+  ],
+  "displayNamePropertyId": "422348980324695139",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "413652811614768080",
+      "name": "organization_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc870\uc9c1 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "422348980324695139",
+      "name": "organization_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc870\uc9c1\uba85",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc870\uc9c1"
+    ],
+    "description": "\uc5c5\ubb34 \uc870\uc9c1",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

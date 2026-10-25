@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "991242687207636397",
+  "name": "inventory_of_lot",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "1134868418419940211"
+  },
+  "target": {
+    "entityTypeId": "1061453953783422658"
+  },
+  "semanticEnrichment": {
+    "description": "\uc7ac\uace0\uc758 \ub85c\ud2b8",
+    "customAttributes": {}
+  }
+}

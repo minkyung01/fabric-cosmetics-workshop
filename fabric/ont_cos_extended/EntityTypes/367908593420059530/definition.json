@@ -1,0 +1,57 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "367908593420059530",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "ProductionLine",
+  "entityIdParts": [
+    "91937528983585353"
+  ],
+  "displayNamePropertyId": "1121897706450205863",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "91937528983585353",
+      "name": "line_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub77c\uc778 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "85385474779059134",
+      "name": "site_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc81c\uc870\uc18c ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "1121897706450205863",
+      "name": "line_name",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub77c\uc778\uba85",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc0dd\uc0b0 \ub77c\uc778"
+    ],
+    "description": "\uc81c\uc870\uc18c\uc758 \uc0dd\uc0b0 \ub77c\uc778",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

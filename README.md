@@ -12,28 +12,24 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | 기능 | 역할 | 이 실습에서 만드는 것 |
 |---|---|---|
-| **Ontology · Lesson 01** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 엔터티 9개의 키·속성·원본 데이터 바인딩을 확인하고, 처방↔원료·대체 원료 관계를 연결해 관계 10개 완성. 유효 버전·시장별 등록 조건을 같은 모델에서 재사용 |
-| **Graph · Lesson 02** | 업무 모델의 **인스턴스와 다단계 의존성**을 탐색 | 원료 → 처방 버전 → 제품·생산 계획·시험·개발 과제의 경로를 GQL로 조회. 폐기 버전 제외 전후와 공급사 관점의 연쇄 영향을 비교 |
-| **Data Agent · Lesson 03** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | Ontology·Graph를 원본으로 연결하고 자연어 질문 → 생성 질의 → 정답 Notebook을 대조. 연결 관계와 실제 일정 위험을 구분 |
-| **Operations Agent · Lesson 04** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
-| **승인 후 Notebook · Lesson 05** | 사람의 승인과 기록 작업을 연결 | 영향 대상 3건의 검토 요청·조치 이력과 이벤트 상태 기록. 실제 구매·처방 변경은 하지 않음 |
-| **SQL database in Fabric · Lesson 06** | 분석 결과를 **업무용 Serving DB**로 제공 | 승인된 검토 요청을 게시하고 담당 팀별 조회 → 검토 착수 → 상태 변경 이력을 T-SQL로 처리. 재게시해도 업무 상태 유지 |
-| **Microsoft Purview · Lesson 07** | 민감 데이터의 분류와 정책을 업무 흐름에 연결 | 참가자가 게시된 민감도 레이블을 직접 적용·확인. 사전 구성된 환경에서는 DLP 정책 팁과 카탈로그 검색까지 확장 |
-
-**Ontology는 용어집만이 아닙니다.** `RawMaterial`이라는 단어에 뜻을 붙이는 것에서 끝나지 않고, `material_code`로 업무 대상을 식별하고 원본 열에 바인딩하며 `uses_material`로 처방과 연결합니다. Graph·에이전트가 같은 연결과 맥락을 재사용하는 기반입니다. 다만 설명에 쓴 규칙이 자동 실행되거나 접근 권한을 대신하지는 않습니다. 이 키트의 여유일 계산·판정은 명시적인 질의와 Notebook에서 실행합니다.
+| **Ontology** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 핵심 엔터티 9개의 키·속성·Lakehouse 바인딩을 확인하고 관계 10개 완성. 선택 확장에서는 로트·품질·재고·등록·설비까지 **26개 엔터티·40개 관계**로 탐색 |
+| **Graph** | 업무 모델의 **인스턴스와 다단계 의존성**을 탐색 | 원료 → 처방 버전 → 제품·생산 계획·시험·개발 과제의 경로를 GQL로 조회. Ontology에 반드시 필요한 저장소가 아니라 경로 탐색을 위한 선택 계층 |
+| **Data Agent** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | Ontology 맥락을 사용해 Lakehouse에 SQL 질의. 선택적으로 Graph의 GQL과 비교하고, 생성 질의·정답 Notebook으로 근거 검증 |
+| **Operations Agent** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
+| **Notebook** | 사람의 승인과 기록 작업을 연결 | 영향 대상 3건의 검토 요청·조치 이력과 이벤트 상태 기록. 실제 구매·처방 변경은 하지 않음 |
+| **SQL database in Fabric** | 분석 결과를 **업무용 Serving DB**로 제공 | 승인된 검토 요청을 게시하고 담당 팀별 조회 → 검토 착수 → 상태 변경 이력을 T-SQL로 처리. 재게시해도 업무 상태 유지 |
+| **Microsoft Purview** | 민감 데이터의 분류와 정책을 업무 흐름에 연결 | 참가자가 게시된 민감도 레이블을 직접 적용·확인. 사전 구성된 환경에서는 DLP 정책 팁과 카탈로그 검색까지 확장 |
 
 ## 아키텍처
 
-![Lesson과 Fabric 기능별 아키텍처: 준비 데이터 → Ontology → Graph → Data Agent, 공급 이벤트 → Operations Agent → Teams 승인 → Notebook → SQL Serving DB. Purview는 데이터 관리 계층](assets/architecture.svg)
-
-[원본 SVG](assets/architecture.svg) · [편집 가능한 Excalidraw](assets/architecture.excalidraw) · [공식 아이콘 출처·사용 조건](assets/icon-attribution.md)
+![Fabric 기능별 아키텍처: Lakehouse에 바인딩한 Ontology를 Data Agent가 활용하며 Graph 경로 탐색은 선택. 공급 이벤트 → Operations Agent → Teams 승인 → Notebook → SQL Serving DB. Purview는 데이터 관리 계층](assets/architecture.svg)
 
 | 흐름 | Lesson → Fabric 항목 | 경계 |
 |---|---|---|
-| 업무 이해·질의 | 00 Lakehouse → 01 Ontology → 02 Graph → 03 Data Agent | 원본 바인딩과 Graph 투영은 구분. Graph는 갱신 전까지 스냅샷 |
+| 업무 이해·질의 | 00 Lakehouse ↔ 01 Ontology 맥락 → 03 Data Agent / 02 Graph는 선택 | 원본 SQL 질의에 Graph가 필요하지 않음. Graph 투영은 갱신 전까지 스냅샷 |
 | 감시·승인 | 04 Notebook → Eventhouse → Operations Agent → 05 Teams 승인·Notebook | 사람이 승인한 뒤에만 검토 요청 기록 |
 | 업무 제공 | 05 Lakehouse 승인 결과 → 06 SQL database | Notebook이 게시 SQL 생성 → 참가자가 SQL DB에서 실행. 자동 동기화가 아님 |
-| 거버넌스·적용 | 07 Purview → 08 적용 논의 | 레이블은 기본 실습, DLP·카탈로그는 환경 조건부 확장 |
+| 거버넌스 | 07 Purview | 레이블은 기본 실습, DLP·카탈로그는 환경 조건부 확장 |
 
 ## 시작 전 확인
 
@@ -53,14 +49,15 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개와 준비된 작업 영역 확인 |
 | [01. Ontology](docs/01-ontology.md) | 엔터티·키·원본 바인딩 이해, 관계와 업무 맥락 완성 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
-| [03. Data Agent](docs/03-data-agent.md) | Graph·Ontology 기반 자연어 질문과 근거 검증 |
+| [03. Data Agent](docs/03-data-agent.md) | Ontology 맥락·Lakehouse SQL 기반 질문, 선택적으로 Graph와 비교 |
 | [04. Operations Agent](docs/04-operations-agent.md) | 지침·Playbook 구성, 감시 시작, 공급 지연 반영 |
 | [05. 승인과 조치 기록](docs/05-approval.md) | Teams 승인 → Notebook으로 검토 요청·조치 이력 기록 |
 | [06. SQL Serving DB](docs/06-serving-db.md) | 승인 결과 게시, 담당 팀별 조회, 검토 상태 변경·이력 확인 |
 | [07. Purview 거버넌스](docs/07-purview.md) | 민감도 레이블 직접 적용, 준비된 DLP·카탈로그 확장 |
-| [08. Data Highway 2.0 논의와 마무리](docs/08-discussion.md) | 적용 논의, 감시 중지 |
 
-운영자는 환경과 목적에 맞게 Lesson을 조합할 수 있습니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 정책·계정 준비와 실행 대기 시간은 [관리자 가이드](admin/README.md)에서 별도로 확인합니다.
+운영자는 환경과 목적에 맞게 Lesson을 조합할 수 있습니다. Graph를 생략해도 01 → 03장으로 진행할 수 있습니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 마지막에는 Operations Agent 감시와 Spark 세션을 중지합니다.
+
+복잡한 업무 모델까지 다루려면 [26개 엔터티 확장 실습](admin/extended-model.md)을 선택합니다. 핵심 9개 모델과 별도 항목으로 배포하며, **총 28개 테이블**을 사용합니다. 정책·계정 준비와 미리 보기 제약은 [관리자 가이드](admin/README.md)에서 확인합니다.
 
 ## 실습 파일
 
@@ -75,12 +72,15 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | `fabric/sql/serving.sql` | SQL Serving 스키마·검토 착수 프로시저 |
 | `fabric/ont_cos_base/` | 참가자가 시작하는 기본 Ontology 정의 |
 | `fabric/ont_cos_reference/` | 완성된 참고 Ontology 정의 (막혔을 때 대체용) |
+| `data/extended/*.csv`, `fabric/ont_cos_extended/` | 선택 확장용 테이블 17개와 26개 엔터티·40개 관계의 완성 모델 |
+| `fabric/sql/extended-queries.sql` | 확장 모델의 로트·재고·등록·설비·검토 담당 경로를 검증하는 읽기 전용 SQL |
 | `notebooks/src/*.py` | Notebook의 읽기 쉬운 원본. `.ipynb`는 여기서 생성 |
 
 ## 관리자용
 
 - [관리자 준비 가이드](admin/README.md) — 테넌트 설정, 작업 영역 일괄 준비, 사전 점검, 초기화, 정리
 - [데이터 설계와 정답](admin/data-design.md) — 테이블, 업무 규칙, 각 장의 기대 결과
+- [미리 보기 기능 제약·호환성](admin/preview-limitations.md) — Ontology 새/기존 경험, Graph 적격성, 에이전트·권한·갱신 주기
 - [로컬 점검·산출물 재생성](admin/README.md#로컬-점검키트-유지보수자용) — 관리자·콘텐츠 유지보수자용. 참가자 PC에서는 실행할 필요 없음
 
 > [Caldova](https://github.com/Caldova)는 Microsoft가 만든 가상 제약 회사이며, 이 교재에서는 **화장품 R&D 업무로 각색**했습니다. 회사·제품·원료·공급사·수치는 실습용 **가상 데이터**입니다. 시장별 원료 등록 상태는 사내 가상 기준이며 실제 법규·규제 정보가 아닙니다.

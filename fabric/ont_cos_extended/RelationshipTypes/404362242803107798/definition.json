@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "404362242803107798",
+  "name": "sold_in_market",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "271629775274238423"
+  },
+  "target": {
+    "entityTypeId": "396973313137384670"
+  },
+  "semanticEnrichment": {
+    "description": "\uc81c\ud488\uc758 \ud310\ub9e4 \uc2dc\uc7a5",
+    "customAttributes": {}
+  }
+}

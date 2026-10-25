@@ -1,0 +1,4 @@
+assessment_id,change_id,version_id,team_id,status
+CA-01,CH-01,FV-CRM-01-03,TEAM-PLAN,대기
+CA-02,CH-01,FV-TON-02-01,TEAM-FORM,진행중
+CA-03,CH-02,FV-TON-02-01,TEAM-REG,등록확인

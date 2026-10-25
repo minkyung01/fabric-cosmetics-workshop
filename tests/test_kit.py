@@ -2,14 +2,20 @@
 import ast
 import base64
 import csv
+import io
 import json
 import re
+import runpy
+import sqlite3
 import subprocess
 import sys
 import unittest
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from contextlib import redirect_stdout
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -27,7 +33,10 @@ def code(name):
 
 
 def rows(table):
-    with open(DATA / f"{table}.csv", encoding="utf-8", newline="") as f:
+    path = DATA / f"{table}.csv"
+    if not path.exists():
+        path = DATA / "extended" / f"{table}.csv"
+    with open(path, encoding="utf-8", newline="") as f:
         return list(csv.DictReader(f))
 
 
@@ -78,9 +87,10 @@ class Notebooks(unittest.TestCase):
 
 
 class Data(unittest.TestCase):
-    def tables(self):
+    def tables(self, name="TABLES"):
         tree = ast.parse((ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8"))
-        node = next(n for n in tree.body if isinstance(n, ast.Assign) and n.targets[0].id == "TABLES")
+        node = next(n for n in tree.body if isinstance(n, ast.Assign)
+                    and isinstance(n.targets[0], ast.Name) and n.targets[0].id == name)
         return ast.literal_eval(node.value)
 
     def test_csv_headers_match_prepare_notebook(self):
@@ -91,7 +101,7 @@ class Data(unittest.TestCase):
                 self.assertEqual(next(csv.reader(f)), list(columns), table)
 
     def test_csv_utf8_without_bom_and_lf(self):
-        for path in DATA.glob("*.csv"):
+        for path in DATA.rglob("*.csv"):
             raw = path.read_bytes()
             self.assertFalse(raw.startswith(b"\xef\xbb\xbf"), path.name)
             self.assertNotIn(b"\r\n", raw, path.name)
@@ -168,7 +178,14 @@ class Docs(unittest.TestCase):
         self.assertNotRegex(index, r"오전|휴식|\d+시간|\d+분|진행 방식")
         self.assertNotIn("python -m unittest", readme)
         self.assertIn("## 로컬 점검", (ROOT / "admin" / "README.md").read_text(encoding="utf-8"))
-        self.assertEqual([doc.name[:2] for doc in DOCS], [f"{i:02}" for i in range(9)])
+        self.assertEqual([doc.name[:2] for doc in DOCS], [f"{i:02}" for i in range(8)])
+        features = readme.split("## 이 실습에서 완성하는 것\n", 1)[1].split("\n## ", 1)[0]
+        self.assertNotIn("Lesson", features)
+        self.assertNotIn("Ontology는 용어집만이 아닙니다", readme)
+        self.assertIn("Ontology는 용어집만이 아닙니다", (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8"))
+        self.assertNotIn("[원본 SVG]", readme)
+        self.assertNotIn("[편집 가능한 Excalidraw]", readme)
+        self.assertNotIn("Data Highway", "\n".join(p.read_text(encoding="utf-8") for p in [ROOT / "README.md", *DOCS]))
 
     def test_scenario_uses_caldova(self):
         for md in [ROOT / "README.md", *DOCS, ROOT / "admin" / "data-design.md"]:
@@ -275,8 +292,14 @@ class Architecture(unittest.TestCase):
         ids = [e["id"] for e in scene["elements"]]
         self.assertEqual(len(ids), len(set(ids)))
         text = "\n".join(e["text"] for e in scene["elements"] if e["type"] == "text")
-        for lesson in range(9):
+        for lesson in range(8):
             self.assertIn(f"LESSON {lesson:02}", text)
+        self.assertNotIn("LESSON 08", text)
+        self.assertNotIn("Lesson 번호", text)
+        self.assertNotIn("공식 Fabric 아이콘 사용", text)
+        self.assertIn("teams-icon", ids)
+        for edge in ("ontology-graph", "graph-dataagent"):
+            self.assertEqual(next(e for e in scene["elements"] if e["id"] == edge)["strokeStyle"], "dashed")
         for item in scene["elements"]:
             if item["type"] == "text":
                 self.assertGreater(item["width"], 0)
@@ -298,10 +321,11 @@ class Ontology(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
 
     def test_counts_and_placeholders(self):
-        for folder, relationships in (("ont_cos_base", 8), ("ont_cos_reference", 10)):
+        for folder, entities, relationships in (("ont_cos_base", 9, 8), ("ont_cos_reference", 9, 10),
+                                                 ("ont_cos_extended", 26, 40)):
             with self.subTest(folder):
                 path = ROOT / "fabric" / folder
-                self.assertEqual(len(list(path.glob("EntityTypes/*/definition.json"))), 9)
+                self.assertEqual(len(list(path.glob("EntityTypes/*/definition.json"))), entities)
                 self.assertEqual(len([p for p in (path / "RelationshipTypes").iterdir() if p.is_dir()]), relationships)
                 for item in path.rglob("*.json"):
                     text = item.read_text(encoding="utf-8")
@@ -315,6 +339,191 @@ class Ontology(unittest.TestCase):
         for name in ("uses_material", "alternative_to", "is_active", "cn_registration"):
             self.assertNotIn(f'"{name}"', base, name)
             self.assertIn(f'"{name}"', ref, name)
+
+
+class ExtendedModel(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.spec = runpy.run_path(str(ROOT / "tools" / "build_ontology.py"))
+        cls.entities = {**cls.spec["ENTITIES"], **cls.spec["EXTENDED_ENTITIES"]}
+        cls.relationships = {**cls.spec["RELATIONSHIPS"], **cls.spec["EXTENDED_RELATIONSHIPS"]}
+        cls.schemas = {**Data().tables(), **Data().tables("EXTENDED_TABLES")}
+
+    def test_exact_expansion_and_prepare_headers(self):
+        self.assertEqual(len(self.entities), 26)
+        self.assertEqual(len(self.relationships), 40)
+        self.assertEqual(len(self.schemas), 28)
+        self.assertEqual(set(Data().tables("EXTENDED_TABLES")), {p.stem for p in (DATA / "extended").glob("*.csv")})
+        for table, schema in self.schemas.items():
+            records = rows(table)
+            self.assertEqual(list(records[0]), list(schema), table)
+            for record in records:
+                for column, kind in schema.items():
+                    value = record[column]
+                    if not value:
+                        continue
+                    if kind == "date":
+                        date.fromisoformat(value)
+                    elif kind == "double":
+                        float(value)
+                    elif kind == "bigint":
+                        int(value)
+                    elif kind == "boolean":
+                        self.assertIn(value, ("true", "false"))
+
+    def test_prepare_profile_selection_and_partial_upload_rejection(self):
+        source = (ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8")
+        helper = next(n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == "select_tables")
+        namespace = {"TABLES": Data().tables(), "EXTENDED_TABLES": Data().tables("EXTENDED_TABLES")}
+        exec(compile(ast.Module(body=[helper], type_ignores=[]), source, "exec"), namespace)
+        select = namespace["select_tables"]
+        core = {f"{t}.csv" for t in namespace["TABLES"]}
+        extended = {f"{t}.csv" for t in namespace["EXTENDED_TABLES"]}
+        self.assertEqual(set(select(core)), set(namespace["TABLES"]))
+        self.assertEqual(set(select(core | extended)), set(self.schemas))
+        for missing in core | extended:
+            with self.subTest(missing=missing), self.assertRaises(ValueError):
+                select((core | extended) - {missing})
+        self.assertEqual(set(select(core | {"unrelated.txt"})), set(namespace["TABLES"]))
+
+    def test_entities_bound_to_unique_keys_and_typed_columns(self):
+        types = {"string": "String", "bigint": "BigInt", "double": "Double", "boolean": "Boolean", "date": "DateTime"}
+        for entity, (table, key, display, _, _, props) in self.entities.items():
+            with self.subTest(entity=entity):
+                values = [r[key] for r in rows(table)]
+                self.assertTrue(all(values))
+                self.assertEqual(len(values), len(set(values)))
+                self.assertIn(display, self.schemas[table])
+                self.assertEqual({p[0]: p[1] for p in props},
+                                 {c: types[t] for c, t in self.schemas[table].items()})
+
+    def test_all_relationship_endpoints_resolve_and_model_is_connected(self):
+        adjacency = {entity: set() for entity in self.entities}
+        for name, (src, dst, table, src_col, dst_col, _) in self.relationships.items():
+            with self.subTest(relationship=name):
+                for entity, column in ((src, src_col), (dst, dst_col)):
+                    entity_table, key = self.entities[entity][:2]
+                    targets = {r[key] for r in rows(entity_table)}
+                    self.assertTrue({r[column] for r in rows(table)} <= targets)
+                adjacency[src].add(dst)
+                adjacency[dst].add(src)
+        seen, pending = set(), ["RawMaterial"]
+        while pending:
+            node = pending.pop()
+            if node not in seen:
+                seen.add(node)
+                pending.extend(adjacency[node] - seen)
+        self.assertEqual(seen, set(self.entities))
+
+    def test_extended_definition_preserves_completed_core(self):
+        build = self.spec["build"]
+        core = build(Path("model"), False)
+        expanded = build(Path("model"), False, True)
+        self.assertTrue(core.items() <= expanded.items())
+
+    def test_provision_profiles_do_not_expand_core_by_default(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        self.assertEqual(len(provision["data_files"](False)), 11)
+        files = provision["data_files"](True)
+        self.assertEqual(len(files), 28)
+        self.assertEqual(len({f.name for f in files}), 28)
+        parts = provision["definition_parts"](ROOT / "fabric" / "ont_cos_extended",
+                                               {"{{WORKSPACE_ID}}": "test-workspace", "{{LAKEHOUSE_ID}}": "test-lakehouse"})
+        self.assertTrue(parts)
+        for part in parts:
+            decoded = base64.b64decode(part["payload"]).decode()
+            self.assertNotIn("{{", decoded)
+            json.loads(decoded)
+
+    def test_provision_uploads_selected_profile_and_keeps_existing_core_ontology(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        for extended in (False, True):
+            with self.subTest(extended=extended):
+                items = [{"type": "Lakehouse", "displayName": "lh_cos", "id": "test-lakehouse"},
+                         {"type": "Eventhouse", "displayName": "eh_cos", "id": "test-eventhouse"}]
+                if extended:
+                    items.append({"type": "Ontology", "displayName": "ont_cos", "id": "existing-core"})
+                fab = SimpleNamespace(
+                    dry_run=False,
+                    get_all=Mock(side_effect=[[{"displayName": "cos-p001", "id": "test-workspace"}], items]),
+                    call=Mock(return_value=(201, {}, b"")),
+                    change=Mock(return_value=(200, {"id": "test-item"})),
+                    run_notebook=Mock(),
+                )
+                args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=False,
+                                       extended_ontology=extended, update_notebooks=False, skip_prepare=False)
+                with redirect_stdout(io.StringIO()):
+                    provision["provision"](fab, "p001", args, {})
+                uploads = [c.args[1] for c in fab.call.call_args_list if "?resource=file" in c.args[1]]
+                self.assertEqual(len(uploads), 28 if extended else 11)
+                self.assertTrue(all("/Files/workshop/data/" in url for url in uploads))
+                fab.run_notebook.assert_called_once_with("test-workspace", "test-item", "run 01_prepare_data")
+                ontology_payloads = [c.args[3] for c in fab.change.call_args_list
+                                     if c.args[3].get("type") == "Ontology"]
+                self.assertEqual([p["displayName"] for p in ontology_payloads],
+                                 ["ont_cos_extended"] if extended else ["ont_cos"])
+                self.assertEqual(len([c for c in fab.change.call_args_list if c.args[0].startswith("import notebook")]), 5)
+
+    def test_provision_rejects_existing_notebook_without_explicit_update(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        fab = SimpleNamespace(
+            dry_run=False,
+            get_all=Mock(side_effect=[[{"displayName": "cos-p001", "id": "test-workspace"}],
+                                     [{"type": "Notebook", "displayName": "01_prepare_data", "id": "old-notebook"}]]),
+            call=Mock(), change=Mock(), run_notebook=Mock(),
+        )
+        args = SimpleNamespace(prefix="cos-", extended_ontology=True, update_notebooks=False)
+        with redirect_stdout(io.StringIO()), self.assertRaisesRegex(ValueError, "--update-notebooks"):
+            provision["provision"](fab, "p001", args, {})
+        fab.call.assert_not_called()
+        fab.change.assert_not_called()
+        fab.run_notebook.assert_not_called()
+
+    def test_registration_and_batch_source_consistency(self):
+        materials = {r["material_code"]: r for r in rows("raw_material")}
+        for reg in rows("material_registration"):
+            if reg["market_code"] == "CN":
+                self.assertEqual(reg["status"], materials[reg["material_code"]]["cn_registration"])
+        products = {r["product_id"]: r for r in rows("product")}
+        plans = {r["plan_id"]: r for r in rows("production_plan")}
+        for batch in rows("manufacturing_batch"):
+            self.assertEqual(batch["version_id"], products[plans[batch["plan_id"]]["product_id"]]["version_id"])
+        specs = {r["spec_id"]: r for r in rows("material_spec")}
+        lots = {r["lot_id"]: r for r in rows("material_lot")}
+        for lot in lots.values():
+            self.assertEqual(lot["material_code"], specs[lot["spec_id"]]["material_code"])
+            self.assertEqual(lot["supplier_id"], materials[lot["material_code"]]["supplier_id"])
+        for inspection in rows("quality_inspection"):
+            self.assertEqual(inspection["spec_id"], lots[inspection["lot_id"]]["spec_id"])
+        orders = {r["po_id"]: r for r in rows("purchase_order")}
+        for receipt in rows("goods_receipt"):
+            self.assertEqual(lots[receipt["lot_id"]]["material_code"], orders[receipt["po_id"]]["material_code"])
+
+    def test_reference_queries_exact_results_and_all_extension_tables_used(self):
+        sql = (ROOT / "fabric" / "sql" / "extended-queries.sql").read_text(encoding="utf-8")
+        used = set(re.findall(r"\bgold\.(\w+)", sql))
+        self.assertTrue(set(Data().tables("EXTENDED_TABLES")) <= used)
+        statements = [s.strip() for s in re.sub(r"--[^\n]*", "", sql).split(";") if s.strip()]
+        self.assertEqual(len(statements), 4)
+        with sqlite3.connect(":memory:") as db:
+            db.row_factory = sqlite3.Row
+            db.execute("ATTACH DATABASE ':memory:' AS gold")
+            for table, schema in self.schemas.items():
+                columns = ", ".join(f'"{c}" {("REAL" if t == "double" else "TEXT")}' for c, t in schema.items())
+                db.execute(f'CREATE TABLE gold."{table}" ({columns})')
+                db.executemany(f'INSERT INTO gold."{table}" VALUES ({", ".join("?" for _ in schema)})',
+                               [tuple(r.values()) for r in rows(table)])
+            result = [[dict(r) for r in db.execute(s)] for s in statements]
+        self.assertEqual([len(r) for r in result], [2, 1, 3, 3])
+        self.assertEqual([(r["lot_id"], r["qty_kg"], r["availability"], r["result"]) for r in result[0]],
+                         [("LOT-120-A", 8.0, "가용", "적합"), ("LOT-120-B", 5.0, "격리", "부적합")])
+        self.assertEqual(result[1], [{"product_id": "P-102", "market_code": "CN", "product_registration": "완료",
+                                     "alternative_material": "RM-HA-210", "supplier_qualification": "승인",
+                                     "material_registration": "필요"}])
+        self.assertEqual([(r["plan_id"], r["site_name"]) for r in result[2]],
+                         [("PP-1101", "인천 제조소"), ("PP-1102", "오산 제조소"), ("PP-1103", "인천 제조소")])
+        self.assertEqual([(r["assessment_id"], r["team_name"], r["status"]) for r in result[3]],
+                         [("CA-01", "구매·생산계획", "대기"), ("CA-02", "처방개발", "진행중"), ("CA-03", "등록검토", "등록확인")])
 
 
 if __name__ == "__main__":

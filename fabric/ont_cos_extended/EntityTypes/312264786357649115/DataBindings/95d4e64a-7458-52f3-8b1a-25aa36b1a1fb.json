@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "95d4e64a-7458-52f3-8b1a-25aa36b1a1fb",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "batch_id",
+        "targetPropertyId": "566031697379154722"
+      },
+      {
+        "sourceColumnName": "plan_id",
+        "targetPropertyId": "889492769247711628"
+      },
+      {
+        "sourceColumnName": "line_id",
+        "targetPropertyId": "544738324066317957"
+      },
+      {
+        "sourceColumnName": "version_id",
+        "targetPropertyId": "920553979468053112"
+      },
+      {
+        "sourceColumnName": "status",
+        "targetPropertyId": "816719146873546967"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "manufacturing_batch",
+      "sourceSchema": "gold"
+    }
+  }
+}

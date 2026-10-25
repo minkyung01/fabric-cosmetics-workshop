@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "3a7a6b20-0b47-54d1-94a2-8d6ed2f0eb6b",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "assessment_id",
+        "targetPropertyId": "636900318160243565"
+      },
+      {
+        "sourceColumnName": "change_id",
+        "targetPropertyId": "422561966397697503"
+      },
+      {
+        "sourceColumnName": "version_id",
+        "targetPropertyId": "867738765069361465"
+      },
+      {
+        "sourceColumnName": "team_id",
+        "targetPropertyId": "176254668647404710"
+      },
+      {
+        "sourceColumnName": "status",
+        "targetPropertyId": "1121346874482477137"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "{{WORKSPACE_ID}}",
+      "itemId": "{{LAKEHOUSE_ID}}",
+      "sourceTableName": "change_assessment",
+      "sourceSchema": "gold"
+    }
+  }
+}

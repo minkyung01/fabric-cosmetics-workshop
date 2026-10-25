@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "1106672054394622292",
+  "name": "change_of_material",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "944106922515749010"
+  },
+  "target": {
+    "entityTypeId": "256248040932892384"
+  },
+  "semanticEnrichment": {
+    "description": "\ubcc0\uacbd \ub300\uc0c1 \uc6d0\ub8cc",
+    "customAttributes": {}
+  }
+}

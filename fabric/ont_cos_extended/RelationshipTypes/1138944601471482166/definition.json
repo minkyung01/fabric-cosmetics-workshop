@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "1138944601471482166",
+  "name": "inspects_lot",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "725098497486594227"
+  },
+  "target": {
+    "entityTypeId": "1061453953783422658"
+  },
+  "semanticEnrichment": {
+    "description": "\uac80\uc0ac \ub300\uc0c1 \ub85c\ud2b8",
+    "customAttributes": {}
+  }
+}

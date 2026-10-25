@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "247481190875475356",
+  "name": "qualification_market",
+  "namespaceType": "Custom",
+  "source": {
+    "entityTypeId": "1014746082862363858"
+  },
+  "target": {
+    "entityTypeId": "396973313137384670"
+  },
+  "semanticEnrichment": {
+    "description": "\uc790\uaca9 \ud3c9\uac00 \uc2dc\uc7a5",
+    "customAttributes": {}
+  }
+}

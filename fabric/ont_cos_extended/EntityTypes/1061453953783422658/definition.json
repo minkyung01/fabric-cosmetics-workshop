@@ -1,0 +1,90 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "1061453953783422658",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "MaterialLot",
+  "entityIdParts": [
+    "235680059444829283"
+  ],
+  "displayNamePropertyId": "235680059444829283",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "235680059444829283",
+      "name": "lot_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub85c\ud2b8 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "234249737695698689",
+      "name": "material_code",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc6d0\ub8cc \ucf54\ub4dc",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "493815637199317221",
+      "name": "supplier_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uacf5\uae09\uc0ac ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "395958174398469826",
+      "name": "spec_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uaddc\uaca9 ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "679508268045202409",
+      "name": "expiry_date",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "DateTime",
+      "semanticEnrichment": {
+        "description": "\uc0ac\uc6a9 \uae30\ud55c",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "116519270812802251",
+      "name": "disposition",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc0ac\uc6a9\uac00\ub2a5\u00b7\uaca9\ub9ac",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc6d0\ub8cc \ub85c\ud2b8"
+    ],
+    "description": "\uc6d0\ub8cc \uc785\uace0 \ub85c\ud2b8. \uac19\uc740 \uc6d0\ub8cc\ub77c\ub3c4 \uc0ac\uc6a9 \uac00\ub2a5 \uc0c1\ud0dc\uac00 \ub2e4\ub974\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}

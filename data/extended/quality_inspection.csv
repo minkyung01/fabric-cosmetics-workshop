@@ -1,0 +1,4 @@
+inspection_id,lot_id,spec_id,result,inspected_date
+QI-01,LOT-120-A,SPEC-120,적합,2026-11-01
+QI-02,LOT-120-B,SPEC-120,부적합,2026-11-01
+QI-03,LOT-210-A,SPEC-210,적합,2026-10-20

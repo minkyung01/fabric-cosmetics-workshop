@@ -1,0 +1,68 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "879166355268257716",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "MaterialRegistration",
+  "entityIdParts": [
+    "657615466528973601"
+  ],
+  "displayNamePropertyId": "657615466528973601",
+  "namespaceType": "Custom",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "657615466528973601",
+      "name": "registration_id",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\ub4f1\ub85d ID",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "364101578202768021",
+      "name": "material_code",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc6d0\ub8cc \ucf54\ub4dc",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "489125334517562752",
+      "name": "market_code",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc2dc\uc7a5 \ucf54\ub4dc",
+        "customAttributes": {}
+      }
+    },
+    {
+      "id": "737692265454129962",
+      "name": "status",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String",
+      "semanticEnrichment": {
+        "description": "\uc644\ub8cc\u00b7\ud544\uc694",
+        "customAttributes": {}
+      }
+    }
+  ],
+  "timeseriesProperties": [],
+  "semanticEnrichment": {
+    "synonyms": [
+      "\uc6d0\ub8cc \ub4f1\ub85d"
+    ],
+    "description": "\uc6d0\ub8cc\uc758 \uc2dc\uc7a5\ubcc4 \uac00\uc0c1 \ub4f1\ub85d \uc0c1\ud0dc. \uc2e4\uc81c \ubc95\uaddc \uc815\ubcf4\uac00 \uc544\ub2c8\ub2e4.",
+    "customAttributes": {}
+  },
+  "untypedProperties": []
+}
