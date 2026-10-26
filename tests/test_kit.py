@@ -19,13 +19,14 @@ from pathlib import Path
 from contextlib import redirect_stderr, redirect_stdout
 from itertools import product
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 DOCS = sorted((ROOT / "docs").glob("*.md"))
 ALL_DOCS = sorted((ROOT / "docs").rglob("*.md"))
+PASTE_DOCS = sorted((ROOT / "notebooks" / "paste").glob("*.md"))
 NOTEBOOKS = ["01_prepare_data", "02_answers", "03_supply_change", "nb_apply_review", "04_publish_serving"]
 WORKSHOP_DOWNLOAD_URL = (
     "https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/"
@@ -59,11 +60,12 @@ class Notebooks(unittest.TestCase):
     def test_expected_set(self):
         self.assertEqual(sorted(p.stem for p in (ROOT / "notebooks").glob("*.ipynb")), sorted(NOTEBOOKS))
 
-    def test_participant_download_contains_only_exact_csv_and_notebook_files(self):
+    def test_participant_download_contains_exact_sources_notebooks_and_paste_guides(self):
         expected = {f"data/{name}.csv" for name in Data().tables()}
         expected |= {f"data/extended/{name}.csv" for name in Data().tables("EXTENDED_TABLES")}
         expected |= {f"notebooks/{name}.ipynb" for name in NOTEBOOKS}
-        self.assertEqual(len(expected), 33)
+        expected |= {f"notebooks/paste/{name}.md" for name in NOTEBOOKS}
+        self.assertEqual(len(expected), 38)
         with zipfile.ZipFile(ROOT / "downloads" / "workshop-files.zip") as archive:
             self.assertEqual(archive.namelist(), sorted(expected))
             self.assertIsNone(archive.testzip())
@@ -96,6 +98,34 @@ class Notebooks(unittest.TestCase):
                 for cell in cells:
                     if cell["cell_type"] == "code":
                         compile("".join(cell["source"]), name, "exec")
+
+    def test_paste_guides_contain_the_same_code_with_separate_parameters(self):
+        self.assertEqual(sorted(p.stem for p in PASTE_DOCS), sorted(NOTEBOOKS))
+        for name in NOTEBOOKS:
+            with self.subTest(notebook=name):
+                text = (ROOT / "notebooks" / "paste" / f"{name}.md").read_text(encoding="utf-8")
+                blocks = re.findall(r"```python\n(.*?)\n```", text, re.S)
+                cells = notebook(name)["cells"]
+                params = next(c for c in cells if "parameters" in c["metadata"].get("tags", []))
+                body = "\n\n".join("".join(c["source"]) for c in cells
+                                   if c["cell_type"] == "code" and c is not params)
+                self.assertEqual(blocks, ["".join(params["source"]), body])
+                for block in blocks:
+                    compile(block, name, "exec")
+                ast.parse("\n".join(blocks))
+
+    def test_embedded_scenario_exactly_matches_all_canonical_data(self):
+        tree = ast.parse(code("01_prepare_data"))
+        data = next(ast.literal_eval(n.value) for n in tree.body
+                    if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)
+                    and n.targets[0].id == "SCENARIO_DATA")
+        self.assertEqual(set(data), set(Data().tables()) | set(Data().tables("EXTENDED_TABLES")))
+        for table, text in data.items():
+            self.assertEqual(list(csv.DictReader(io.StringIO(text))), rows(table), table)
+        for name in NOTEBOOKS:
+            self.assertNotIn("Files/workshop", code(name), name)
+            self.assertNotIn("spark.read", code(name), name)
+        self.assertNotRegex(code("01_prepare_data"), r"requests|urllib|notebookutils|open\(")
 
     def test_no_bound_lakehouse_or_tenant_ids(self):
         for name in NOTEBOOKS:
@@ -203,45 +233,95 @@ class DataPreparation(unittest.TestCase):
         exists.assert_not_called()
 
     def test_existing_data_stops_the_real_notebook_before_any_writes(self):
-        source = (ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8")
+        source = code("01_prepare_data")
         nodes = [n for n in ast.parse(source).body if not isinstance(n, (ast.Import, ast.ImportFrom))]
         spark = Mock()
         spark.catalog.tableExists.side_effect = lambda name: name == "ops.review_request"
-        fs = SimpleNamespace(ls=Mock(return_value=[SimpleNamespace(name=f"{t}.csv") for t in Data().tables()]))
-        namespace = {"spark": spark, "fs": fs, "F": Mock(), "display": Mock()}
+        namespace = {"spark": spark, "F": Mock(), "display": Mock(), "csv": csv, "io": io}
         with redirect_stdout(io.StringIO()), self.assertRaisesRegex(ValueError, "ops.review_request"):
             exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"), namespace)
         self.assertIs(namespace["reset_ops"], False)
         spark.sql.assert_not_called()
-        spark.read.option.assert_not_called()
+        spark.createDataFrame.assert_not_called()
 
     def test_notebook_creates_tables_and_drops_ops_only_for_explicit_reset(self):
-        source = (ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8")
+        source = code("01_prepare_data")
         nodes = [n for n in ast.parse(source).body if not isinstance(n, (ast.Import, ast.ImportFrom))
-                 and not (isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "reset_ops" for t in n.targets))]
-        tables = Data().tables()
-        for reset in (False, True):
-            with self.subTest(reset=reset):
+                 and not (isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and
+                          t.id in ("reset_ops", "include_extended") for t in n.targets))]
+        for reset, extended in product((False, True), repeat=2):
+            with self.subTest(reset=reset, extended=extended):
+                tables = {**Data().tables(), **(Data().tables("EXTENDED_TABLES") if extended else {})}
                 spark, raw, frame = Mock(), Mock(), Mock()
                 spark.catalog.tableExists.return_value = False
-                spark.read.option.return_value = spark.read
-                spark.read.csv.return_value = raw
-                raw.columns = {column for schema in tables.values() for column in schema}
+                spark.createDataFrame.return_value = raw
                 raw.select.return_value = frame
+                frame.withColumn.return_value = frame
                 frame.count.return_value = 1
                 frame.write.mode.return_value = frame.write
                 frame.write.option.return_value = frame.write
                 frame.write.format.return_value = frame.write
-                fs = SimpleNamespace(ls=Mock(return_value=[SimpleNamespace(name=f"{t}.csv") for t in tables]))
-                namespace = {"spark": spark, "fs": fs, "F": Mock(), "display": Mock(), "reset_ops": reset}
+                namespace = {"spark": spark, "F": Mock(), "display": Mock(), "reset_ops": reset,
+                             "include_extended": extended, "csv": csv, "io": io}
                 with redirect_stdout(io.StringIO()):
                     exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"), namespace)
                 self.assertEqual([call.args[0] for call in frame.write.saveAsTable.call_args_list],
                                  [f"gold.{table}" for table in tables])
                 self.assertTrue(all(call.args == ("overwrite",) for call in frame.write.mode.call_args_list))
+                self.assertEqual(spark.createDataFrame.call_count, len(tables))
+                frame.withColumn.assert_called_once_with("original_eta", namespace["F"].col("eta"))
+                for (table, columns), call in zip(tables.items(), spark.createDataFrame.call_args_list):
+                    self.assertEqual(call.args[0], [{k: v or None for k, v in row.items()} for row in rows(table)], table)
+                    self.assertEqual(call.kwargs["schema"], ", ".join(f"{c} string" for c in columns), table)
                 drops = [call.args[0] for call in spark.sql.call_args_list if call.args[0].startswith("DROP")]
                 self.assertEqual(drops, [f"DROP TABLE IF EXISTS ops.{t}" for t in
                                          ("material_impact", "review_request", "action_log")] if reset else [])
+
+    def test_supply_change_reuses_preserved_eta_and_rejects_missing_baseline(self):
+        cells = notebook("03_supply_change")["cells"]
+        source = "".join(next(c["source"] for c in cells if c["cell_type"] == "code"
+                              and "purchase_orders = spark.table" in "".join(c["source"])))
+        nodes = [n for n in ast.parse(source).body if not isinstance(n, ast.ImportFrom)]
+        for current_eta in (date(2026, 11, 10), date(2026, 12, 15)):
+            with self.subTest(current_eta=current_eta):
+                spark, functions = MagicMock(), MagicMock()
+                orders = spark.table.return_value
+                orders.columns = ["po_id", "material_code", "eta", "original_eta"]
+                row = {"po_id": "PO-5501", "eta": current_eta, "original_eta": date(2026, 11, 10)}
+                def select(*columns):
+                    result = Mock()
+                    result.collect.return_value = [SimpleNamespace(**{c: row[c] for c in columns})]
+                    return result
+                orders.where.return_value.select.side_effect = select
+                namespace = {"spark": spark, "F": functions, "date": date, "timedelta": timedelta,
+                             "material_code": "RM-HA-120", "delay_days": 35, "as_of_date": "2026-11-02"}
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"), namespace)
+                orders.where.return_value.select.assert_called_once_with("po_id", "original_eta")
+                self.assertEqual(namespace["orig_eta"], {"PO-5501": date(2026, 11, 10)})
+                self.assertIn("2026-11-10 → 2026-12-15", output.getvalue())
+                self.assertEqual(functions.date_add.call_args.args[1], 35)
+                spark.read.assert_not_called()
+        spark = MagicMock()
+        spark.table.return_value.columns = ["po_id", "eta"]
+        with self.assertRaisesRegex(ValueError, "original_eta"):
+            exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"),
+                 {"spark": spark, "F": MagicMock(), "date": date, "as_of_date": "2026-11-02"})
+        spark.sql.assert_not_called()
+        spark.table.return_value.write.mode.assert_not_called()
+        for baseline in (None, "2026-11-10"):
+            with self.subTest(invalid_baseline=baseline):
+                spark = MagicMock()
+                spark.table.return_value.columns = ["po_id", "eta", "original_eta"]
+                spark.table.return_value.where.return_value.select.return_value.collect.return_value = [
+                    SimpleNamespace(po_id="PO-5501", original_eta=baseline)]
+                with self.assertRaisesRegex(ValueError, "original_eta"):
+                    exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"),
+                         {"spark": spark, "F": MagicMock(), "date": date,
+                          "as_of_date": "2026-11-02", "material_code": "RM-HA-120"})
+                spark.sql.assert_not_called()
+                spark.table.return_value.write.mode.assert_not_called()
 
 
 class Docs(unittest.TestCase):
@@ -251,7 +331,7 @@ class Docs(unittest.TestCase):
             self.assertIn(f"docs/{doc.name}", readme)
 
     def test_relative_links_resolve(self):
-        for md in [ROOT / "README.md", *ALL_DOCS, *sorted((ROOT / "admin").glob("*.md")),
+        for md in [ROOT / "README.md", *ALL_DOCS, *PASTE_DOCS, *sorted((ROOT / "admin").glob("*.md")),
                    ROOT / "assets" / "icon-attribution.md"]:
             text = md.read_text(encoding="utf-8")
             for link in re.findall(r"\]\(([^)]+)\)", text):
@@ -267,7 +347,7 @@ class Docs(unittest.TestCase):
                 self.assertEqual([link for link in links if "workshop-files.zip" in link], [WORKSHOP_DOWNLOAD_URL])
 
     def test_bold_delimiters_do_not_end_in_punctuation_before_attached_words(self):
-        for md in [ROOT / "README.md", *ALL_DOCS, *sorted((ROOT / "admin").glob("*.md")),
+        for md in [ROOT / "README.md", *ALL_DOCS, *PASTE_DOCS, *sorted((ROOT / "admin").glob("*.md")),
                    ROOT / "assets" / "icon-attribution.md"]:
             fence = None
             for number, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1):
@@ -491,52 +571,58 @@ class Docs(unittest.TestCase):
         self.assertIn("**00장에서 Lakehouse `lh_cos` 생성", readme)
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         self.assertEqual(re.findall(r"^## \d\. .+$", scenario, re.M), [
-            "## 1. 빈 작업 영역과 권한 확인", "## 2. 실습 파일 내려받기", "## 3. Lakehouse 직접 만들기",
-            "## 4. CSV 업로드와 원본 확인", "## 5. Notebook 5개 가져오기와 기본 Lakehouse 연결",
-            "## 6. Notebook으로 gold 테이블 직접 만들기",
+            "## 1. 빈 작업 영역과 권한 확인", "## 2. 복사할 코드 확인", "## 3. Lakehouse 직접 만들기",
+            "## 4. Notebook 5개 만들기와 코드 붙여넣기", "## 5. Notebook으로 gold 테이블 직접 만들기",
         ])
         self.assertIn(WORKSHOP_DOWNLOAD_URL, scenario)
         self.assertIn("Lakehouse schemas", scenario)
         self.assertIn("Tables → dbo", scenario)
-        self.assertIn("Upload files", scenario)
-        self.assertIn("**같은 `Files/workshop/data` 폴더**", scenario)
-        self.assertIn("각 Notebook을 열고", scenario)
+        self.assertIn("**+ New item → Notebook**", scenario)
+        self.assertIn("**PySpark**(Python)", scenario)
+        self.assertIn("Toggle parameter cell", scenario)
+        self.assertIn("매개변수 코드를 이 셀에 다시 넣지 않습니다", scenario)
         self.assertIn("**기본 Lakehouse로 고정**(핀)", scenario)
         self.assertIn("세션을 다시 시작", scenario)
         self.assertIn("**지금은 `01_prepare_data`만 실행합니다.**", scenario)
         names = runpy.run_path(str(ROOT / "admin" / "provision.py"))["NOTEBOOKS"]
         for name in names:
-            self.assertIn(f"{name}.ipynb", scenario)
+            self.assertIn(f"../notebooks/paste/{name}.md", scenario)
         self.assertIn("reset_ops = False", scenario)
         self.assertIn("Run all", scenario)
         self.assertIn("쓰기 전에 오류로 중지", scenario)
         self.assertIn("28개 테이블", scenario)
-        for table in Data().tables():
-            self.assertIn(f"{table}.csv", scenario)
+        self.assertIn("include_extended = True", scenario)
+        self.assertIn("original_eta", scenario)
+        self.assertIn("처음에는 작업 영역이 비어", scenario)
         ontology = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
         self.assertIn("`01_prepare_data`를 직접 실행해", ontology)
         extension = (ROOT / "docs" / "extensions" / "ontology.md").read_text(encoding="utf-8")
         self.assertIn("00장의 첫 적재에서 직접 만든", extension)
 
-    def test_scenario_separates_local_download_folders_and_fabric_destinations(self):
+    def test_participant_setup_uses_paste_guides_without_file_uploads(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
-        download = scenario.split("## 2. 실습 파일 내려받기\n", 1)[1].split("\n## 3.", 1)[0]
+        download = scenario.split("## 2. 복사할 코드 확인\n", 1)[1].split("\n## 3.", 1)[0]
         self.assertIn(WORKSHOP_DOWNLOAD_URL, download)
-        self.assertIn("| 내 PC 폴더 | 파일 | Fabric 위치 |", download)
-        self.assertIn("| `data` | 핵심 `.csv` 11개 |", download)
-        self.assertIn("| `notebooks` | `.ipynb` 5개 |", download)
-        self.assertIn("작업 영역 → Import → Notebook", download)
-        self.assertIn("첫 적재 전", download)
+        self.assertIn("| Notebook 이름 | 복사할 코드 | 실행 시점 |", download)
+        self.assertIn("매개변수 셀", download)
+        self.assertIn("실행 코드 셀", download)
+        self.assertIn("CSV 업로드나 `.ipynb` 가져오기는 하지 않습니다", download)
         self.assertNotIn("archive/refs/heads/main.zip", download)
         self.assertNotIn("저장소 전체", download)
         self.assertNotIn("Python·Git 설치", download)
         self.assertIn(WORKSHOP_DOWNLOAD_URL, (ROOT / "README.md").read_text(encoding="utf-8"))
+        for path in [ROOT / "README.md", *ALL_DOCS]:
+            text = path.read_text(encoding="utf-8")
+            with self.subTest(document=path.relative_to(ROOT)):
+                self.assertNotIn("Upload files", text)
+                self.assertNotIn("Import → Notebook", text)
+                self.assertNotIn("Files/workshop", text)
 
-    def test_scenario_includes_actual_empty_workspace_screenshot_before_downloads(self):
+    def test_scenario_includes_actual_empty_workspace_screenshot_before_code_links(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         image = "../assets/screenshots/00-empty-workspace.png"
         self.assertIn(f"![빈 작업 영역 화면]({image})", scenario)
-        self.assertLess(scenario.index(image), scenario.index("## 2. 실습 파일 내려받기"))
+        self.assertLess(scenario.index(image), scenario.index("## 2. 복사할 코드 확인"))
         self.assertIn("`cos-p901`", scenario)
         self.assertTrue((ROOT / "assets" / "screenshots" / "00-empty-workspace.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
@@ -842,20 +928,17 @@ class ExtendedModel(unittest.TestCase):
                     elif kind == "boolean":
                         self.assertIn(value, ("true", "false"))
 
-    def test_prepare_profile_selection_and_partial_upload_rejection(self):
+    def test_prepare_profile_selection_requires_an_explicit_boolean(self):
         source = (ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8")
         helper = next(n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == "select_tables")
         namespace = {"TABLES": Data().tables(), "EXTENDED_TABLES": Data().tables("EXTENDED_TABLES")}
         exec(compile(ast.Module(body=[helper], type_ignores=[]), source, "exec"), namespace)
         select = namespace["select_tables"]
-        core = {f"{t}.csv" for t in namespace["TABLES"]}
-        extended = {f"{t}.csv" for t in namespace["EXTENDED_TABLES"]}
-        self.assertEqual(set(select(core)), set(namespace["TABLES"]))
-        self.assertEqual(set(select(core | extended)), set(self.schemas))
-        for missing in core | extended:
-            with self.subTest(missing=missing), self.assertRaises(ValueError):
-                select((core | extended) - {missing})
-        self.assertEqual(set(select(core | {"unrelated.txt"})), set(namespace["TABLES"]))
+        self.assertEqual(set(select(False)), set(namespace["TABLES"]))
+        self.assertEqual(set(select(True)), set(self.schemas))
+        for invalid in ("false", "true", 0, 1, None, set()):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                select(invalid)
 
     def test_entities_bound_to_unique_keys_and_typed_columns(self):
         types = {"string": "String", "bigint": "BigInt", "double": "Double", "boolean": "Boolean", "date": "DateTime"}
@@ -894,10 +977,8 @@ class ExtendedModel(unittest.TestCase):
 
     def test_provision_profiles_do_not_expand_core_by_default(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
-        self.assertEqual(len(provision["data_files"](False)), 11)
-        files = provision["data_files"](True)
-        self.assertEqual(len(files), 28)
-        self.assertEqual(len({f.name for f in files}), 28)
+        self.assertNotIn("upload", provision)
+        self.assertNotIn("ONELAKE", provision)
         parts = provision["definition_parts"](ROOT / "fabric" / "ont_cos_extended",
                                                {"{{WORKSPACE_ID}}": "test-workspace", "{{LAKEHOUSE_ID}}": "test-lakehouse"})
         self.assertTrue(parts)
@@ -906,7 +987,7 @@ class ExtendedModel(unittest.TestCase):
             self.assertNotIn("{{", decoded)
             json.loads(decoded)
 
-    def test_provision_uploads_selected_profile_and_keeps_existing_core_ontology(self):
+    def test_provision_embeds_selected_profile_without_file_uploads_and_keeps_existing_core(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
         for reference, extended, existing, run_prepare in product((False, True), repeat=4):
             with self.subTest(reference=reference, extended=extended, existing=existing, run_prepare=run_prepare):
@@ -927,9 +1008,16 @@ class ExtendedModel(unittest.TestCase):
                 output = io.StringIO()
                 with redirect_stdout(output):
                     provision["provision"](fab, "p001", args, {})
-                uploads = [c.args[1] for c in fab.call.call_args_list if "?resource=file" in c.args[1]]
-                self.assertEqual(len(uploads), 28 if extended else 11)
-                self.assertTrue(all("/Files/workshop/data/" in url for url in uploads))
+                fab.call.assert_not_called()
+                preparation = next(c.args[3] for c in fab.change.call_args_list
+                                   if c.args[0] == "import notebook 01_prepare_data")
+                nb = json.loads(base64.b64decode(preparation["definition"]["parts"][0]["payload"]))
+                params = next(c for c in nb["cells"] if "parameters" in c["metadata"].get("tags", []))
+                values = {}
+                exec("".join(params["source"]), values)
+                self.assertIs(values["include_extended"], extended)
+                self.assertIs(values["reset_ops"], False)
+                self.assertIn("SCENARIO_DATA", json.dumps(nb))
                 if run_prepare:
                     fab.run_notebook.assert_called_once_with("test-workspace", "test-item", "run 01_prepare_data")
                 else:

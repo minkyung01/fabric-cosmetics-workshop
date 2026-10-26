@@ -31,6 +31,8 @@ original = (purchase_orders.where(F.col("material_code") == material_code)
             .select("po_id", "original_eta").collect())
 if not original:
     raise ValueError(f"{material_code} 발주가 없습니다. 원료 코드를 확인하세요.")
+if any(not isinstance(row.original_eta, date) for row in original):
+    raise ValueError("original_eta에 최초 입고 예정일(date)이 있어야 합니다. 지연 반영 전에 원본 테이블을 확인하세요.")
 orig_eta = {r.po_id: r.original_eta for r in original}
 
 delayed = F.col("po_id").isin(list(orig_eta))

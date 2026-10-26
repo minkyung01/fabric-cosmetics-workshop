@@ -4,7 +4,7 @@
 
 Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참가자는 보지 않아도 됩니다. 예시는 `p001` 기준이며 참가자마다 `pNNN`을 바꿔 반복합니다. 데이터 구조와 정답은 [데이터 설계](data-design.md)를 봅니다.
 
-**사전 필독:** [미리 보기 제약·호환성](preview-limitations.md). Ontology 새/기존 경험과 API 정의 호환성, **2027-01-31 기존 경험 종료**, Graph 선택 투영·적격성, Data Agent 문맥 갱신·권한, Operations Agent 감시·실행 권한을 확인합니다. [엔터티 확장 선택 실습](extended-model.md)을 제공한다면 참가자에게 00장의 첫 적재 전에 추가 CSV도 올리도록 안내하고, 모델 확장은 07장 Purview 완료 이후에만 진행합니다.
+**사전 필독:** [미리 보기 제약·호환성](preview-limitations.md). Ontology 새/기존 경험과 API 정의 호환성, **2027-01-31 기존 경험 종료**, Graph 선택 투영·적격성, Data Agent 문맥 갱신·권한, Operations Agent 감시·실행 권한을 확인합니다. [엔터티 확장 선택 실습](extended-model.md)을 제공한다면 00장 첫 실행 전에 `include_extended = True`로 설정하도록 안내하고, 모델 확장은 07장 Purview 완료 이후에만 진행합니다.
 
 ## 준비할 리소스
 
@@ -12,15 +12,17 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 |---|---|
 | Microsoft Fabric 용량 | **유료 F 용량**. Operations agent는 Trial 용량을 지원하지 않습니다. 12명 동시 실습 기준 F64 이상 권장 |
 | 참가자 작업 영역 | 용량이 할당된 **빈 `cos-pNNN`**. 참가자에게 **본인 실습 작업 영역의 Contributor** 부여. 테넌트·운영 작업 영역 권한과 구분 |
-| Lakehouse·데이터 | 사전 생성·업로드하지 않음. 참가자가 00장에서 스키마 지원 `lh_cos` 생성 → CSV 11개(선택 확장 포함 시 28개) 업로드 → `gold` 적재 |
-| Notebook | 사전 가져오기·연결하지 않음. 참가자가 00장에서 `.ipynb` 5개를 가져와 각각 `lh_cos`를 기본 Lakehouse로 연결 |
+| Lakehouse·데이터 | 참가자가 00장에서 스키마 지원 `lh_cos` 생성 → 코드에 포함된 고정 데이터로 `gold` 11개(선택 확장 포함 시 28개) 생성 |
+| Notebook | 참가자가 00장에서 Notebook 5개를 새로 만들고 코드를 붙여 넣음. 각각 `lh_cos` 기본 연결·매개변수 셀 지정 |
 | Eventhouse | 사전 생성하지 않음. 참가자가 04장에서 `eh_cos` 생성, 같은 이름의 기본 KQL Database 자동 생성·이벤트 테이블 구성 |
 | Ontology | 기본 준비에서는 **생성하지 않음**. 참가자가 01장에서 핵심 `ont_cos` 생성·보강. 07장 이후 선택 실습은 같은 항목을 확장하며 별도 완성 모델은 비교·복구용 |
 | Microsoft Teams | 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
 | SQL database | 사전 생성하지 않음. 참가자가 06장에서 본인 실습 작업 영역에 `sqldb_cos`와 Serving 스키마 직접 생성 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. 선택 활동인 DLP 정책 팁 확인·카탈로그 자산 검색은 아래 별도 조건 확인 |
 
-**참가자용 작업 영역 안에는 항목을 미리 배포하지 않습니다.** 빈 작업 영역으로 시작해도 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스 준비는 필요합니다. 워크샵 파일은 [실습 파일 ZIP](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)으로 배포하며 참가자가 [00장](../docs/00-scenario.md)을 따라 직접 가져옵니다.
+**참가자용 작업 영역 안에는 항목을 미리 배포하지 않습니다.** 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스를 준비합니다. [00장](../docs/00-scenario.md)의 복사할 코드를 안내하며, 내려받을 자료가 필요하면 [실습 파일 ZIP](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)을 제공합니다.
+
+**고객사 파일 정책:** 기본 실습은 파일 업로드·`.ipynb` 가져오기 없이 진행하며, 준비 Notebook도 외부 파일을 다운로드하지 않습니다. 실제 참가자 계정으로 코드 복사·붙여넣기와 실행이 허용되는지 확인합니다. 항목 정의 API 배포도 파일 정책의 우회 수단으로 사용하지 않습니다.
 
 ## 1. Fabric 테넌트 설정
 
@@ -70,11 +72,11 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 
 **기존 환경 재사용:** 기본 재실행은 CSV·Notebook·기존 항목·`gold`·`ops` 상태를 변경하지 않습니다. 항목이 이미 있으면 보존 안내를 출력하며, 빈 작업 영역으로 만들려고 삭제하지 않습니다. 처음부터 생성하는 실습에는 새 작업 영역을 제공합니다. 기존 작업 영역의 용량은 자동 재할당하지 않으므로 포털에서 확인합니다.
 
-**수동 준비:** 참가자별 작업 영역 생성 → 유료 F 용량 할당 → 참가자를 Contributor로 추가 → 비어 있는지 확인하면 됩니다. Lakehouse 생성·CSV 업로드·Notebook 가져오기·기본 연결은 00장의 참가자 작업입니다. 참가자에게 동일한 실습 파일 배포본과 확장 CSV 사용 여부를 안내합니다.
+**수동 준비:** 참가자별 작업 영역 생성 → 유료 F 용량 할당 → 참가자를 Contributor로 추가 → 비어 있는지 확인하면 됩니다. Lakehouse·Notebook 생성과 코드 붙여넣기·기본 연결은 00장의 참가자 작업입니다. 동일한 코드 버전과 `include_extended` 설정을 안내합니다.
 
 ### 선택: 관리자 리허설·복구용 항목 사전 준비
 
-예전의 Lakehouse·CSV·Notebook 사전 준비는 **`--prefill-items`를 명시할 때만** 실행합니다. 참가자 기본 준비에는 사용하지 않습니다. 별도 리허설 환경에서 자동 준비가 필요할 때의 예입니다.
+Lakehouse·자체 데이터가 포함된 Notebook의 항목 정의 배포는 **`--prefill-items`를 명시할 때만** 실행하며 CSV를 업로드하지 않습니다. 참가자 기본 준비에는 사용하지 않습니다. 조직에서 API 배포를 허용한 별도 리허설·복구 환경에서만 사용합니다.
 
 ```powershell
 python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --participants p001 --prefill-items --dry-run
@@ -85,13 +87,13 @@ python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --par
 
 완성 복구 모델은 바인딩할 원본 테이블이 먼저 있어야 합니다. 새 복구 환경은 `--prefill-items --run-prepare --reference-ontology`를 함께 사용하고, 이미 적재된 원본이 있으면 적재 옵션을 생략합니다.
 
-`--prefill-items`는 CSV를 다시 업로드할 수 있으며, 기존 Notebook은 `--update-notebooks`를 명시할 때만 교체합니다. 이전 교재의 Notebook만 최신화하려면 참가자 편집 내용을 먼저 보존하고 `--prefill-items --update-notebooks`를 사용합니다. `--run-prepare`는 붙이지 않습니다. 기존 `ont_cos`·`eh_cos`는 보존하며 자동 삭제·초기화하지 않습니다. 참가자 과정 중간이나 07장 이후 모델 확장을 위해 항목 준비·적재를 재실행하지 않습니다.
+기존 Notebook은 `--update-notebooks`를 명시할 때만 교체합니다. 참가자 편집 내용을 먼저 보존하고, 테이블을 보존하려면 `--run-prepare`는 붙이지 않습니다. 이전 CSV 기반 테이블에는 `purchase_order.original_eta`가 없으므로 Notebook만 갱신해 호환된다고 가정하지 않습니다. 진행 중인 실습은 보존하고 별도 환경에서 최신 00장부터 준비합니다. 기존 `ont_cos`·`eh_cos`는 자동 삭제·초기화하지 않습니다.
 
 | 옵션 | 용도 |
 |---|---|
-| `--prefill-items` | 별도 관리자 리허설·복구용 Lakehouse·CSV·Notebook 사전 준비에 명시적으로 동의. 생략하면 작업 영역·접근 권한만 준비 |
+| `--prefill-items` | 승인된 관리자 리허설·복구 환경에 Lakehouse·자체 데이터를 포함한 Notebook을 배포. 생략하면 작업 영역·접근 권한만 준비 |
 | `--reference-ontology` | `ont_cos`가 없을 때 완성 모델(`fabric/ont_cos_reference`)을 배포하는 **복구 경로**. 이미 있으면 보존하며 덮어쓰지 않음. Agent 생성 실습의 기본 준비 옵션이 아님 |
-| `--extended-ontology` | 비교·복구용 별도 `ont_cos_extended` 완성 모델과 확장 CSV 17개를 준비하는 옵션. 기존 작업 영역은 `--update-notebooks`도 필요. 기본 과정 시작 전에만 실행하며, 데이터만 준비하는 권장 경로와 구분합니다([확장 가이드](extended-model.md)). |
+| `--extended-ontology` | 준비 Notebook을 `include_extended = True`로 설정하고 비교·복구용 별도 `ont_cos_extended` 완성 모델을 배포. 기존 작업 영역은 `--update-notebooks`도 필요([확장 가이드](extended-model.md)). |
 | `--run-prepare` | 관리자 리허설·복구 환경에서만 `01_prepare_data` 실행을 명시적으로 요청. 참가자 기본 준비에는 사용하지 않음 |
 | `--skip-prepare` | 이전 명령 호환용. 미실행이 이미 기본값이며 `--run-prepare`와 함께 사용할 수 없음 |
 | `--update-notebooks` | 이미 있는 Notebook을 저장소 최신 버전으로 덮어씁니다. |
@@ -151,7 +153,7 @@ python tools/build_architecture.py
 python -m unittest discover -s tests -v
 ```
 
-`build_notebooks.py`는 Notebook 5개와 **`downloads/workshop-files.zip`을 함께 재생성**합니다. CSV나 Notebook 원본이 바뀌면 다시 실행하고 ZIP도 함께 반영합니다. ZIP에는 핵심 CSV 11개·선택 확장 CSV 17개·`.ipynb` 5개만 넣으며, 관리자 스크립트·문서·스크린샷·`.py`는 포함하지 않습니다. `python tools/build_notebooks.py --check`로 Notebook과 ZIP의 최신 여부를 함께 확인할 수 있습니다.
+`build_notebooks.py`는 관리용 CSV를 준비 코드에 포함하고, Notebook 5개·복붙용 `notebooks/paste/*.md` 5개·**`downloads/workshop-files.zip`을 함께 재생성**합니다. CSV나 Notebook 원본이 바뀌면 다시 실행합니다. ZIP에는 CSV 28개·`.ipynb` 5개·복붙용 코드 문서 5개를 넣습니다. `python tools/build_notebooks.py --check`로 모든 산출물의 최신 여부를 확인합니다. 데이터는 ID·관계·날짜가 고정되며 무작위 생성하지 않습니다.
 
 Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Lesson 순서, CSV와 기대 영향 계산, 게시 SQL 생성 등을 오프라인으로 점검합니다. **Fabric 배포·SQL 엔진 동작·Teams 승인·Purview 정책 평가를 대신하지 않습니다.** 실제 테넌트 사전 점검을 별도로 수행합니다.
 
@@ -166,7 +168,7 @@ Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, �
 | 장 | 확인할 값 |
 |---|---|
 | 준비 | 유료 F 용량이 할당된 빈 작업 영역·Contributor 접근 권한·테넌트/Teams/Purview 공통 조건. Lakehouse·CSV·Notebook을 포함한 실습 항목 미생성 |
-| 00 | 참가자 계정으로 ZIP 받기 → 스키마 지원 `lh_cos` 생성 → CSV 11개(선택 확장 28개) 업로드 → Notebook 5개 가져오기·기본 연결 → `01_prepare_data` 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
+| 00 | 코드 복사·붙여넣기 허용 확인 → 스키마 지원 `lh_cos` 생성 → Notebook 5개 생성·코드 붙여넣기·기본 연결·매개변수 셀 지정 → `01_prepare_data` 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA·original_eta 모두 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
 | 01 초안 | 참가자 계정으로 빈 항목 생성 → Plan 원본 조사·초안 검토 → Act 적용 → 저장된 키·바인딩·실제 행 확인 |
 | 01 보강 | 생산·개발 일정과 대체 검토 질문으로 빈틈 진단 → Plan 변경안 → Act 적용. 핵심 참고 9개/10개 경로와 `is_active`, `cn_registration` 바인딩·Plan 질의 확인 |
 | 02 | Graph Q1 4행 → `is_active` 필터 3행, 생산 계획 `PP-1101`·`PP-1102`·`PP-1103`, `ST-0711` |

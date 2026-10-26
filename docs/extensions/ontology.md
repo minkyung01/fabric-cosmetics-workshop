@@ -73,7 +73,7 @@
 
 ## 실습 2. Lakehouse SQL로 업무 경로 확인
 
-`lh_cos`의 **SQL analytics endpoint**에서 [extended-queries.sql](../../fabric/sql/extended-queries.sql)의 QX1–QX4를 각각 실행합니다. `sqldb_cos`의 Serving 스키마에서 실행하는 SQL이 아닙니다. endpoint 동기화 후 `gold` 확장 테이블이 보이는지 먼저 확인합니다. 각 질의의 대상 ID·상태·수량·담당 조직을 기록한 뒤 아래 결과와 대조합니다.
+`lh_cos`의 **SQL analytics endpoint**에서 [extended-queries.sql](../../fabric/sql/extended-queries.sql)의 내용을 복사해 붙여 넣고 QX1–QX4를 각각 실행합니다. `sqldb_cos`의 Serving 스키마에서 실행하는 SQL이 아닙니다. endpoint 동기화 후 `gold` 확장 테이블이 보이는지 먼저 확인합니다. 각 질의의 대상 ID·상태·수량·담당 조직을 기록한 뒤 아래 결과와 대조합니다.
 
 <details>
 <summary>결과 대조 — 직접 질의를 실행한 뒤 펼치기</summary>

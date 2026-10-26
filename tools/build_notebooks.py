@@ -1,7 +1,7 @@
 """Build self-contained Fabric notebooks, copy-paste guides and the participant download.
 
-Run: python tools/build_notebooks.py          (writes notebooks/*.ipynb and downloads/workshop-files.zip)
-     python tools/build_notebooks.py --check  (fails if a notebook or the download is out of date)
+Run: python tools/build_notebooks.py          (writes notebooks, paste guides and downloads/workshop-files.zip)
+     python tools/build_notebooks.py --check  (fails if any generated output is out of date)
 
 Source format (one file per notebook):
     # %% [markdown]        markdown cell; following lines start with "# "
