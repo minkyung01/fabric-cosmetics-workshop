@@ -50,7 +50,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, Lakehouse 생성 → `01_prepare_data`에 연결 → 고정 가상 데이터로 `gold` 테이블 생성 |
 | [01. Ontology](docs/01-ontology.md) | 빈 Ontology → 업무 질문으로 Agent 초안 생성 → 검토·Act 적용 → 추가 질문으로 모델 보강 → Plan 질의로 검증 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
-| [03. Data Agent](docs/03-data-agent.md) | 중요도순 핵심 8문항으로 영향·경로·대체 조건·판단 한계 검증, 선택 Graph 실습은 관계 문항 재사용 |
+| [03. Data Agent](docs/03-data-agent.md) | 핵심 8문항으로 영향·경로·대체 조건·판단 한계 검증, 선택 Graph 실습은 관계 문항 재사용 |
 | [04. Operations Agent](docs/04-operations-agent.md) | Eventhouse·이벤트 테이블 직접 생성, 지침·Playbook 구성, 감시 시작, 공급 지연 반영 |
 | [05. 승인과 조치 기록](docs/05-approval.md) | Teams 승인 → Notebook으로 검토 요청·조치 이력 기록 |
 | [06. SQL Serving DB](docs/06-serving-db.md) | SQL DB·Serving 스키마 직접 생성, 승인 결과 게시, 담당 팀별 조회, 검토 상태 변경·이력 확인 |

@@ -974,21 +974,23 @@ class Docs(unittest.TestCase):
             self.assertIn(requirement, optional)
         self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
 
-    def test_data_agent_prioritizes_eight_questions_with_deferred_answers(self):
+    def test_data_agent_selects_eight_questions_in_id_order_with_deferred_answers(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \|$", lesson, re.M)
-        ids = ["DA01", "DA07", "DA09", "DA04", "DA11", "DA03", "DA12", "DA08"]
+        ids = ["DA01", "DA03", "DA04", "DA07", "DA08", "DA09", "DA11", "DA12"]
         self.assertEqual([q[0] for q in questions], ids)
         self.assertEqual([q[1] for q in questions],
-                         ["대조", "관계", "What-if", "규칙", "여러 데이터 통합",
-                          "규칙", "여러 데이터 통합", "관계"])
+                         ["대조", "규칙", "규칙", "관계", "관계", "What-if",
+                          "여러 데이터 통합", "여러 데이터 통합"])
         for _, _, prompt in questions:
             self.assertNotRegex(prompt, r"DA\d{2}")
         answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
         self.assertEqual(re.findall(r"^\| (DA\d{2}) \|", answers, re.M), ids)
-        self.assertIn("8문항을 중요도순", lesson)
+        self.assertIn("핵심 8문항을 ID 순서대로", lesson)
+        self.assertIn("Notebook에 준비된 SQL 실행 결과와 비교", lesson)
         for doc in (ROOT / "README.md", ROOT / "admin" / "README.md", ROOT / "docs" / "03-data-agent.md"):
             self.assertNotIn("12문항", doc.read_text(encoding="utf-8"), doc.name)
+            self.assertNotIn("중요도순", doc.read_text(encoding="utf-8"), doc.name)
         self.assertLess(lesson.index("| DA12 | 여러 데이터 통합 |"), lesson.index("<details>"))
         self.assertIn("핵심 11개 테이블·9개 엔터티", lesson)
         self.assertIn("Clear chat", lesson)
@@ -1003,6 +1005,12 @@ class Docs(unittest.TestCase):
         self.assertTrue(instructions.strip().startswith(
             "기본 에이전트 **`da_cos`의 Agent instructions**에 아래 지침을 붙여 넣습니다.\n\n``` text\n"))
         self.assertLess(instructions.index("``` text"), instructions.index("**참고: 설정 항목별 역할**"))
+        image = "../assets/screenshots/03-agent-instructions.png"
+        self.assertIn(image, instructions)
+        self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        self.assertLess(instructions.index("```\n"), instructions.index(image))
+        self.assertIn("**Setup → Agent instructions**", instructions)
+        self.assertIn("**Test the agent's responses**", instructions)
         self.assertIn("기본 실습은 Agent instructions만 입력하고 시작합니다", instructions)
         self.assertIn("Data source instructions", instructions)
         self.assertIn("조인·필터 등 질의 생성 규칙", instructions)
