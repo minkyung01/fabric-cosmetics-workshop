@@ -927,6 +927,28 @@ class Docs(unittest.TestCase):
         self.assertIn("https://learn.microsoft.com/en-us/fabric/database/sql/create", admin)
         self.assertNotIn("관리자가 **SQL database** 항목 `sqldb_cos`를 만들었습니다", lesson)
 
+    def test_data_agent_setup_focuses_on_ontology_and_connected_lakehouse(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        prerequisites = lesson.split("## 시작 전 확인", 1)[1].split("## 1.", 1)[0]
+        self.assertNotIn("최대 5개", prerequisites)
+        setup = lesson.split("## 1. Data Agent 만들고 원본 연결", 1)[1].split("## 2.", 1)[0]
+        for requirement in ("**Create data agent**", "`da_cos`", "**No sources added**",
+                            "**Add an ontology**", "**Ontology**", "선택한 뒤 활성화",
+                            "**Ontology → ont_cos → Entity types:**",
+                            "**Ontology data sources → lh_cos → Schemas → gold → Tables:**",
+                            "`formula_line`·`material_alternative`",
+                            "중복으로 추가하지 않습니다", "읽기 권한",
+                            "연결 화면만으로 질의 성공까지 확인한 것은 아닙니다",
+                            "**SQL과 실제 Lakehouse 실행 원본**"):
+            self.assertIn(requirement, setup)
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", setup)
+        self.assertEqual(images, ["../assets/screenshots/03-create-data-agent.png",
+                                  "../assets/screenshots/03-data-agent-empty.png",
+                                  "../assets/screenshots/03-select-ontology.png",
+                                  "../assets/screenshots/03-ontology-connected.png"])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+
     def test_data_agent_questions_cover_six_types_with_deferred_answers(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \|$", lesson, re.M)

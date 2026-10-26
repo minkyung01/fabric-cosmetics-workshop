@@ -10,18 +10,34 @@
 
 - 1장에서 `ont_cos`의 관계와 속성을 완성했고, `lh_cos`의 SQL analytics endpoint에서 `gold` 테이블을 조회할 수 있습니다. Graph는 필수가 아닙니다.
 - 테넌트에서 Data agent와 Copilot·Azure OpenAI 설정이 켜져 있어야 합니다(관리자 준비 사항).
-- Data agent 하나에 데이터 원본은 최대 5개까지 연결할 수 있습니다.
 - 질문은 **핵심 11개 테이블·9개 엔터티**로 풉니다. 여기서 여러 데이터 통합은 같은 Lakehouse 안의 발주·공급사·처방·제품·계획·시험 데이터를 조인하는 뜻이며, 별도 시스템 간 교차 원본 질의나 07장 이후 엔터티 확장을 요구하지 않습니다.
 - 날짜 계산의 기준일은 **2026-11-02**, 기본 QC 리드타임은 **7일**입니다. 질문에 제시한 입고일·QC 일수는 **조회용 가정**이며 04장의 실제 지연 반영을 먼저 실행하지 않습니다. 이전 실습으로 원본이 바뀌었다면 현재 ETA와 가정 ETA를 구분합니다.
 
 ## 1. Data Agent 만들고 원본 연결
 
-1. 작업 영역에서 **+ New item** → **Data agent**를 고르고 이름을 `da_cos`로 만듭니다.
-2. **Sources → Add sources → Add an ontology**(환경에 따라 **Add data source**)에서 `ont_cos`를 추가합니다. 새 Ontology 문맥 경험은 **preview runtime**을 사전에 확인합니다.
-3. Ontology를 펼쳐 엔터티와 연결된 원본 `lh_cos`를 확인합니다. 필요하면 연결 가능한 Lakehouse 원본을 추가/마운트해 원본별 지침·예제 SQL을 설정합니다. 요청 사용자에게 Lakehouse/SQL endpoint 읽기 권한이 있어야 합니다.
-4. **선택:** 02장을 수행했다면 Graph model `ont_cos_graph_…`을 추가합니다. SQL과 GQL을 구분해서 비교하려면 별도의 `da_cos_graph`를 만들고 Graph 원본만 연결하는 편이 명확합니다.
+1. 작업 영역에서 **+ New item → Data agent**를 선택합니다. **Create data agent** 창에 `da_cos`를 입력하고 **Create**를 누릅니다.
 
-**확인할 결과:** Sources에서 `ont_cos`와 연결된 Lakehouse 원본을 확인하고, 기본 질문의 실행 단계에 **SQL과 실제 Lakehouse 실행 원본**이 표시됩니다. Graph를 만들지 않아도 이 단계가 동작합니다. Ontology 편집 후 문맥은 자동 반영에 최대 10분이 걸릴 수 있으므로 **Refresh**로 갱신합니다.
+   ![Create data agent 창에서 이름을 da_cos로 입력하고 Create 선택](../assets/screenshots/03-create-data-agent.png)
+
+2. 생성 직후 **No sources added**는 아직 연결한 원본이 없다는 정상 상태입니다. 가운데 **Add an ontology** 카드를 선택합니다. 상단이나 왼쪽의 **Add sources → Add an ontology**로도 시작할 수 있습니다. 이번에는 기존 업무 모델을 연결하므로 **Add a data source**가 아니라 **Add an ontology**를 사용합니다. Runtime은 관리자와 사전 검증한 설정을 사용합니다.
+
+   ![Data Agent 초기 화면: No sources added 상태에서 Add an ontology 카드 선택](../assets/screenshots/03-data-agent-empty.png)
+
+3. OneLake catalog의 **Add an ontology** 창에서 내 작업 영역의 `ont_cos`를 선택합니다. 항목 유형이 **Ontology**인지 확인하고 오른쪽 아래 **Add**를 누릅니다. 화면의 Add 버튼은 항목을 선택한 뒤 활성화됩니다.
+
+   ![OneLake catalog의 Add an ontology 창에서 ont_cos의 이름과 Ontology 유형 확인](../assets/screenshots/03-select-ontology.png)
+
+4. 왼쪽 **Sources**에서 아래 두 영역을 펼쳐 확인합니다.
+   - **Ontology → ont_cos → Entity types:** 앞에서 만든 핵심 엔터티 9개가 보입니다.
+   - **Ontology data sources → lh_cos → Schemas → gold → Tables:** 연결된 Lakehouse와 질문에 사용할 테이블을 확인합니다. 엔터티 원본뿐 아니라 관계 매핑 원본인 `formula_line`·`material_alternative`도 확인합니다.
+
+   ![Ontology의 엔터티 9개와 Ontology data sources의 lh_cos·gold 테이블이 연결된 화면](../assets/screenshots/03-ontology-connected.png)
+
+   `lh_cos`가 이미 연결되어 있다면 중복으로 추가하지 않습니다. 표시되지 않거나 원본 읽기에 실패하면 연결·바인딩과 요청 사용자의 Lakehouse/SQL endpoint 읽기 권한을 확인합니다. 필요한 경우에만 연결 가능한 Lakehouse 원본을 추가/마운트합니다.
+
+5. **선택:** 02장을 수행했다면 Graph model `ont_cos_graph_…`을 추가할 수 있습니다. SQL과 GQL을 구분해서 비교하려면 별도의 `da_cos_graph`를 만들고 Graph 원본만 연결하는 편이 명확합니다.
+
+**확인할 결과:** Sources에 `ont_cos`와 `lh_cos`가 연결됩니다. 다음 단계에서 지침을 입력하고 질문한 뒤, 실행 단계에 **SQL과 실제 Lakehouse 실행 원본**이 표시되는지도 확인합니다. 위 연결 화면만으로 질의 성공까지 확인한 것은 아닙니다. Graph를 만들지 않아도 기본 실습을 진행할 수 있습니다. Ontology 편집 후 문맥은 자동 반영에 최대 10분이 걸릴 수 있으므로 **Refresh**로 갱신합니다.
 
 ## 2. 에이전트 지침 입력
 
