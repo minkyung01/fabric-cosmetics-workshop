@@ -492,7 +492,9 @@ class Docs(unittest.TestCase):
                                   "../assets/screenshots/01-ontology-applied.png",
                                   "../assets/screenshots/01-formula-line-proposal.png",
                                   "../assets/screenshots/01-formula-line-relationship.png",
-                                  "../assets/screenshots/01-incomplete-proposal.png"])
+                                  "../assets/screenshots/01-incomplete-proposal.png",
+                                  "../assets/screenshots/01-answers-q1-formula-versions.png",
+                                  "../assets/screenshots/01-answers-q6-before-supply-change.png"])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
@@ -683,6 +685,38 @@ class Docs(unittest.TestCase):
         notebook_section = lesson.split("## 6.", 1)[1].split("## 이 장의 완료 기준", 1)[0]
         self.assertIn("명시적인 Notebook 질의", notebook_section)
         self.assertIn("Q1 표의 **4행**", notebook_section)
+
+    def test_ontology_answers_walkthrough_connects_lakehouse_and_explains_outputs(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        section = lesson.split("## 6.", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        for requirement in ("### 6-2.", "### 6-3.", "### 6-4.", "### 6-5.",
+                            "**Data items → Add data items → From OneLake catalog**",
+                            "**내 작업 영역의 `lh_cos`**", "**SQL analytics endpoint**",
+                            "**기본 Lakehouse로 고정**", "Notebook을 저장",
+                            "**`02_answers`에도 별도로 연결해야 합니다.**",
+                            "세션을 다시 시작", "**Tables → gold**",
+                            'material_code = "RM-HA-120"', "qc_lead_days = 7",
+                            "**30초–5분**", "**Run all**을 한 번",
+                            "**5 columns, 4 rows**", "**상태 무관**",
+                            "Ontology의 모든 관계·바인딩까지 검증했다는 뜻은 아닙니다",
+                            "`01_prepare_data`를 다시 실행해 데이터를 초기화하지 않습니다",
+                            "지금은 지연 반영 전", "**영향 3건**",
+                            "**`03_supply_change`를 먼저 실행하지 않습니다.**",
+                            "기존 영향 분석 표", "**Plan 상태를 유지**"):
+            self.assertIn(requirement, section)
+        for version, status, active in (
+                ("FV-AMP-03-02", "현행", "true"),
+                ("FV-CRM-01-02", "폐기", "false"),
+                ("FV-CRM-01-03", "현행", "true"),
+                ("FV-TON-02-01", "개발중", "true")):
+            self.assertIn(f"| `{version}` | {status} | {active} |", section)
+        answers = (ROOT / "notebooks" / "paste" / "02_answers.md").read_text(encoding="utf-8")
+        notice = "ops.material_impact가 아직 없습니다. 4장에서 03_supply_change를 실행한 뒤 다시 확인하세요."
+        self.assertIn(notice, section)
+        self.assertIn(notice, answers)
+        self.assertLess(section.index("### 6-2."), section.index("### 6-3."))
+        self.assertLess(section.index("### 6-3."), section.index("01-answers-q1-formula-versions.png"))
+        self.assertLess(section.index("### 6-5."), section.index("01-answers-q6-before-supply-change.png"))
 
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

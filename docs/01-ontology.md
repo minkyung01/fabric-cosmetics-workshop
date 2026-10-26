@@ -349,6 +349,8 @@ material_alternative는 material_code가 원래 원료, alt_material_code가 대
 
 ## 6. Plan에서 모델 설명 확인 → Notebook으로 전체 처방 조회
 
+### 6-1. Ontology Agent에서 모델 설명 확인
+
 모드가 **Plan**인지 확인하고 다음 요청을 보냅니다.
 
 ```text
@@ -360,11 +362,62 @@ uses_material의 양끝과 매핑을 현재 저장된 정의에서 설명해줘.
 확인할 수 없는 값이나 전체 건수·데이터 부재는 추정하지 마.
 ```
 
-전체 처방 목록과 건수는 Agent의 샘플이 아닌 **명시적인 Notebook 질의**로 확인합니다. `02_answers`를 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). 세션이 연결되어 있지 않다면 **Connect**로 시작합니다. 연결 완료 후 **Run all**을 누르고 Q1을 비교합니다.
+### 6-2. `02_answers`에 내 Lakehouse 연결
+
+전체 처방 목록과 건수는 Agent의 샘플이 아닌 **명시적인 Notebook 질의**로 확인합니다. Ontology Agent는 **Plan** 상태로 두고, 작업 영역으로 이동해 조회용 Notebook을 엽니다.
+
+1. 내 작업 영역의 준비된 **`02_answers` Notebook**을 엽니다. `01_prepare_data`나 `03_supply_change`를 여는 것이 아닙니다.
+2. 왼쪽 **Data items → Add data items → From OneLake catalog**를 선택합니다.
+3. **내 작업 영역의 `lh_cos`** 항목을 찾아 유형이 **Lakehouse**인지 확인하고 **Add**를 누릅니다. 같은 이름의 **SQL analytics endpoint**를 선택하지 않습니다. 선택 화면은 [앞 장의 예시](00-scenario.md#4-notebook에-기본-lakehouse-연결)를 참고합니다.
+4. 왼쪽 목록에 추가된 `lh_cos`를 **기본 Lakehouse로 고정**(핀)하고 Notebook을 저장합니다. 이미 연결되어 있다면 내 작업 영역의 `lh_cos`가 기본값인지 확인하면 됩니다. `01_prepare_data`에서 연결했더라도 **`02_answers`에도 별도로 연결해야 합니다.**
+5. 기본 Lakehouse를 바꾸기 전에 이미 Spark 세션이 실행 중이었다면 세션을 다시 시작합니다. Notebook에서 `lh_cos`의 **Tables → gold**에 `formula_line`·`formula_version`이 있는지도 확인합니다.
+6. 매개변수 셀은 다음 기본값을 유지합니다. 이번에는 다른 원료로 바꾸지 않습니다.
+
+   ```python
+   material_code = "RM-HA-120"
+   qc_lead_days = 7
+   ```
+
+### 6-3. Spark 연결 후 전체 실행
 
 **예상 코드 실행 시간:** 전체 Notebook 약 1–3분(세션 준비 제외).
 
-**예상 출력:** Q1 표의 **4행** — `FV-CRM-01-02`(폐기, false), `FV-CRM-01-03`(현행, true), `FV-TON-02-01`(개발중, true), `FV-AMP-03-02`(현행, true). 지연 반영 전 Q6의 `ops.material_impact가 아직 없습니다` 안내는 정상이며, 이를 없애려고 `03_supply_change`를 먼저 실행하지 않습니다. Plan 상태를 유지하며 엔터티·관계·바인딩은 바뀌지 않습니다.
+1. 세션이 연결되어 있지 않다면 상단 **Connect**를 누르고 연결 완료를 기다립니다. **Connecting**은 Spark 세션 준비 단계로, 보통 **30초–5분** 정도 걸립니다. 대기 중 **Connect**나 **Run all**을 반복해서 누르지 않습니다.
+2. 연결 완료 후 **Run all**을 한 번 누릅니다. 이미 세션이 연결되어 있고 기본 Lakehouse도 맞다면 바로 실행합니다.
+3. 실행이 끝나면 아래 **Q1**과 **Q6**의 셀 출력을 확인합니다. 결과를 보기 위해 셀을 다시 실행할 필요는 없습니다.
+
+### 6-4. Q1에서 전체 처방 버전 4행 확인
+
+**Q1. 이 원료를 쓰는 처방 버전은? (상태 무관)** 셀 아래의 결과 표를 확인합니다. `gold.formula_line`과 `gold.formula_version`을 조인해 `RM-HA-120`의 사용처를 조회한 결과이며, Agent가 보여 준 샘플 목록과 구분합니다.
+
+**예상 출력:** Q1 표의 **4행**입니다. 화면 오른쪽 위의 **5 columns, 4 rows**와 각 행의 `version_id`·`status`·`is_active`를 비교합니다.
+
+| version_id | status | is_active |
+| --- | --- | --- |
+| `FV-AMP-03-02` | 현행 | true |
+| `FV-CRM-01-02` | 폐기 | false |
+| `FV-CRM-01-03` | 현행 | true |
+| `FV-TON-02-01` | 개발중 | true |
+
+![02_answers Q1 실행 결과: RM-HA-120을 쓰는 처방 버전 4행과 status·is_active](../assets/screenshots/01-answers-q1-formula-versions.png)
+
+이 질문은 **상태 무관**이므로 폐기된 `FV-CRM-01-02`도 포함되는 것이 맞습니다. Agent의 샘플에서 빠졌던 `FV-AMP-03-02`도 이 조회에서는 확인할 수 있습니다. 이 결과는 해당 원료의 처방 사용처를 확인한 것이며, Ontology의 모든 관계·바인딩까지 검증했다는 뜻은 아닙니다.
+
+4행이 아니라면 `material_code`가 `RM-HA-120`인지, 기본 Lakehouse가 내 작업 영역의 `lh_cos`인지 먼저 확인합니다. 테이블 읽기 오류가 나거나 결과가 여전히 다르면 오류·출력을 기록하고 관리자와 확인합니다. 이를 해결하려고 `01_prepare_data`를 다시 실행해 데이터를 초기화하지 않습니다.
+
+### 6-5. Q6의 ‘아직 없습니다’ 안내 확인
+
+**Q6. 지연 반영 후 영향 분석 결과 (`03_supply_change` 실행 후)** 셀은 나중에 공급 지연을 반영한 뒤 생성되는 `ops.material_impact`를 조회합니다. **지금은 지연 반영 전이므로 아래 안내만 나와도 정상**입니다.
+
+```text
+ops.material_impact가 아직 없습니다. 4장에서 03_supply_change를 실행한 뒤 다시 확인하세요.
+```
+
+![02_answers Q6 실행 결과: 지연 반영 전 ops.material_impact가 아직 없다는 정상 안내](../assets/screenshots/01-answers-q6-before-supply-change.png)
+
+스크린샷의 셀은 실행이 성공했고, 결과 테이블이 아직 없다는 안내를 출력했습니다. 위쪽 설명에 적힌 **영향 3건**은 **04장에서 `03_supply_change`를 실행한 뒤의 기대값**이지, 지금 나와야 하는 결과가 아닙니다. 이 안내를 없애려고 **`03_supply_change`를 먼저 실행하지 않습니다.** 이미 04장을 진행한 환경에서는 안내 대신 기존 영향 분석 표가 보일 수 있으므로, 초기화하지 말고 현재 진행 상태를 확인합니다.
+
+여기서는 Q1의 4행을 확인하고 다음 장으로 넘어갑니다. `02_answers`는 조회용이므로 엔터티·관계·바인딩을 변경하지 않으며, Ontology Agent도 **Plan 상태를 유지**합니다.
 
 Ontology Agent는 이처럼 현재 Ontology 안에서 설명·질의·개선을 수행합니다. 03장의 **Data Agent는 별도 에이전트 항목**에 완성한 Ontology 문맥과 원본을 연결해 질문하는 경험입니다.
 
