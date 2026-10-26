@@ -1000,6 +1000,9 @@ class Docs(unittest.TestCase):
     def test_data_agent_source_instructions_are_optional_for_basic_lab(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         instructions = lesson.split("## 2. 에이전트 지침 입력", 1)[1].split("## 3.", 1)[0]
+        self.assertTrue(instructions.strip().startswith(
+            "기본 에이전트 **`da_cos`의 Agent instructions**에 아래 지침을 붙여 넣습니다.\n\n``` text\n"))
+        self.assertLess(instructions.index("``` text"), instructions.index("**참고: 설정 항목별 역할**"))
         self.assertIn("기본 실습은 Agent instructions만 입력하고 시작합니다", instructions)
         self.assertIn("Data source instructions", instructions)
         self.assertIn("조인·필터 등 질의 생성 규칙", instructions)
