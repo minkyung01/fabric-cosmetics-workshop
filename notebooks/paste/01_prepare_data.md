@@ -1,6 +1,8 @@
 # 01_prepare_data — 복사할 코드
 
-[Notebook 생성·셀 설정](../../docs/00-scenario.md#4-notebook-5개-만들기와-코드-붙여넣기)
+파일 가져오기가 허용되지 않는 환경의 대체 준비용입니다. 새 Notebook의 첫 코드 블록은 셀 메뉴의 `Toggle parameter cell`로 매개변수 셀로 지정하고, 두 번째 블록은 별도 코드 셀에 넣습니다.
+
+[기본 Lakehouse 연결](../../docs/00-scenario.md#4-notebook에-기본-lakehouse-연결)
 
 ## 1. 매개변수 셀
 

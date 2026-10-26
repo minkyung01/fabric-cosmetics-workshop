@@ -36,8 +36,8 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | 항목 | 내용 |
 |---|---|
 | 작업 영역 | 참가자별 `cos-pNNN` (예: `cos-p001`), 기본 **Contributor 권한** |
-| 준비된 항목 | 용량이 할당된 **빈 작업 영역과 접근 권한만**. Lakehouse·CSV·Notebook 등 실습 항목은 사전 배포하지 않음 |
-| 직접 만들 항목 | **00장에서 Lakehouse `lh_cos` 생성 → Notebook 5개 생성·코드 붙여넣기 → `gold` 테이블 생성**. **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
+| 준비된 항목 | 용량이 할당된 **작업 영역·접근 권한·Notebook 5개**. Lakehouse와 데이터는 참가자가 생성 |
+| 직접 만들 항목 | **00장에서 Lakehouse `lh_cos` 생성 → 준비된 Notebook에 연결 → `gold` 테이블 생성**. **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
@@ -47,7 +47,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | Lesson(장) | 내용 |
 |---|---|
-| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, Lakehouse·Notebook 생성 → 코드 붙여넣기 → 고정 가상 데이터로 `gold` 테이블 생성 |
+| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, Lakehouse 생성 → 준비된 Notebook에 연결 → 고정 가상 데이터로 `gold` 테이블 생성 |
 | [01. Ontology](docs/01-ontology.md) | 빈 Ontology → 업무 질문으로 Agent 초안 생성 → 검토·Act 적용 → 추가 질문으로 모델 보강 → Plan 질의로 검증 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
 | [03. Data Agent](docs/03-data-agent.md) | 6개 유형·12문항으로 의미·규칙·관계·가정·통합 결과 검증, 선택적으로 Graph와 비교 |
@@ -63,13 +63,13 @@ Graph를 사용하지 않는 실습 경로는 01 → 03장으로 진행합니다
 
 ## 실습 파일
 
-실습은 [복사할 코드](docs/00-scenario.md#2-복사할-코드-확인)를 새 Notebook에 붙여 넣는 방식으로 진행합니다. 파일 업로드나 `.ipynb` 가져오기는 필요하지 않습니다.
+참가자는 [작업 영역에 준비된 Notebook](docs/00-scenario.md#2-준비된-notebook-확인)을 사용합니다. 아래 파일은 환경 준비·참고용이며 참가자의 파일 업로드는 필요하지 않습니다.
 
 [실습 파일 ZIP 다운로드](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)
 
 | 경로 | 내용 |
 |---|---|
-| `notebooks/paste/*.md` | Notebook별 매개변수·실행 코드. 복사·붙여넣기용 |
+| `notebooks/paste/*.md` | 파일 가져오기가 허용되지 않는 환경의 대체 준비용 매개변수·실행 코드 |
 | `data/*.csv` | 핵심 가상 데이터의 관리용 원본. 준비 코드에 포함됨 |
 | `notebooks/01_prepare_data.ipynb` | 코드에 포함된 고정 데이터 → `gold` 테이블 생성. 기본값은 기존 실습 테이블이 있으면 중지하며, `reset_ops = True`는 명시적 데이터 초기화 |
 | `notebooks/02_answers.ipynb` | 직접 질의한 뒤 결과를 대조하는 참고 Notebook |

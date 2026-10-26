@@ -341,7 +341,7 @@ class Docs(unittest.TestCase):
                 self.assertTrue(path.exists(), f"{md.name}: {link}")
 
     def test_download_links_use_the_public_absolute_zip_url(self):
-        for md in (ROOT / "README.md", ROOT / "docs" / "00-scenario.md", ROOT / "admin" / "README.md"):
+        for md in (ROOT / "README.md", ROOT / "admin" / "README.md"):
             links = re.findall(r"\]\(([^)]+)\)", md.read_text(encoding="utf-8"))
             with self.subTest(document=md.relative_to(ROOT)):
                 self.assertEqual([link for link in links if "workshop-files.zip" in link], [WORKSHOP_DOWNLOAD_URL])
@@ -567,49 +567,44 @@ class Docs(unittest.TestCase):
 
     def test_learner_creates_gold_tables_before_building_the_ontology(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("빈 작업 영역과 접근 권한만", readme)
+        self.assertIn("작업 영역·접근 권한·Notebook 5개", readme)
         self.assertIn("**00장에서 Lakehouse `lh_cos` 생성", readme)
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         self.assertEqual(re.findall(r"^## \d\. .+$", scenario, re.M), [
-            "## 1. 빈 작업 영역과 권한 확인", "## 2. 복사할 코드 확인", "## 3. Lakehouse 직접 만들기",
-            "## 4. Notebook 5개 만들기와 코드 붙여넣기", "## 5. Notebook으로 gold 테이블 직접 만들기",
+            "## 1. 작업 영역과 권한 확인", "## 2. 준비된 Notebook 확인", "## 3. Lakehouse 직접 만들기",
+            "## 4. Notebook에 기본 Lakehouse 연결", "## 5. Notebook으로 gold 테이블 직접 만들기",
         ])
-        self.assertIn(WORKSHOP_DOWNLOAD_URL, scenario)
         self.assertIn("Lakehouse schemas", scenario)
         self.assertIn("Tables → dbo", scenario)
-        self.assertIn("**+ New item → Notebook**", scenario)
-        self.assertIn("**PySpark**(Python)", scenario)
-        self.assertIn("Toggle parameter cell", scenario)
-        self.assertIn("매개변수 코드를 이 셀에 다시 넣지 않습니다", scenario)
+        self.assertIn("미리 준비되어 있습니다", scenario)
+        self.assertIn("**Notebook 5개 각각**", scenario)
+        self.assertIn("**Add lakehouse → Existing lakehouse**", scenario)
         self.assertIn("**기본 Lakehouse로 고정**(핀)", scenario)
         self.assertIn("세션을 다시 시작", scenario)
         self.assertIn("**지금은 `01_prepare_data`만 실행합니다.**", scenario)
         names = runpy.run_path(str(ROOT / "admin" / "provision.py"))["NOTEBOOKS"]
         for name in names:
-            self.assertIn(f"../notebooks/paste/{name}.md", scenario)
+            self.assertIn(f"`{name}`", scenario)
         self.assertIn("reset_ops = False", scenario)
         self.assertIn("Run all", scenario)
         self.assertIn("쓰기 전에 오류로 중지", scenario)
         self.assertIn("28개 테이블", scenario)
         self.assertIn("include_extended = True", scenario)
         self.assertIn("original_eta", scenario)
-        self.assertIn("처음에는 작업 영역이 비어", scenario)
+        self.assertNotIn("처음에는 작업 영역이 비어", scenario)
         ontology = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
         self.assertIn("`01_prepare_data`를 직접 실행해", ontology)
         extension = (ROOT / "docs" / "extensions" / "ontology.md").read_text(encoding="utf-8")
         self.assertIn("00장의 첫 적재에서 직접 만든", extension)
 
-    def test_participant_setup_uses_paste_guides_without_file_uploads(self):
+    def test_participant_setup_uses_preimported_notebooks_without_file_uploads_or_pasting(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
-        download = scenario.split("## 2. 복사할 코드 확인\n", 1)[1].split("\n## 3.", 1)[0]
-        self.assertIn(WORKSHOP_DOWNLOAD_URL, download)
-        self.assertIn("| Notebook 이름 | 복사할 코드 | 실행 시점 |", download)
-        self.assertIn("매개변수 셀", download)
-        self.assertIn("실행 코드 셀", download)
-        self.assertIn("CSV 업로드나 `.ipynb` 가져오기는 하지 않습니다", download)
-        self.assertNotIn("archive/refs/heads/main.zip", download)
-        self.assertNotIn("저장소 전체", download)
-        self.assertNotIn("Python·Git 설치", download)
+        prepared = scenario.split("## 2. 준비된 Notebook 확인\n", 1)[1].split("\n## 3.", 1)[0]
+        self.assertIn("| Notebook 이름 | 실행 시점 |", prepared)
+        self.assertIn("참가자는 파일을 가져오거나 코드를 붙여 넣지 않습니다", prepared)
+        self.assertNotIn("workshop-files.zip", scenario)
+        self.assertNotIn("notebooks/paste", scenario)
+        self.assertNotIn("New item → Notebook", scenario)
         self.assertIn(WORKSHOP_DOWNLOAD_URL, (ROOT / "README.md").read_text(encoding="utf-8"))
         for path in [ROOT / "README.md", *ALL_DOCS]:
             text = path.read_text(encoding="utf-8")
@@ -618,18 +613,25 @@ class Docs(unittest.TestCase):
                 self.assertNotIn("Import → Notebook", text)
                 self.assertNotIn("Files/workshop", text)
 
-    def test_scenario_includes_actual_empty_workspace_screenshot_before_code_links(self):
+    def test_scenario_selects_prepared_notebook_and_lakehouse_creation_screenshots(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
-        image = "../assets/screenshots/00-empty-workspace.png"
-        self.assertIn(f"![빈 작업 영역 화면]({image})", scenario)
-        self.assertLess(scenario.index(image), scenario.index("## 2. 복사할 코드 확인"))
-        self.assertIn("`cos-p901`", scenario)
-        self.assertTrue((ROOT / "assets" / "screenshots" / "00-empty-workspace.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", scenario)
+        self.assertEqual(images, ["../assets/screenshots/00-prepared-notebooks.png",
+                                  "../assets/screenshots/00-lakehouse-create.png"])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        self.assertLess(scenario.index("## 2. 준비된 Notebook 확인"), scenario.index(images[0]))
+        self.assertLess(scenario.index(images[0]), scenario.index("## 3. Lakehouse 직접 만들기"))
+        self.assertLess(scenario.index("## 3. Lakehouse 직접 만들기"), scenario.index(images[1]))
+        self.assertLess(scenario.index(images[1]), scenario.index("## 4. Notebook에 기본 Lakehouse 연결"))
 
-    def test_admin_default_is_empty_workspace_not_prestaged_items(self):
+    def test_admin_imports_notebooks_after_workspace_only_provisioning(self):
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
         self.assertIn("기본 실행은 작업 영역 생성·용량 지정·참가자 접근 권한만 준비", admin)
-        self.assertIn("참가자용 작업 영역은 빈 상태로 남깁니다", admin)
+        self.assertIn("Notebook 5개만 준비된 상태", admin)
+        self.assertIn("**Import → Notebook**", admin)
+        self.assertIn("Notebook을 실행하거나 Lakehouse를 사전 생성하지 않습니다", admin)
+        self.assertIn("기본 스크립트는 실습 항목을 만들거나 변경하지 않으며", admin)
         self.assertIn("기본 재실행은 CSV·Notebook·기존 항목·`gold`·`ops` 상태를 변경하지 않습니다", admin)
         self.assertIn("**`--prefill-items`와 함께 사용해야 하며**", admin)
         self.assertIn("별도 리허설 작업 영역", admin)
@@ -1121,7 +1123,7 @@ class ExtendedModel(unittest.TestCase):
                 self.assertIn("workspace-only: no items or source files changed", output.getvalue())
                 if items:
                     self.assertIn("workspace contains 5 items; retained", output.getvalue())
-                    self.assertIn("Use a fresh workspace", output.getvalue())
+                    self.assertIn("Review existing items", output.getvalue())
 
     def test_workspace_only_assigns_contributor_and_preserves_existing_roles(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
@@ -1160,7 +1162,7 @@ class ExtendedModel(unittest.TestCase):
         fab.get_all.assert_called_once_with("/workspaces")
         fab.change.assert_called_once()
         self.assertIn("assign Contributor to p001@example.com", output.getvalue())
-        self.assertIn("workspace-only: leave workspace empty", output.getvalue())
+        self.assertIn("import the five notebooks separately before chapter 00", output.getvalue())
         self.assertNotIn("data upload", output.getvalue())
         resolve_user.assert_not_called()
         fab.call.assert_not_called()

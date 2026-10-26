@@ -2,7 +2,8 @@
 
 By default, this creates workspace cos-pNNN on the given capacity or reuses it unchanged,
 and assigns Contributor access when --users is provided. No workspace items are created or modified.
-Participants create the Lakehouse and notebooks, paste code and generate data in chapter 00.
+After workspace setup, the admin imports the five notebooks separately in the portal.
+Participants create the Lakehouse, attach it to each notebook and generate data in chapter 00.
 
 Only --prefill-items enables the optional admin rehearsal/recovery setup:
   - a schema-enabled Lakehouse lh_cos (no source-file uploads)
@@ -171,7 +172,7 @@ def provision(fab, pid, args, users):
         if pid in users:
             print(f"  [dry-run] assign {args.role} to {users[pid]}")
         if not args.prefill_items:
-            print("  [dry-run] workspace-only: leave workspace empty; participants create items and load data in chapter 00")
+            print("  [dry-run] workspace-only: no items staged; import the five notebooks separately before chapter 00")
             return
         print(f"  [dry-run] {LAKEHOUSE}, self-contained notebooks; no source-file uploads")
         if args.run_prepare:
@@ -201,8 +202,8 @@ def provision(fab, pid, args, users):
     items = {(i["type"], i["displayName"]): i["id"] for i in fab.get_all(f"/workspaces/{ws}/items")}
     if not args.prefill_items:
         if items:
-            print(f"  workspace contains {len(items)} items; retained. Use a fresh workspace for the empty-workspace exercise.")
-        print("  workspace-only: no items or source files changed; participants create items and load data in chapter 00")
+            print(f"  workspace contains {len(items)} items; retained. Review existing items before workshop setup.")
+        print("  workspace-only: no items or source files changed; import the five notebooks separately before chapter 00")
         return
     if (args.extended_ontology or args.run_prepare) and ("Notebook", "01_prepare_data") in items and not args.update_notebooks:
         raise ValueError("Admin preparation/reference profiles require --update-notebooks when 01_prepare_data already exists")

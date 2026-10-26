@@ -11,18 +11,18 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 | 리소스 | 값 |
 |---|---|
 | Microsoft Fabric 용량 | **유료 F 용량**. Operations agent는 Trial 용량을 지원하지 않습니다. 12명 동시 실습 기준 F64 이상 권장 |
-| 참가자 작업 영역 | 용량이 할당된 **빈 `cos-pNNN`**. 참가자에게 **본인 실습 작업 영역의 Contributor** 부여. 테넌트·운영 작업 영역 권한과 구분 |
+| 참가자 작업 영역 | 용량이 할당된 `cos-pNNN`에 **Notebook 5개만 준비**. 참가자에게 **본인 실습 작업 영역의 Contributor** 부여 |
 | Lakehouse·데이터 | 참가자가 00장에서 스키마 지원 `lh_cos` 생성 → 코드에 포함된 고정 데이터로 `gold` 11개(선택 확장 포함 시 28개) 생성 |
-| Notebook | 참가자가 00장에서 Notebook 5개를 새로 만들고 코드를 붙여 넣음. 각각 `lh_cos` 기본 연결·매개변수 셀 지정 |
+| Notebook | 관리자가 모든 참가자 작업 영역에 `.ipynb` 5개를 미리 가져옴. 실행하지 않으며 기본 Lakehouse는 참가자가 연결 |
 | Eventhouse | 사전 생성하지 않음. 참가자가 04장에서 `eh_cos` 생성, 같은 이름의 기본 KQL Database 자동 생성·이벤트 테이블 구성 |
 | Ontology | 기본 준비에서는 **생성하지 않음**. 참가자가 01장에서 핵심 `ont_cos` 생성·보강. 07장 이후 선택 실습은 같은 항목을 확장하며 별도 완성 모델은 비교·복구용 |
 | Microsoft Teams | 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
 | SQL database | 사전 생성하지 않음. 참가자가 06장에서 본인 실습 작업 영역에 `sqldb_cos`와 Serving 스키마 직접 생성 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. 선택 활동인 DLP 정책 팁 확인·카탈로그 자산 검색은 아래 별도 조건 확인 |
 
-**참가자용 작업 영역 안에는 항목을 미리 배포하지 않습니다.** 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스를 준비합니다. [00장](../docs/00-scenario.md)의 복사할 코드를 안내하며, 내려받을 자료가 필요하면 [실습 파일 ZIP](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)을 제공합니다.
+용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스를 준비합니다. [실습 파일 ZIP](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)의 `notebooks` 폴더에서 `.ipynb` 5개를 사용합니다. Lakehouse·데이터·Ontology·Eventhouse·SQL DB는 참가자가 직접 만듭니다.
 
-**고객사 파일 정책:** 기본 실습은 파일 업로드·`.ipynb` 가져오기 없이 진행하며, 준비 Notebook도 외부 파일을 다운로드하지 않습니다. 실제 참가자 계정으로 코드 복사·붙여넣기와 실행이 허용되는지 확인합니다. 항목 정의 API 배포도 파일 정책의 우회 수단으로 사용하지 않습니다.
+**고객사 파일 정책:** Notebook 가져오기는 조직에서 허용된 관리자 환경에서 미리 수행합니다. 참가자는 파일을 업로드하거나 Notebook 코드를 복사하지 않으며, 준비 Notebook도 외부 파일을 다운로드하지 않습니다. 항목 정의 API를 파일 정책의 우회 수단으로 사용하지 않습니다. 가져오기 자체가 허용되지 않으면 `notebooks/paste`의 코드를 사용해 관리자가 대체 준비하고 매개변수 셀을 지정합니다.
 
 ## 1. Fabric 테넌트 설정
 
@@ -41,9 +41,9 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 
 Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허용합니다.
 
-## 2. 참가자 작업 영역 일괄 준비
+## 2. 참가자 작업 영역과 Notebook 준비
 
-`admin/provision.py`의 **기본 실행은 작업 영역 생성·용량 지정·참가자 접근 권한만 준비**합니다. Lakehouse·CSV·Notebook·테이블·Ontology·Eventhouse·SQL DB는 만들거나 변경하지 않습니다. 참가자가 00장부터 직접 만듭니다. 관리자 계정의 Azure CLI 로그인을 사용하며 비밀 값을 저장하지 않습니다.
+`admin/provision.py`의 **기본 실행은 작업 영역 생성·용량 지정·참가자 접근 권한만 준비**합니다. 이후 관리자가 포털에서 Notebook 5개를 가져옵니다. 기본 스크립트는 실습 항목을 만들거나 변경하지 않으며 관리자 계정의 Azure CLI 로그인을 사용합니다.
 
 1.  저장소 루트에서 Fabric 관리자(또는 용량 Contributor + 작업 영역 생성 권한) 계정으로 로그인합니다.
 
@@ -66,13 +66,15 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
     python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv --role Contributor
     ```
 
-**확인할 결과:** 새 참가자 작업 영역마다 `create workspace`, 신규 계정의 `assign Contributor …`, `workspace-only` 안내가 출력됩니다. **`create lakehouse`·CSV 업로드·Notebook 가져오기·실행은 나오지 않습니다.** Fabric 포털에서 실습 항목이 없는지, 용량이 올바른지 확인합니다. `--users`를 생략하면 접근 권한은 자동 부여하지 않으므로 별도로 추가합니다. 새 작업 영역의 dry-run은 사용자 ID 조회·역할 할당 API 호출 없이 예정 역할을 출력합니다.
+4. 각 작업 영역에서 **Import → Notebook**으로 `notebooks` 폴더의 `.ipynb` 5개를 가져옵니다. 이름은 `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review`, `04_publish_serving`으로 유지합니다. **Notebook을 실행하거나 Lakehouse를 사전 생성하지 않습니다.**
+
+**확인할 결과:** 스크립트의 `create workspace`·`assign Contributor …`·`workspace-only` 출력 후 수동 가져오기를 마치면, 각 작업 영역에 Notebook 5개가 보입니다. `nb_apply_review`의 매개변수 셀에 `event_id`, `material_code`, `eventhouse_name`이 있는지 확인합니다. `--users`를 생략하면 접근 권한은 별도로 부여합니다.
 
 **참가자 권한:** 기본은 `Contributor`입니다. Member를 전체 과정의 필수 권한으로 고정하지 않습니다. SQL DB 권한 문서의 안내 차이와 실제 계정 사전 점검은 [아래 SQL 준비](#sql-serving-db-준비-06장)를 참고합니다. 기존 역할은 자동 승격·강등하지 않으므로 이미 Member/Admin인 계정이나 그룹 상속 권한은 따로 검토합니다. 운영 작업 영역이나 테넌트 권한은 늘리지 않습니다.
 
-**기존 환경 재사용:** 기본 재실행은 CSV·Notebook·기존 항목·`gold`·`ops` 상태를 변경하지 않습니다. 항목이 이미 있으면 보존 안내를 출력하며, 빈 작업 영역으로 만들려고 삭제하지 않습니다. 처음부터 생성하는 실습에는 새 작업 영역을 제공합니다. 기존 작업 영역의 용량은 자동 재할당하지 않으므로 포털에서 확인합니다.
+**기존 환경 재사용:** 기본 재실행은 CSV·Notebook·기존 항목·`gold`·`ops` 상태를 변경하지 않습니다. 준비된 Notebook을 중복 가져오거나 덮어쓰지 않고 버전·매개변수 셀을 확인합니다. 진행 중인 데이터가 있다면 삭제하지 말고 별도 실습 환경을 제공합니다. 기존 작업 영역의 용량은 포털에서 확인합니다.
 
-**수동 준비:** 참가자별 작업 영역 생성 → 유료 F 용량 할당 → 참가자를 Contributor로 추가 → 비어 있는지 확인하면 됩니다. Lakehouse·Notebook 생성과 코드 붙여넣기·기본 연결은 00장의 참가자 작업입니다. 동일한 코드 버전과 `include_extended` 설정을 안내합니다.
+**수동 준비:** 참가자별 작업 영역 생성 → 유료 F 용량 할당 → Contributor 부여 → Notebook 5개 가져오기. 참가자는 Lakehouse 생성·기본 연결·데이터 생성을 수행합니다. 동일한 Notebook 버전과 `include_extended` 설정을 안내합니다.
 
 ### 선택: 관리자 리허설·복구용 항목 사전 준비
 
@@ -163,12 +165,12 @@ Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, �
 
 ## 3. 사전 점검 체크리스트
 
-실습 전에 **별도 리허설 작업 영역**에서 참가자와 같은 Contributor 계정으로 교재 전체를 한 번 실행하고 아래 값을 확인합니다. 참가자용 작업 영역은 빈 상태로 남깁니다.
+실습 전에 **별도 리허설 작업 영역**에서 참가자와 같은 Contributor 계정으로 교재 전체를 한 번 실행하고 아래 값을 확인합니다. 참가자용 작업 영역은 **Notebook 5개만 준비된 상태**로 남깁니다.
 
 | 장 | 확인할 값 |
 |---|---|
-| 준비 | 유료 F 용량이 할당된 빈 작업 영역·Contributor 접근 권한·테넌트/Teams/Purview 공통 조건. Lakehouse·CSV·Notebook을 포함한 실습 항목 미생성 |
-| 00 | 코드 복사·붙여넣기 허용 확인 → 스키마 지원 `lh_cos` 생성 → Notebook 5개 생성·코드 붙여넣기·기본 연결·매개변수 셀 지정 → `01_prepare_data` 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA·original_eta 모두 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
+| 준비 | 유료 F 용량·Contributor 접근 권한·테넌트/Teams/Purview 공통 조건. Notebook 5개를 모든 참가자 작업 영역에 가져왔으며 Lakehouse·데이터는 미생성 |
+| 00 | Notebook 5개 확인 → 스키마 지원 `lh_cos` 생성 → 각 Notebook 기본 연결 → `01_prepare_data` 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA·original_eta 모두 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
 | 01 초안 | 참가자 계정으로 빈 항목 생성 → Plan 원본 조사·초안 검토 → Act 적용 → 저장된 키·바인딩·실제 행 확인 |
 | 01 보강 | 생산·개발 일정과 대체 검토 질문으로 빈틈 진단 → Plan 변경안 → Act 적용. 핵심 참고 9개/10개 경로와 `is_active`, `cn_registration` 바인딩·Plan 질의 확인 |
 | 02 | Graph Q1 4행 → `is_active` 필터 3행, 생산 계획 `PP-1101`·`PP-1102`·`PP-1103`, `ST-0711` |

@@ -87,7 +87,10 @@ def build_paste(name, content):
     body = "\n\n".join("".join(c["source"]) for c in cells
                        if c["cell_type"] == "code" and c not in parameters)
     return (f"# {name} — 복사할 코드\n\n"
-            "[Notebook 생성·셀 설정](../../docs/00-scenario.md#4-notebook-5개-만들기와-코드-붙여넣기)\n\n"
+            "파일 가져오기가 허용되지 않는 환경의 대체 준비용입니다. "
+            "새 Notebook의 첫 코드 블록은 셀 메뉴의 `Toggle parameter cell`로 매개변수 셀로 지정하고, "
+            "두 번째 블록은 별도 코드 셀에 넣습니다.\n\n"
+            "[기본 Lakehouse 연결](../../docs/00-scenario.md#4-notebook에-기본-lakehouse-연결)\n\n"
             f"## 1. 매개변수 셀\n\n```python\n{params}\n```\n\n"
             f"## 2. 실행 코드 셀\n\n```python\n{body}\n```\n")
 
