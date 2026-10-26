@@ -652,7 +652,8 @@ class Docs(unittest.TestCase):
         self.assertNotIn("항목별로 기대 설계와의 일치·불일치·미확인", review)
         self.assertEqual(len(re.findall(r"```text\n(.*?)```", main_flow, re.S)), 1)
         prompt = re.findall(r"```text\n(.*?)```", review, re.S)[0]
-        for requirement in ("2단계에서 검토한 설계와 원본 근거",
+        self.assertNotRegex(prompt, r"\d+단계")
+        for requirement in ("이 대화에서 제안한 초안의 설계와 원본 근거",
                             "검토한 초안만 현재 ont_cos에 적용",
                             "lh_cos.gold 원본은 읽기만",
                             "원본 테이블·데이터나 다른 Fabric 항목은 변경하지 마"):
