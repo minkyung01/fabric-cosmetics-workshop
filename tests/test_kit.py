@@ -966,7 +966,7 @@ class Docs(unittest.TestCase):
         for requirement in ("별도 `da_cos_graph`", "기존 `da_cos`는 그대로 유지",
                             "**Graph 원본만 연결**", "Ontology나 Lakehouse는 추가하지 않습니다",
                             "Materialize·새로 고침 시점의 데이터",
-                            "12문항을 모두 반복하지 않고", "DA07·DA08",
+                            "새 문항을 추가하지 않고", "기본 8문항 중 DA07·DA08",
                             "RM-HA-120 자체는 제외", "**Clear chat**",
                             "`RM-PHE-002`", "`P-101`·`P-102`·`P-301`",
                             "**`da_cos`는 Lakehouse SQL**", "**`da_cos_graph`는 Graph GQL**",
@@ -974,17 +974,21 @@ class Docs(unittest.TestCase):
             self.assertIn(requirement, optional)
         self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
 
-    def test_data_agent_questions_cover_six_types_with_deferred_answers(self):
+    def test_data_agent_prioritizes_eight_questions_with_deferred_answers(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \|$", lesson, re.M)
-        ids = [f"DA{i:02}" for i in range(1, 13)]
+        ids = ["DA01", "DA07", "DA09", "DA04", "DA11", "DA03", "DA12", "DA08"]
         self.assertEqual([q[0] for q in questions], ids)
         self.assertEqual([q[1] for q in questions],
-                         [kind for kind in ("대조", "규칙", "용어", "관계", "What-if", "여러 데이터 통합") for _ in range(2)])
+                         ["대조", "관계", "What-if", "규칙", "여러 데이터 통합",
+                          "규칙", "여러 데이터 통합", "관계"])
         for _, _, prompt in questions:
             self.assertNotRegex(prompt, r"DA\d{2}")
         answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
         self.assertEqual(re.findall(r"^\| (DA\d{2}) \|", answers, re.M), ids)
+        self.assertIn("8문항을 중요도순", lesson)
+        for doc in (ROOT / "README.md", ROOT / "admin" / "README.md", ROOT / "docs" / "03-data-agent.md"):
+            self.assertNotIn("12문항", doc.read_text(encoding="utf-8"), doc.name)
         self.assertLess(lesson.index("| DA12 | 여러 데이터 통합 |"), lesson.index("<details>"))
         self.assertIn("핵심 11개 테이블·9개 엔터티", lesson)
         self.assertIn("Clear chat", lesson)
@@ -992,6 +996,16 @@ class Docs(unittest.TestCase):
         self.assertIn("0일은 일정 기준 영향 없음", lesson)
         self.assertIn("농도·제형 환산", lesson)
         self.assertNotIn("질문 5개", lesson)
+
+    def test_data_agent_source_instructions_are_optional_for_basic_lab(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        instructions = lesson.split("## 2. 에이전트 지침 입력", 1)[1].split("## 3.", 1)[0]
+        self.assertIn("기본 실습은 Agent instructions만 입력하고 시작합니다", instructions)
+        self.assertIn("Data source instructions", instructions)
+        self.assertIn("조인·필터 등 질의 생성 규칙", instructions)
+        self.assertIn("선택 설정", instructions)
+        self.assertIn("별도로 입력하지 않습니다", instructions)
+        self.assertIn("https://learn.microsoft.com/en-us/fabric/data-science/data-agent-configurations", lesson)
 
     def test_purview_optional_activities_have_names_distinct_from_ontology_expansion(self):
         lesson = (ROOT / "docs" / "07-purview.md").read_text(encoding="utf-8")

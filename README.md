@@ -14,7 +14,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 |---|---|---|
 | **Ontology** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 빈 항목에서 **Ontology Agent로 초안을 생성**하고, 생산·개발 일정과 대체 원료 질문에 맞춰 보강. 사람이 Plan의 원본·키·관계를 검토한 뒤 Act로 적용. 기본 과정의 핵심 참고 모델은 **9개 엔터티·10개 관계** |
 | **Graph** | 업무 모델의 **인스턴스와 다단계 의존성**을 탐색 | 원료 → 처방 버전 → 제품·생산 계획·시험·개발 과제의 경로를 GQL로 조회. Ontology에 반드시 필요한 저장소가 아니라 경로 탐색을 위한 선택 계층 |
-| **Data Agent** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | 대조·규칙·용어·관계·What-if·여러 데이터 통합 6개 유형의 질문을 Ontology 맥락·Lakehouse SQL로 검증. 선택적으로 Graph의 GQL과 비교 |
+| **Data Agent** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | 영향 대상·연결 경로·지연 가정·대체 조건·통합 검토표를 Ontology 맥락·Lakehouse SQL로 검증. 선택적으로 별도 Graph 에이전트의 GQL과 비교 |
 | **Operations Agent** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | Eventhouse·이벤트 테이블을 직접 만들고 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
 | **Notebook** | 사람의 승인과 기록 작업을 연결 | 찾아낸 영향 대상의 검토 요청·조치 이력과 이벤트 상태 기록. 실제 구매·처방 변경은 하지 않음 |
 | **SQL database in Fabric** | 분석 결과를 **업무용 Serving DB**로 제공 | DB·Serving 스키마를 직접 만들고 승인된 요청 게시 → 담당 팀별 조회 → 검토 착수 → 상태 변경 이력을 T-SQL로 처리. 재게시해도 업무 상태 유지 |
@@ -50,7 +50,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, Lakehouse 생성 → `01_prepare_data`에 연결 → 고정 가상 데이터로 `gold` 테이블 생성 |
 | [01. Ontology](docs/01-ontology.md) | 빈 Ontology → 업무 질문으로 Agent 초안 생성 → 검토·Act 적용 → 추가 질문으로 모델 보강 → Plan 질의로 검증 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
-| [03. Data Agent](docs/03-data-agent.md) | 6개 유형·12문항으로 의미·규칙·관계·가정·통합 결과 검증, 선택적으로 Graph와 비교 |
+| [03. Data Agent](docs/03-data-agent.md) | 중요도순 핵심 8문항으로 영향·경로·대체 조건·판단 한계 검증, 선택 Graph 실습은 관계 문항 재사용 |
 | [04. Operations Agent](docs/04-operations-agent.md) | Eventhouse·이벤트 테이블 직접 생성, 지침·Playbook 구성, 감시 시작, 공급 지연 반영 |
 | [05. 승인과 조치 기록](docs/05-approval.md) | Teams 승인 → Notebook으로 검토 요청·조치 이력 기록 |
 | [06. SQL Serving DB](docs/06-serving-db.md) | SQL DB·Serving 스키마 직접 생성, 승인 결과 게시, 담당 팀별 조회, 검토 상태 변경·이력 확인 |
