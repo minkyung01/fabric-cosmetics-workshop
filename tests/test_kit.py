@@ -1005,6 +1005,12 @@ class Docs(unittest.TestCase):
         self.assertIn("조인·필터 등 질의 생성 규칙", instructions)
         self.assertIn("선택 설정", instructions)
         self.assertIn("별도로 입력하지 않습니다", instructions)
+        reference = instructions.split("**참고: 설정 항목별 역할**", 1)[1].split("```", 1)[0]
+        self.assertEqual(re.findall(r"^\| \*\*([^*]+)\*\* \|", reference, re.M),
+                         ["Agent instructions", "Data source description",
+                          "Data source instructions", "Example queries"])
+        for role in ("에이전트 전체", "원본 선택", "질의 생성 지침", "자연어 질문과 검증된 질의"):
+            self.assertIn(role, reference)
         self.assertIn("https://learn.microsoft.com/en-us/fabric/data-science/data-agent-configurations", lesson)
 
     def test_purview_optional_activities_have_names_distinct_from_ontology_expansion(self):
