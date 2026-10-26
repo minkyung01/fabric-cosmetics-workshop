@@ -4,7 +4,7 @@
 
 Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참가자는 보지 않아도 됩니다. 예시는 `p001` 기준이며 참가자마다 `pNNN`을 바꿔 반복합니다. 데이터 구조와 정답은 [데이터 설계](data-design.md)를 봅니다.
 
-**사전 필독:** [미리 보기 제약·호환성](preview-limitations.md). Ontology 새/기존 경험과 API 정의 호환성, **2027-01-31 기존 경험 종료**, Graph 선택 투영·적격성, Data Agent 문맥 갱신·권한, Operations Agent 감시·실행 권한을 확인합니다. 엔터티가 많은 시나리오는 [26개 엔터티 선택 확장](extended-model.md)을 별도로 준비합니다.
+**사전 필독:** [미리 보기 제약·호환성](preview-limitations.md). Ontology 새/기존 경험과 API 정의 호환성, **2027-01-31 기존 경험 종료**, Graph 선택 투영·적격성, Data Agent 문맥 갱신·권한, Operations Agent 감시·실행 권한을 확인합니다. [엔터티 확장 선택 실습](extended-model.md)을 제공한다면 데이터는 기본 과정 전에 준비하고, 참가자의 모델 확장은 07장 Purview 완료 이후에만 진행합니다.
 
 ## 준비할 리소스
 
@@ -15,7 +15,7 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 | Lakehouse | `lh_cos` (**schemas 켬**), `Files/workshop/data`에 핵심 CSV 11개. 선택 확장은 17개 추가, 총 28개 |
 | Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review`, `04_publish_serving` |
 | Eventhouse | `eh_cos` (KQL Database 이름 동일) |
-| Ontology | 기본 준비에서는 **생성하지 않음**. 참가자가 01장에서 빈 `ont_cos` 생성 → Agent 초안·보강 수행. 복구용 핵심 완성 모델과 별도 확장 `ont_cos_extended`는 선택 배포 |
+| Ontology | 기본 준비에서는 **생성하지 않음**. 참가자가 01장에서 핵심 `ont_cos` 생성·보강. 07장 이후 선택 실습은 같은 항목을 확장하며 별도 완성 모델은 비교·복구용 |
 | Microsoft Teams | 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
 | SQL database | `sqldb_cos` — 작업 영역 Admin/Member가 수동 생성. 참가자별 DB 권장 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. DLP·카탈로그 확장은 아래 별도 조건 확인 |
@@ -69,14 +69,14 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 | 옵션 | 용도 |
 |---|---|
 | `--reference-ontology` | `ont_cos`가 없을 때 완성 모델(`fabric/ont_cos_reference`)을 배포하는 **복구 경로**. 이미 있으면 보존하며 덮어쓰지 않음. Agent 생성 실습의 기본 준비 옵션이 아님 |
-| `--extended-ontology` | 확장 CSV 17개를 추가 업로드하고 별도 `ont_cos_extended` 완성 모델을 배포합니다. 기존 작업 영역은 `--update-notebooks`도 필요하며 승인 실습 전에 준비합니다([확장 가이드](extended-model.md)). |
+| `--extended-ontology` | 비교·복구용 별도 `ont_cos_extended` 완성 모델과 확장 CSV 17개를 준비하는 옵션. 기존 작업 영역은 `--update-notebooks`도 필요. 기본 과정 시작 전에만 실행하며, 데이터만 준비하는 권장 경로와 구분합니다([확장 가이드](extended-model.md)). |
 | `--skip-prepare` | `01_prepare_data` 실행을 건너뜁니다. 참가자가 직접 실행하게 할 때 씁니다. |
 | `--update-notebooks` | 이미 있는 Notebook을 저장소 최신 버전으로 덮어씁니다. |
 | `--prefix` | 작업 영역 이름 접두사(기본 `cos-`) |
 | `--role` | 참가자 권한(기본 `Contributor`) |
 | `--tenant` | 여러 테넌트에 로그인한 경우 토큰을 받을 테넌트 |
 
-**수동 준비:** 작업 영역을 만들고 용량에 할당한 뒤 `lh_cos`를 **Lakehouse schemas** 켜고 만듭니다. `Files/workshop/data`에 `data/*.csv`를 올리고, `notebooks/*.ipynb` 5개를 가져와 기본 Lakehouse를 `lh_cos`로 연결한 뒤 `01_prepare_data`를 실행합니다. Eventhouse `eh_cos`를 만들고, **Ontology는 미생성 상태로 남깁니다.** 참가자 계정으로 [01장](../docs/01-ontology.md)의 새 항목 생성·Agent 원본 조사·Plan 미리 보기·Act 적용을 리허설합니다.
+**수동 준비:** 작업 영역을 만들고 용량에 할당한 뒤 `lh_cos`를 **Lakehouse schemas** 켜고 만듭니다. `Files/workshop/data`에 `data/*.csv`를 올립니다. 07장 이후 선택 실습을 제공한다면 `data/extended/*.csv`도 같은 위치에 **미리** 올립니다. `notebooks/*.ipynb` 5개를 가져와 기본 Lakehouse를 `lh_cos`로 연결한 뒤 `01_prepare_data`를 실행합니다. Eventhouse `eh_cos`를 만들고, **Ontology는 미생성 상태로 남깁니다.** 참가자 계정으로 [01장](../docs/01-ontology.md)의 새 항목 생성·Agent 원본 조사·Plan 미리 보기·Act 적용을 리허설합니다.
 
 **01장 복구:** Agent 오류로 진행이 막혔다면 현재 정의·항목 ID와 작업 내용을 먼저 보존합니다. 호환성을 확인한 `fabric/ont_cos_reference`를 별도 복구 작업 영역에 배포하거나, 현재 항목에서 누락 부분을 수동 보완합니다. 복구 작업 영역도 Lakehouse 등 필요한 원본이 있어야 하며 API 배포 시 `{{WORKSPACE_ID}}`, `{{LAKEHOUSE_ID}}`를 해당 원본 ID로 치환합니다. 다른 Ontology 항목을 사용하면 이후 Graph·Data Agent 연결을 다시 확인합니다. `--reference-ontology`로 기존 `ont_cos`를 교체할 수는 없으며, 복구 모델 사용을 Agent 생성 완료로 표시하지 않습니다.
 
@@ -149,7 +149,7 @@ Notebook·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Less
 | 06 | `sqldb_cos` 요청 3행, 팀별 조회 2/1행, 검토 착수 후 이력 1행. 중복 착수는 오류, 재게시 0행 추가·검토중 상태 유지 |
 | 07 기본 | 참가자 계정으로 `lh_cos` 레이블 적용·재열기 |
 | 07 확장 | 구성한 범위에 한해 DLP 정책 팁 또는 카탈로그 검색을 확인 |
-| 모델 확장 | 선택한 경우에만 `ont_cos_extended` 26개/40개, QX1–QX4 결과 2/1/3/3행. 기본 영향 3건 유지 |
+| 07장 이후 선택 확장 | 기존 `ont_cos`를 Agent와 보강(참고 26개/40개). QX1–QX4 결과 2/1/3/3행, 기존 질문 재검증, 기본 영향·승인·SQL 상태 보존 |
 
 ## 4. 다시 시연하기
 

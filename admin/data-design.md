@@ -22,7 +22,7 @@ CSV는 `data/`(UTF-8, BOM 없음)에 있고 `01_prepare_data`가 `gold.<table>`�
 | `production_plan` | 4 | `plan_id` | `product_id`, `planned_date`, `qty_ea` |
 | `purchase_order` | 6 | `po_id` | `material_code`, `supplier_id`, `order_date`, `eta`, `status` |
 
-선택 확장 데이터는 `data/extended/`에 있습니다. 핵심 11개에 아래 17개를 더해 총 28개 테이블로 준비하며 [확장 실습](../docs/extensions/ontology.md)에서 사용합니다. 준비 명령은 [확장 환경 준비](extended-model.md)에 있습니다. 핵심 영향 계산에는 추가하지 않습니다.
+선택 확장 데이터는 `data/extended/`에 있습니다. 핵심 11개에 아래 17개를 더해 총 28개 테이블로 기본 과정 전에 준비하되, 기존 Ontology에 연결하는 [엔터티 확장 선택 실습](../docs/extensions/ontology.md)은 **07장 Purview 완료 이후**에만 진행합니다. 준비 절차는 [확장 환경 준비](extended-model.md)에 있습니다. 핵심 영향 계산에는 추가하지 않습니다.
 
 | 테이블 | 행 | 키 | 주요 열 |
 |---|---:|---|---|

@@ -12,7 +12,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | 기능 | 역할 | 이 실습에서 만드는 것 |
 |---|---|---|
-| **Ontology** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 빈 항목에서 **Ontology Agent로 초안을 생성**하고, 생산·개발 일정과 대체 원료 질문에 맞춰 보강. 사람이 Plan의 원본·키·관계를 검토한 뒤 Act로 적용. 핵심 참고 모델은 **9개 엔터티·10개 관계**, 선택 확장은 **26개 엔터티·40개 관계** |
+| **Ontology** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 빈 항목에서 **Ontology Agent로 초안을 생성**하고, 생산·개발 일정과 대체 원료 질문에 맞춰 보강. 사람이 Plan의 원본·키·관계를 검토한 뒤 Act로 적용. 기본 과정의 핵심 참고 모델은 **9개 엔터티·10개 관계** |
 | **Graph** | 업무 모델의 **인스턴스와 다단계 의존성**을 탐색 | 원료 → 처방 버전 → 제품·생산 계획·시험·개발 과제의 경로를 GQL로 조회. Ontology에 반드시 필요한 저장소가 아니라 경로 탐색을 위한 선택 계층 |
 | **Data Agent** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | Ontology 맥락을 사용해 Lakehouse에 SQL 질의. 선택적으로 Graph의 GQL과 비교하고, 생성 질의·정답 Notebook으로 근거 검증 |
 | **Operations Agent** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
@@ -36,7 +36,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | 항목 | 내용 |
 |---|---|
 | 작업 영역 | 관리자가 준비한 `cos-pNNN` (예: `cos-p001`). Contributor 이상 권한 |
-| 준비된 항목 | Lakehouse `lh_cos`(gold 테이블 11개), Notebook 5개, Eventhouse `eh_cos`, SQL DB `sqldb_cos`. **Ontology `ont_cos`는 01장에서 직접 생성** |
+| 준비된 항목 | Lakehouse `lh_cos`(핵심 gold 테이블 11개, 선택 실습 데이터 사전 준비 시 총 28개), Notebook 5개, Eventhouse `eh_cos`, SQL DB `sqldb_cos`. **Ontology `ont_cos`는 01장에서 직접 생성** |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
@@ -54,10 +54,11 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | [05. 승인과 조치 기록](docs/05-approval.md) | Teams 승인 → Notebook으로 검토 요청·조치 이력 기록 |
 | [06. SQL Serving DB](docs/06-serving-db.md) | 승인 결과 게시, 담당 팀별 조회, 검토 상태 변경·이력 확인 |
 | [07. Purview 거버넌스](docs/07-purview.md) | 민감도 레이블 직접 적용, 준비된 DLP·카탈로그 확장 |
+| [선택. Ontology 엔터티 확장](docs/extensions/ontology.md) | **07장까지 기본 과정을 마친 뒤에만 선택**. 기존 `ont_cos`를 Agent와 보강해 로트·품질·재고·등록·설비·검토 담당 경로 탐색 |
 
 Graph를 사용하지 않는 실습 경로는 01 → 03장으로 진행합니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 각 단계에서는 먼저 직접 실행한 뒤 예상 결과와 대조합니다. 마지막에는 Operations Agent 감시와 Spark 세션을 중지합니다.
 
-확장 모델이 준비된 작업 영역에서는 [26개 엔터티 확장 실습](docs/extensions/ontology.md)도 진행할 수 있습니다. 핵심 9개 모델과 별도 항목이며, **총 28개 테이블**을 사용합니다.
+**기본 과정은 07장 Purview까지입니다.** 이후 원하는 참가자만 [Ontology 엔터티 확장 선택 실습](docs/extensions/ontology.md)을 진행합니다. 추가 데이터가 사전 준비된 환경에서 기존 `ont_cos`를 확장하며, 참고 범위는 **26개 엔터티·40개 관계·28개 테이블**입니다. 선택 실습을 생략해도 기본 과정은 완료됩니다.
 
 ## 실습 파일
 

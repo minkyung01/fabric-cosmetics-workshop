@@ -243,6 +243,31 @@ class Docs(unittest.TestCase):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         self.assertIn("지금은 없어도 정상", scenario)
 
+    def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        index = readme.split("## 진행 순서\n", 1)[1].split("\n## ", 1)[0]
+        self.assertLess(index.index("docs/07-purview.md"), index.index("docs/extensions/ontology.md"))
+        self.assertIn("07장까지 기본 과정을 마친 뒤에만 선택", index)
+        for name in ("01-ontology.md", "03-data-agent.md"):
+            text = (ROOT / "docs" / name).read_text(encoding="utf-8")
+            self.assertNotIn("extensions/ontology.md", text)
+            self.assertNotIn("ont_cos_extended", text)
+        purview = (ROOT / "docs" / "07-purview.md").read_text(encoding="utf-8")
+        self.assertIn("(extensions/ontology.md)", purview)
+        self.assertIn("00~07장 기본 과정을 마쳤습니다", purview)
+        extension = (ROOT / "docs" / "extensions" / "ontology.md").read_text(encoding="utf-8")
+        self.assertIn("07장 Purview까지 기본 과정을 마친 뒤에만", extension)
+        self.assertIn("같은 `ont_cos`에 추가·보강", extension)
+        self.assertIn("기존 엔터티·ID·키·속성·관계·바인딩은 보존", extension)
+        self.assertIn("`01_prepare_data`를 다시 실행하지 않습니다", extension)
+        self.assertIn("현재 데이터 상태에서", extension)
+        self.assertIn("## 실습 1. Ontology Agent로 기존 모델 확장", extension)
+        self.assertIn("## 실습 2. Lakehouse SQL로 업무 경로 확인", extension)
+        self.assertNotIn("da_cos_extended", extension)
+        admin = (ROOT / "admin" / "extended-model.md").read_text(encoding="utf-8")
+        self.assertIn("참가자가 00장을 시작하기 전에", admin)
+        self.assertIn("reset_ops = False", admin)
+
     def test_ontology_checkpoint_matches_core_keys_and_relationship_mappings(self):
         spec = runpy.run_path(str(ROOT / "tools" / "build_ontology.py"))
         lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
