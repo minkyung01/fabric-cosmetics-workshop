@@ -234,7 +234,12 @@ class Docs(unittest.TestCase):
         self.assertEqual(initial | added, core)
         self.assertIn("Boolean", improvement)
         self.assertIn("cn_registration", improvement)
-        self.assertIn("아직 적용하지 마", improvement)
+        self.assertIn("변경 미리 보기", improvement)
+        for prompt in prompts:
+            if "검토한 초안만 현재 ont_cos에 적용해줘." in prompt:
+                self.assertIn("원본은 읽기만 하고", prompt)
+            else:
+                self.assertNotRegex(prompt, r"Ontology나 작업 영역은 변경하지 마|아직 적용하지 마|먼저 Plan에서")
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         self.assertIn("지금은 없어도 정상", scenario)
 
