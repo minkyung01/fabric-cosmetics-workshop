@@ -464,7 +464,7 @@ class Docs(unittest.TestCase):
         self.assertIn("관계 **5개**", initial)
         for entity in ("Ingredient", "RawMaterial", "Supplier", "PurchaseOrder", "FormulaVersion", "Product"):
             self.assertIn(f"`{entity}`", initial)
-        recovery = lesson.split("<summary>엔터티 4개·관계 2개만 제안된 경우</summary>", 1)[1].split("</details>", 1)[0]
+        recovery = lesson.split("<summary>엔터티 또는 관계가 불충분하게 제안된 경우</summary>", 1)[1].split("</details>", 1)[0]
         self.assertIn("발주나 제품을 다른 대상의 속성으로만 합치거나 생략하지 마", recovery)
         self.assertIn("그대로 승인하지 말고 **Plan**에서 보완", recovery)
         self.assertIn("아직 저장된 모델이 아닙니다", recovery)
@@ -472,7 +472,15 @@ class Docs(unittest.TestCase):
         self.assertIn("gold.product의 product_id", recovery)
         for relationship in ("has_ingredient", "supplied_by", "orders", "uses_material", "made_with"):
             self.assertRegex(recovery, rf"(?m)^- {relationship}:")
-        self.assertIn("6개 타입이 보여도 관계·바인딩이 빠졌다면 아직 완료가 아닙니다", recovery)
+        self.assertIn("타입이 모두 있어도 관계·바인딩이 빠졌다면 아직 완료가 아닙니다", recovery)
+        self.assertIn("질문별로 이미 지원되는 부분과 누락된 부분", recovery)
+        self.assertIn("누락된 항목만 추가", recovery)
+        self.assertIn("기존 항목·ID·키·속성·바인딩은 보존", recovery)
+        self.assertIn("추가·수정·유지한 항목", recovery)
+        self.assertNotIn("엔터티 4개", recovery)
+        self.assertNotIn("관계는 2개", recovery)
+        self.assertNotIn("PurchaseOrder와 Product를 독립 엔터티로 추가", recovery)
+        self.assertNotIn("<summary>엔터티 4개", lesson)
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", lesson)
         self.assertEqual(images, ["../assets/screenshots/01-create-ontology.png",
                                   "../assets/screenshots/01-agent-preview-button.png",
@@ -494,9 +502,10 @@ class Docs(unittest.TestCase):
                             "FormulaLine을 거치지 않는 FormulaVersion → RawMaterial의 uses_material",
                             "gold.formula_line 테이블의 version_id와 material_code",
                             "각각 FormulaVersion.version_id와 RawMaterial.material_code에 연결",
-                            "처방 버전 4개와 연결된 판매 제품 3개",
-                            "제품이 없는 처방도 제외하지 말고",
-                            "결과가 다르면 차이와 원인을 보고",
+                            "확인 가능한 원본 열과 샘플 행",
+                            "관계 설계로 해석한 연결을 구분",
+                            "샘플만으로 단정하지 마",
+                            "도구가 없으면 해당 검증은 미실행",
                             "관련 없는 엔터티·관계·키·속성·바인딩은 보존",
                             "원본 데이터와 다른 Fabric 항목은 변경하지 마",
                             "오류를 보고하고 중단"):
@@ -505,15 +514,15 @@ class Docs(unittest.TestCase):
         self.assertIn("초안 검토용 정답지", lesson)
         self.assertIn("문제가 없다면 보완 요청 없이 적용 단계로 진행", lesson)
         repair = next(p for p in re.findall(r"```text\n(.*?)```", lesson, re.S)
-                      if "현재 초안에는 Ingredient" in p)
+                      if "현재 초안에서 첫 세 업무 질문에 필요한" in p)
         repair_sources = set(re.findall(r"\b\w+\b", repair)) & set(Data().tables())
         self.assertEqual(repair_sources, {"ingredient", "raw_material", "supplier", "purchase_order",
                                          "formula_version", "formula_line", "product"})
         self.assertIn("각각 독립된 업무 대상으로 모델링", repair)
         self.assertIn("formula_line은 관계 매핑으로만 사용", repair)
         self.assertIn("첫 요청에 함께 넣지 않습니다", lesson)
-        self.assertLess(lesson.index("### 2-3. RM-HA-120의 예상 데이터 결과"),
-                        lesson.index("현재 초안에는 Ingredient"))
+        self.assertLess(lesson.index("### 2-3. RM-HA-120의 원본 샘플과 연결 설계 확인"),
+                        lesson.index("현재 초안에서 첫 세 업무 질문에 필요한"))
         admin = (ROOT / "admin" / "preview-limitations.md").read_text(encoding="utf-8")
         self.assertIn("전체 엔터티 목록은 미리 지정하지 않되", admin)
         self.assertIn("이 관계의 방향·키 매핑", admin)
@@ -537,8 +546,9 @@ class Docs(unittest.TestCase):
         self.assertIn("검증이 끝나기 전에는 FormulaLine과 기존 연결을 제거하지 마", example)
         self.assertIn("나머지 엔터티·키·속성·바인딩·관계는 보존", example)
         self.assertIn("원본 데이터는 변경하지 마", example)
-        self.assertIn("처방 버전 4개와 연결된 판매 제품 3개", example)
-        self.assertIn("제품이 없는 처방도 제외하지 마", example)
+        self.assertIn("확인 가능한 샘플을 근거", example)
+        self.assertIn("결과 건수의 보존은 미실행", example)
+        self.assertNotIn("처방 버전 4개", example)
         self.assertIn("오류를 보고하고 중단", example)
         self.assertIn("Preview ontology", example)
         records = rows("formula_line")
@@ -585,9 +595,72 @@ class Docs(unittest.TestCase):
                 continue
             products = [product["product_id"] for product in rows("product")
                         if product["version_id"] == record["version_id"] and product["sales_status"] == "판매중"]
-            expected = " · ".join(f"`{product}`" for product in products) or "없음"
-            self.assertIn(f'| `{record["version_id"]}` | {record["status"]} | {expected} |', initial)
-        self.assertIn("폐기·개발중 버전을 제외하지 않습니다", initial)
+            if products:
+                expected = " · ".join(f"`{product}`" for product in products)
+                self.assertIn(f'| `{record["version_id"]}` | {record["status"]} | {expected} |', initial)
+        self.assertNotRegex(initial, r"\| `FV-(?:CRM-01-02|TON-02-01)` \| .* \| 없음 \|")
+
+    def test_initial_data_review_accepts_sample_limits_without_claiming_absence(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        review = lesson.split("### 2-3. RM-HA-120의 원본 샘플과 연결 설계 확인", 1)[1].split("\n## 3.", 1)[0]
+        self.assertIn("**Act로 전환하지 않습니다**", review)
+        self.assertIn("**같은 대화의 Plan**", review)
+        prompt = re.findall(r"```text\n(.*?)```", review, re.S)[0]
+        for requirement in ("lh_cos.gold에서 확인 가능한 원본 샘플", "RM-HA-120",
+                            "원료명·성분·공급사·발주·처방·제품",
+                            "샘플에서 실제로 확인한 값과 그 원본 테이블·열",
+                            "'샘플에서 미확인'", "'없음'으로 바꾸지 마",
+                            "테이블별 샘플에서 읽은 값과 관계 설계로 해석한 연결을 구분",
+                            "전체 건수나 제품의 부재는 단정하지 마",
+                            "실행하지 않은 검증은 미실행",
+                            "바인딩은 미확인", "오류를 보고하고 중단",
+                            "원본 데이터와 현재 Ontology는 변경하지 마"):
+            self.assertIn(requirement, prompt)
+        self.assertIn("**Preview ontology**", review)
+        self.assertIn("2-1·2-2 표와 대조", review)
+        self.assertIn("별도 SQL 실습으로 이동하지 않습니다", review)
+        self.assertIn("전체 건수나 제품이 없는 처방의 판정은 완료 조건이 아닙니다", review)
+        self.assertNotIn("처방 버전은 **4개**", review)
+        self.assertNotIn("| 없음 |", review)
+        self.assertIn("전체 경로를 조인 질의로 검증했다는 뜻은 아닙니다", review)
+        self.assertIn("3단계의 Act 적용 후 확인", review)
+        self.assertIn("`02_answers` Q1", review)
+
+    def test_initial_model_review_requires_definition_evidence_before_act(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        review = lesson.split("## 3. 초안 검토 → Act 적용 → 실제 데이터 확인", 1)[1].split("\n## 4.", 1)[0]
+        prompt = re.findall(r"```text\n(.*?)```", review, re.S)[0]
+        for requirement in ("저장된 기존 모델과 적용 전 초안을 혼동하지 마",
+                            "엔터티 표: 타입명, 고유 키, 원본 테이블, 속성별 원본 열",
+                            "관계 표: 관계명, 출발 타입·키, 도착 타입·키",
+                            "확인 범위 표", "미확인·미실행 항목과 이유",
+                            "FormulaVersion → RawMaterial",
+                            "gold.formula_line의 version_id와 material_code",
+                            "전수 질의를 실행하지 못하면",
+                            "0건이나 전체 건수를 샘플만으로 단정하지 마",
+                            "원본을 조회해 얻은 사실과 초안 정의에서 확인한 바인딩을 구분",
+                            "미확인으로 표시", "일치·불일치·미확인",
+                            "오류를 보고하고 중단",
+                            "원본 데이터와 현재 Ontology는 변경하지 마"):
+            self.assertIn(requirement, prompt)
+        self.assertIn("어디서 무엇을 보는가?", review)
+        self.assertIn("2-1 표와 대조", review)
+        self.assertIn("2-2 경로와 대조", review)
+        self.assertIn("**미확인 상태로 두고 승인하지 않습니다**", review)
+        self.assertIn("**설계의 키·속성·관계 바인딩을 확인하지 못한 경우**", review)
+        self.assertIn("이 제한을 기록하고 모델 적용으로 진행할 수 있습니다", review)
+        self.assertIn("Agent의 “일치” 판정만 믿기보다", review)
+        self.assertIn("`FormulaVersion / formula_id`이면 불일치", review)
+        self.assertLess(review.index("현재 적용하려는 Ontology 초안 자체를 검토"),
+                        review.index("**Switch to 'Act' + approve**"))
+        first_prompt = re.findall(r"```text\n(.*?)```", lesson, re.S)[0]
+        self.assertNotIn("처방 버전 4개", first_prompt)
+        self.assertNotIn("판매 제품 3개", first_prompt)
+        for prompt in re.findall(r"```text\n(.*?)```", lesson, re.S):
+            self.assertNotIn("쓰는 모든 처방 버전", prompt)
+        notebook_section = lesson.split("## 6.", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        self.assertIn("명시적인 Notebook 질의", notebook_section)
+        self.assertIn("Q1 표의 **4행**", notebook_section)
 
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
