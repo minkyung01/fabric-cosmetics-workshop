@@ -217,6 +217,38 @@ class Docs(unittest.TestCase):
         for path in (ROOT / "notebooks" / "src").glob("*.py"):
             self.assertNotRegex(path.read_text(encoding="utf-8"), r"강사|시연|관리자 사전 실행")
 
+    def test_ontology_agent_creation_and_improvement_have_separate_source_scopes(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        self.assertIn("## 1. 빈 Ontology 만들기", lesson)
+        self.assertIn("## 4. 추가 질문으로 모델 보강하기", lesson)
+        self.assertIn("기존 항목·ID·키·바인딩은 보존", lesson)
+        self.assertNotIn("관리자가 배포한 기본 Ontology", lesson)
+        prompts = re.findall(r"```text\n(.*?)```", lesson, re.S)
+        core = set(Data().tables())
+        initial = set(re.findall(r"\b\w+\b", prompts[0])) & core
+        self.assertEqual(initial, {"ingredient", "raw_material", "supplier", "purchase_order",
+                                   "formula_version", "formula_line", "product"})
+        improvement = next(p for p in prompts if "보강하는 변경안" in p)
+        added = (set(re.findall(r"\b\w+\b", improvement)) & core) - initial
+        self.assertEqual(added, {"production_plan", "dev_project", "stability_test", "material_alternative"})
+        self.assertEqual(initial | added, core)
+        self.assertIn("Boolean", improvement)
+        self.assertIn("cn_registration", improvement)
+        self.assertIn("아직 적용하지 마", improvement)
+        scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
+        self.assertIn("지금은 없어도 정상", scenario)
+
+    def test_ontology_checkpoint_matches_core_keys_and_relationship_mappings(self):
+        spec = runpy.run_path(str(ROOT / "tools" / "build_ontology.py"))
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        entities = {name: (table, key) for name, table, key in
+                    re.findall(r"^\| `(\w+)` \| `(\w+)` \| `(\w+)` \|", lesson, re.M)}
+        self.assertEqual(entities, {name: value[:2] for name, value in spec["ENTITIES"].items()})
+        relationships = {name: (src, dst, table, src_col, dst_col)
+                         for name, src, dst, table, src_col, dst_col in re.findall(
+                             r"^\| `(\w+)` \| (\w+) → (\w+) \| `(\w+)\.(\w+) → (\w+)` \|", lesson, re.M)}
+        self.assertEqual(relationships, {name: value[:5] for name, value in spec["RELATIONSHIPS"].items()})
+
 
 class Serving(unittest.TestCase):
     def setUp(self):
@@ -322,6 +354,7 @@ class Architecture(unittest.TestCase):
         self.assertNotIn("Lesson 번호", text)
         self.assertNotIn("공식 Fabric 아이콘 사용", text)
         self.assertNotIn("영향 3건", text)
+        self.assertIn("Ontology Agent로 초안·보강", text)
         self.assertIn("teams-icon", ids)
         for edge in ("ontology-graph", "graph-dataagent"):
             self.assertEqual(next(e for e in scene["elements"] if e["id"] == edge)["strokeStyle"], "dashed")
@@ -358,7 +391,7 @@ class Ontology(unittest.TestCase):
                         for value in re.findall(rf'"{key}": "([^"]+)"', text):
                             self.assertIn(value, PLACEHOLDERS, item)
 
-    def test_base_omits_what_participants_add(self):
+    def test_intermediate_recovery_reference_omits_two_relations_and_properties(self):
         base = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "fabric" / "ont_cos_base").rglob("*.json"))
         ref = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "fabric" / "ont_cos_reference").rglob("*.json"))
         for name in ("uses_material", "alternative_to", "is_active", "cn_registration"):
@@ -462,11 +495,14 @@ class ExtendedModel(unittest.TestCase):
 
     def test_provision_uploads_selected_profile_and_keeps_existing_core_ontology(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
-        for extended in (False, True):
-            with self.subTest(extended=extended):
+        for reference, extended, existing in ((False, False, False), (False, False, True),
+                                               (True, False, False), (True, False, True),
+                                               (False, True, False), (False, True, True),
+                                               (True, True, False), (True, True, True)):
+            with self.subTest(reference=reference, extended=extended, existing=existing):
                 items = [{"type": "Lakehouse", "displayName": "lh_cos", "id": "test-lakehouse"},
                          {"type": "Eventhouse", "displayName": "eh_cos", "id": "test-eventhouse"}]
-                if extended:
+                if existing:
                     items.append({"type": "Ontology", "displayName": "ont_cos", "id": "existing-core"})
                 fab = SimpleNamespace(
                     dry_run=False,
@@ -475,9 +511,10 @@ class ExtendedModel(unittest.TestCase):
                     change=Mock(return_value=(200, {"id": "test-item"})),
                     run_notebook=Mock(),
                 )
-                args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=False,
+                args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=reference,
                                        extended_ontology=extended, update_notebooks=False, skip_prepare=False)
-                with redirect_stdout(io.StringIO()):
+                output = io.StringIO()
+                with redirect_stdout(output):
                     provision["provision"](fab, "p001", args, {})
                 uploads = [c.args[1] for c in fab.call.call_args_list if "?resource=file" in c.args[1]]
                 self.assertEqual(len(uploads), 28 if extended else 11)
@@ -485,9 +522,42 @@ class ExtendedModel(unittest.TestCase):
                 fab.run_notebook.assert_called_once_with("test-workspace", "test-item", "run 01_prepare_data")
                 ontology_payloads = [c.args[3] for c in fab.change.call_args_list
                                      if c.args[3].get("type") == "Ontology"]
-                self.assertEqual([p["displayName"] for p in ontology_payloads],
-                                 ["ont_cos_extended"] if extended else ["ont_cos"])
+                expected = (["ont_cos"] if reference and not existing else []) + (["ont_cos_extended"] if extended else [])
+                self.assertEqual([p["displayName"] for p in ontology_payloads], expected)
+                if reference and not existing:
+                    self.assertEqual(ontology_payloads[0]["definition"]["parts"],
+                                     provision["definition_parts"](ROOT / "fabric" / "ont_cos_reference",
+                                         {"{{WORKSPACE_ID}}": "test-workspace", "{{LAKEHOUSE_ID}}": "test-lakehouse"}))
+                if existing:
+                    self.assertIn("retained", output.getvalue())
+                    if not reference:
+                        self.assertIn("Chapter 01 starts empty", output.getvalue())
                 self.assertEqual(len([c for c in fab.change.call_args_list if c.args[0].startswith("import notebook")]), 5)
+
+    def test_dry_run_describes_participant_creation_or_explicit_recovery(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        for reference in (False, True):
+            for extended in (False, True):
+                with self.subTest(reference=reference, extended=extended):
+                    fab = SimpleNamespace(
+                        dry_run=True, get_all=Mock(return_value=[]),
+                        change=Mock(return_value=(200, {"id": "00000000-0000-0000-0000-000000000000"})),
+                        call=Mock(), run_notebook=Mock(),
+                    )
+                    args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=reference,
+                                           extended_ontology=extended)
+                    output = io.StringIO()
+                    with redirect_stdout(output):
+                        provision["provision"](fab, "p001", args, {})
+                    text = output.getvalue()
+                    self.assertNotIn("ont_cos_base", text)
+                    self.assertEqual("deploy ont_cos_reference" in text, reference)
+                    self.assertEqual("leave ont_cos creation to participants" in text, not reference)
+                    self.assertEqual("deploy ont_cos_extended" in text, extended)
+                    fab.change.assert_called_once()
+                    self.assertEqual(fab.change.call_args.args[0], "create workspace")
+                    fab.call.assert_not_called()
+                    fab.run_notebook.assert_not_called()
 
     def test_provision_rejects_existing_notebook_without_explicit_update(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))

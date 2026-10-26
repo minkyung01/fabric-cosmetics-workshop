@@ -60,8 +60,8 @@
 <tspan x="543" dy="0">Ontology</tspan>
 </text>
 <text x="483" y="313" font-size="17" fill="#000000">
-<tspan x="483" dy="0">핵심 9개 / 확장 26개 엔터티</tspan>
-<tspan x="483" dy="25.5">키 · 속성 · Lakehouse 바인딩</tspan>
+<tspan x="483" dy="0">Ontology Agent로 초안·보강</tspan>
+<tspan x="483" dy="25.5">키 · 관계 · Lakehouse 바인딩</tspan>
 </text>
 <rect x="860" y="190" width="310" height="180" rx="12" stroke="#5C2D91" fill="#E8DAEF" />
 <text x="878" y="216" font-size="16" fill="#000000" font-weight="600">

@@ -15,7 +15,7 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 | Lakehouse | `lh_cos` (**schemas 켬**), `Files/workshop/data`에 핵심 CSV 11개. 선택 확장은 17개 추가, 총 28개 |
 | Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review`, `04_publish_serving` |
 | Eventhouse | `eh_cos` (KQL Database 이름 동일) |
-| Ontology | `ont_cos` — 기본 모델(엔터티 9, 관계 8) 또는 참고 모델(관계 10). 확장은 별도 `ont_cos_extended`(엔터티 26, 관계 40) |
+| Ontology | 기본 준비에서는 **생성하지 않음**. 참가자가 01장에서 빈 `ont_cos` 생성 → Agent 초안·보강 수행. 복구용 핵심 완성 모델과 별도 확장 `ont_cos_extended`는 선택 배포 |
 | Microsoft Teams | 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
 | SQL database | `sqldb_cos` — 작업 영역 Admin/Member가 수동 생성. 참가자별 DB 권장 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. DLP·카탈로그 확장은 아래 별도 조건 확인 |
@@ -39,7 +39,7 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 
 ## 2. 참가자 작업 영역 일괄 준비
 
-`admin/provision.py`가 참가자마다 작업 영역, Lakehouse, CSV 업로드, Notebook 5개, `01_prepare_data` 실행, Eventhouse, 기본 Ontology를 준비합니다. **SQL DB·Purview 정책은 자동 생성하지 않으며 아래 사전 준비가 필요합니다.** 이미 있는 항목은 다시 만들지 않습니다. 관리자 계정의 Azure CLI 로그인을 사용하며 비밀 값을 저장하지 않습니다.
+`admin/provision.py`가 참가자마다 작업 영역, Lakehouse, CSV 업로드, Notebook 5개, `01_prepare_data` 실행, Eventhouse를 준비합니다. **기본 실행은 Ontology를 배포하지 않습니다.** 참가자가 01장에서 새 UI로 빈 `ont_cos`를 만들고 Agent와 초안·보강을 수행합니다. **SQL DB·Purview 정책은 자동 생성하지 않으며 아래 사전 준비가 필요합니다.** 이미 있는 항목은 다시 만들지 않습니다. 관리자 계정의 Azure CLI 로그인을 사용하며 비밀 값을 저장하지 않습니다.
 
 1.  저장소 루트에서 Fabric 관리자(또는 용량 Contributor + 작업 영역 생성 권한) 계정으로 로그인합니다.
 
@@ -62,11 +62,13 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
     python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv
     ```
 
-**확인할 결과:** 참가자마다 `create workspace`, `create lakehouse lh_cos (schemas)`, `upload Files/workshop/data (11 csv)`, `import notebook …` 5줄, `run 01_prepare_data: completed`, `create eventhouse eh_cos`, `deploy ont_cos_base as ont_cos`가 출력됩니다.
+**확인할 결과:** 새 참가자 작업 영역마다 `create workspace`, `create lakehouse lh_cos (schemas)`, `upload Files/workshop/data (11 csv)`, `import notebook …` 5줄, `run 01_prepare_data: completed`, `create eventhouse eh_cos`가 출력됩니다. 기본 경로에는 Ontology 배포 로그와 `ont_cos` 항목이 없습니다. `--dry-run`에서는 참가자가 01장에서 생성한다는 안내가 표시됩니다.
+
+**기존 환경 재사용:** 이전 버전이 배포했거나 참가자가 만든 `ont_cos`는 자동 삭제·초기화하지 않으며, 기본 실행 시 기존 항목 보존과 새 생성 실습용 작업 영역 필요를 출력합니다. 처음부터 생성하는 과정은 새 작업 영역에서 준비합니다. 준비 스크립트 전체 재실행은 기본적으로 `01_prepare_data`도 실행하므로 진행 중인 승인 결과를 지울 수 있습니다. Ontology 복구만 필요하다면 다른 준비 단계를 무심코 반복하지 않습니다.
 
 | 옵션 | 용도 |
 |---|---|
-| `--reference-ontology` | 완성 모델(`fabric/ont_cos_reference`)을 `ont_cos`로 배포합니다. Ontology agent를 쓸 수 없는 환경이나 01장을 끝내지 못한 참가자용입니다. 기존 `ont_cos`를 먼저 지워야 합니다. |
+| `--reference-ontology` | `ont_cos`가 없을 때 완성 모델(`fabric/ont_cos_reference`)을 배포하는 **복구 경로**. 이미 있으면 보존하며 덮어쓰지 않음. Agent 생성 실습의 기본 준비 옵션이 아님 |
 | `--extended-ontology` | 확장 CSV 17개를 추가 업로드하고 별도 `ont_cos_extended` 완성 모델을 배포합니다. 기존 작업 영역은 `--update-notebooks`도 필요하며 승인 실습 전에 준비합니다([확장 가이드](extended-model.md)). |
 | `--skip-prepare` | `01_prepare_data` 실행을 건너뜁니다. 참가자가 직접 실행하게 할 때 씁니다. |
 | `--update-notebooks` | 이미 있는 Notebook을 저장소 최신 버전으로 덮어씁니다. |
@@ -74,7 +76,9 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 | `--role` | 참가자 권한(기본 `Contributor`) |
 | `--tenant` | 여러 테넌트에 로그인한 경우 토큰을 받을 테넌트 |
 
-**수동 준비:** 작업 영역을 만들고 용량에 할당한 뒤 `lh_cos`를 **Lakehouse schemas** 켜고 만듭니다. `Files/workshop/data`에 `data/*.csv`를 올리고, `notebooks/*.ipynb` 5개를 가져와 기본 Lakehouse를 `lh_cos`로 연결한 뒤 `01_prepare_data`를 실행합니다. Eventhouse `eh_cos`를 만들고, Ontology는 [01장](../docs/01-ontology.md)의 엔터티·관계 표대로 만들거나 `fabric/ont_cos_base`를 REST API로 배포합니다(`{{WORKSPACE_ID}}`, `{{LAKEHOUSE_ID}}` 치환).
+**수동 준비:** 작업 영역을 만들고 용량에 할당한 뒤 `lh_cos`를 **Lakehouse schemas** 켜고 만듭니다. `Files/workshop/data`에 `data/*.csv`를 올리고, `notebooks/*.ipynb` 5개를 가져와 기본 Lakehouse를 `lh_cos`로 연결한 뒤 `01_prepare_data`를 실행합니다. Eventhouse `eh_cos`를 만들고, **Ontology는 미생성 상태로 남깁니다.** 참가자 계정으로 [01장](../docs/01-ontology.md)의 새 항목 생성·Agent 원본 조사·Plan 미리 보기·Act 적용을 리허설합니다.
+
+**01장 복구:** Agent 오류로 진행이 막혔다면 현재 정의·항목 ID와 작업 내용을 먼저 보존합니다. 호환성을 확인한 `fabric/ont_cos_reference`를 별도 복구 작업 영역에 배포하거나, 현재 항목에서 누락 부분을 수동 보완합니다. 복구 작업 영역도 Lakehouse 등 필요한 원본이 있어야 하며 API 배포 시 `{{WORKSPACE_ID}}`, `{{LAKEHOUSE_ID}}`를 해당 원본 ID로 치환합니다. 다른 Ontology 항목을 사용하면 이후 Graph·Data Agent 연결을 다시 확인합니다. `--reference-ontology`로 기존 `ont_cos`를 교체할 수는 없으며, 복구 모델 사용을 Agent 생성 완료로 표시하지 않습니다.
 
 ## SQL Serving DB 준비 (06장)
 
@@ -124,7 +128,7 @@ python -m unittest discover -s tests -v
 
 Notebook·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Lesson 순서, CSV와 기대 영향 계산, 게시 SQL 생성 등을 오프라인으로 점검합니다. **Fabric 배포·SQL 엔진 동작·Teams 승인·Purview 정책 평가를 대신하지 않습니다.** 실제 테넌트 사전 점검을 별도로 수행합니다.
 
-배포 정의는 `fabric/ont_cos_base`(시작 모델), `fabric/ont_cos_reference`(핵심 완성 모델), `fabric/ont_cos_extended`(선택 확장 모델)에 있습니다. 준비 Notebook의 기본 과정 실행은 관리자가 사전에 마치며, 참가자가 초기화를 요청하면 진행 중인 `ops` 결과 삭제 여부를 먼저 확인합니다.
+보관된 정의는 `fabric/ont_cos_base`(이전 과정의 중간 복구 참고 모델), `fabric/ont_cos_reference`(핵심 완성 복구 모델), `fabric/ont_cos_extended`(선택 확장 완성 모델)입니다. **`ont_cos_base`는 기본 배포 대상이 아닙니다.** 준비 Notebook은 관리자가 사전에 실행하며, 참가자가 초기화를 요청하면 진행 중인 `ops` 결과 삭제 여부를 먼저 확인합니다.
 
 아키텍처는 `tools/build_architecture.py`에서 수정한 뒤 SVG·Excalidraw를 함께 재생성합니다. 직접 편집은 [Microsoft Excalidraw](https://aka.ms/excalidraw)에서 가능하지만 생성기 변경 없이 산출물만 수정하면 재생성 시 덮어씁니다. 아이콘 원본·사용 조건은 [출처 문서](../assets/icon-attribution.md)에 보관합니다.
 
@@ -134,8 +138,9 @@ Notebook·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Less
 
 | 장 | 확인할 값 |
 |---|---|
-| 준비 | 핵심 `gold` 테이블 11개(선택 확장 28개), `ops` 스키마 비어 있음. API 생성 모델의 경험·바인딩 확인 |
-| 01 | 관계 10개, `FormulaVersion.is_active`, `RawMaterial.cn_registration` 추가 |
+| 준비 | 핵심 `gold` 테이블 11개(선택 확장 28개), `ops` 스키마 비어 있음, 기본 경로는 `ont_cos` 미생성. 복구·확장 API 정의는 별도 호환성 확인 |
+| 01 초안 | 참가자 계정으로 빈 항목 생성 → Plan 원본 조사·초안 검토 → Act 적용 → 저장된 키·바인딩·실제 행 확인 |
+| 01 보강 | 생산·개발 일정과 대체 검토 질문으로 빈틈 진단 → Plan 변경안 → Act 적용. 핵심 참고 9개/10개 경로와 `is_active`, `cn_registration` 바인딩·Plan 질의 확인 |
 | 02 | Graph Q1 4행 → `is_active` 필터 3행, 생산 계획 `PP-1101`·`PP-1102`·`PP-1103`, `ST-0711` |
 | 02 | `02_answers` Q5 지연 전 여유 8·15·64·3일 |
 | 03 | Graph 없이도 `da_cos`가 Ontology 문맥으로 Lakehouse SQL 실행, 질문 1–3이 정답과 일치 |

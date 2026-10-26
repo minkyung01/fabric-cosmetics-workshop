@@ -3,7 +3,8 @@
 Run: python tools/build_ontology.py          (writes fabric/ont_cos_base, ont_cos_reference and ont_cos_extended)
      python tools/build_ontology.py --check  (fails if the folders are out of date)
 
-ont_cos_base       what participants start with in chapter 01: no uses_material / alternative_to relationships,
+ont_cos_base       intermediate recovery reference, not the default participant starting point:
+                   no uses_material / alternative_to relationships,
                    no is_active / cn_registration properties.
 ont_cos_reference  the completed model (fallback when the UI steps cannot be finished).
 ont_cos_extended   opt-in completed model: 26 entities / 40 relationships over 28 tables.

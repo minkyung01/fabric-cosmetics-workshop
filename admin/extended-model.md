@@ -15,7 +15,7 @@ python admin/provision.py --capacity <capacity-id> --participants p001 --extende
 python admin/provision.py --capacity <capacity-id> --participants p001 --extended-ontology
 ```
 
-핵심 `ont_cos`를 그대로 두고 별도 완성 모델을 추가합니다. 원본 CSV 11개에 `data/extended`의 17개를 더해 **같은 `Files/workshop/data` 폴더**에 업로드합니다. `01_prepare_data`는 확장 파일이 모두 있을 때 28개 테이블을 생성하며 일부만 있으면 오류로 중지합니다.
+기존 핵심 `ont_cos`는 보존하고 별도 확장 완성 모델만 추가합니다. 새 작업 영역에서는 핵심 `ont_cos`를 생성하지 않으며 참가자가 01장에서 만듭니다. 원본 CSV 11개에 `data/extended`의 17개를 더해 **같은 `Files/workshop/data` 폴더**에 업로드합니다. `01_prepare_data`는 확장 파일이 모두 있을 때 28개 테이블을 생성하며 일부만 있으면 오류로 중지합니다.
 
 이미 준비한 작업 영역은 **`--update-notebooks`도 지정**해 새 준비 Notebook을 가져와야 합니다. 다시 실행하면 기본 `reset_ops = True`에 따라 승인 결과가 초기화되므로 **승인 실습 전**에 준비합니다. 기존 Ontology 항목은 자동 덮어쓰기·마이그레이션하지 않습니다. `--skip-prepare`를 지정했다면 `01_prepare_data`를 직접 실행해 확장 테이블을 확인한 후 바인딩을 사용합니다.
 
@@ -27,7 +27,7 @@ python admin/provision.py --capacity <capacity-id> --participants p001 --extende
 
 ## 준비 완료 확인
 
-- `ont_cos`가 유지되고 별도 `ont_cos_extended`에서 엔터티 26개·관계 40개·원본 바인딩을 확인했습니다.
+- 기존 `ont_cos`는 변경되지 않았으며, 새 작업 영역에서는 01장 생성용으로 미생성 상태입니다. 별도 `ont_cos_extended`에서 엔터티 26개·관계 40개·원본 바인딩을 확인했습니다.
 - 참가자 계정의 Lakehouse SQL endpoint에서 `gold` 테이블 28개를 조회할 수 있습니다.
 - `fabric/sql/extended-queries.sql`의 QX1–QX4 결과는 각각 **2/1/3/3행**이며 [실습의 대조 결과](../docs/extensions/ontology.md#실습-1-lakehouse-sql로-업무-경로-확인)와 일치합니다.
 - 핵심 영향 대상은 `PP-1101`, `PP-1102`, `ST-0711`로 유지됩니다. 추가 재고를 핵심 일정 영향 계산에 자동 합산하지 않습니다.

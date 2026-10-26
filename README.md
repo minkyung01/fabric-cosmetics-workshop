@@ -12,7 +12,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | 기능 | 역할 | 이 실습에서 만드는 것 |
 |---|---|---|
-| **Ontology** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 핵심 엔터티 9개의 키·속성·Lakehouse 바인딩을 확인하고 관계 10개 완성. 선택 확장에서는 로트·품질·재고·등록·설비까지 **26개 엔터티·40개 관계**로 탐색 |
+| **Ontology** | 테이블을 실제 업무 대상·관계·판정 맥락으로 연결하는 **공유 업무 모델** | 빈 항목에서 **Ontology Agent로 초안을 생성**하고, 생산·개발 일정과 대체 원료 질문에 맞춰 보강. 사람이 Plan의 원본·키·관계를 검토한 뒤 Act로 적용. 핵심 참고 모델은 **9개 엔터티·10개 관계**, 선택 확장은 **26개 엔터티·40개 관계** |
 | **Graph** | 업무 모델의 **인스턴스와 다단계 의존성**을 탐색 | 원료 → 처방 버전 → 제품·생산 계획·시험·개발 과제의 경로를 GQL로 조회. Ontology에 반드시 필요한 저장소가 아니라 경로 탐색을 위한 선택 계층 |
 | **Data Agent** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | Ontology 맥락을 사용해 Lakehouse에 SQL 질의. 선택적으로 Graph의 GQL과 비교하고, 생성 질의·정답 Notebook으로 근거 검증 |
 | **Operations Agent** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
@@ -36,7 +36,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | 항목 | 내용 |
 |---|---|
 | 작업 영역 | 관리자가 준비한 `cos-pNNN` (예: `cos-p001`). Contributor 이상 권한 |
-| 준비된 항목 | Lakehouse `lh_cos`(gold 테이블 11개), Notebook 5개, Eventhouse `eh_cos`, 기본 Ontology `ont_cos`. SQL DB `sqldb_cos`는 관리자가 별도로 준비 |
+| 준비된 항목 | Lakehouse `lh_cos`(gold 테이블 11개), Notebook 5개, Eventhouse `eh_cos`, SQL DB `sqldb_cos`. **Ontology `ont_cos`는 01장에서 직접 생성** |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
@@ -47,7 +47,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | Lesson(장) | 내용 |
 |---|---|
 | [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개와 준비된 작업 영역 확인 |
-| [01. Ontology](docs/01-ontology.md) | 엔터티·키·원본 바인딩 이해, Plan 모드로 모델 설명·데이터 질의, 변경안 검토 후 Act로 적용 |
+| [01. Ontology](docs/01-ontology.md) | 빈 Ontology → 업무 질문으로 Agent 초안 생성 → 검토·Act 적용 → 추가 질문으로 모델 보강 → Plan 질의로 검증 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
 | [03. Data Agent](docs/03-data-agent.md) | Ontology 맥락·Lakehouse SQL 기반 질문, 선택적으로 Graph와 비교 |
 | [04. Operations Agent](docs/04-operations-agent.md) | 지침·Playbook 구성, 감시 시작, 공급 지연 반영 |

@@ -4,7 +4,8 @@ For each participant pNNN this creates (or reuses) workspace cos-pNNN on the giv
   - a schema-enabled Lakehouse lh_cos, with data/*.csv uploaded to Files/workshop/data
   - the 5 notebooks bound to lh_cos (01_prepare_data is run once to build the gold tables)
   - an Eventhouse eh_cos (KQL database eh_cos) for the Operations agent
-  - the base ontology ont_cos (participants complete it in chapter 01), or the completed one with --reference-ontology
+  - no core ontology by default: participants create ont_cos with the Ontology agent in chapter 01
+  - the completed core ontology only with --reference-ontology (recovery path)
   - optional 17 additional CSVs and a separate ont_cos_extended with --extended-ontology
 Existing items are reused; notebooks are only overwritten with --update-notebooks.
 
@@ -181,8 +182,11 @@ def provision(fab, pid, args, users):
     else:
         print("  workspace exists")
     if fab.dry_run and ws.startswith("0000"):
-        ontology = "reference" if args.reference_ontology else "base"
-        print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks, run 01_prepare_data, {EVENTHOUSE}, {ontology} ontology {ONTOLOGY}")
+        print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks, run 01_prepare_data, {EVENTHOUSE}")
+        if args.reference_ontology:
+            print(f"  [dry-run] deploy ont_cos_reference as {ONTOLOGY} if absent; keep any existing ontology")
+        else:
+            print(f"  [dry-run] leave {ONTOLOGY} creation to participants in chapter 01; keep any existing ontology")
         if args.extended_ontology:
             print("  [dry-run] 28 CSVs total, deploy ont_cos_extended as a separate ontology")
         return
@@ -199,6 +203,8 @@ def provision(fab, pid, args, users):
     items = {(i["type"], i["displayName"]): i["id"] for i in fab.get_all(f"/workspaces/{ws}/items")}
     if args.extended_ontology and ("Notebook", "01_prepare_data") in items and not args.update_notebooks:
         raise ValueError("--extended-ontology on an existing workspace requires --update-notebooks before preparing 28 tables")
+    if not args.reference_ontology and ("Ontology", ONTOLOGY) in items:
+        print(f"  {ONTOLOGY} exists; retained. Chapter 01 starts empty: prepare a fresh workspace for the creation exercise.")
     lh = items.get(("Lakehouse", LAKEHOUSE))
     if not lh:
         _, created = fab.change(f"create lakehouse {LAKEHOUSE} (schemas)", "POST", f"/workspaces/{ws}/lakehouses",
@@ -241,12 +247,12 @@ def provision(fab, pid, args, users):
     if ("Eventhouse", EVENTHOUSE) not in items:
         fab.change(f"create eventhouse {EVENTHOUSE}", "POST", f"/workspaces/{ws}/eventhouses", {"displayName": EVENTHOUSE})
 
-    models = [(ONTOLOGY, "ont_cos_reference" if args.reference_ontology else "ont_cos_base")]
+    models = [(ONTOLOGY, "ont_cos_reference")] if args.reference_ontology else []
     if args.extended_ontology:
         models.append(("ont_cos_extended", "ont_cos_extended"))
     for display_name, folder in models:
         if ("Ontology", display_name) in items:
-            print(f"  {display_name} exists; ontology not deployed (delete it first to redeploy)")
+            print(f"  {display_name} exists; retained, ontology definition not overwritten")
             continue
         parts = definition_parts(ROOT / "fabric" / folder, {"{{WORKSPACE_ID}}": ws, "{{LAKEHOUSE_ID}}": lh})
         fab.change(f"deploy {folder} as {display_name}", "POST", f"/workspaces/{ws}/items",
@@ -264,7 +270,7 @@ def main():
     parser.add_argument("--update-notebooks", action="store_true", help="overwrite existing notebooks")
     parser.add_argument("--skip-prepare", action="store_true", help="do not run 01_prepare_data")
     parser.add_argument("--reference-ontology", action="store_true",
-                        help="deploy the completed ontology instead of the base one (fallback for chapter 01)")
+                        help="deploy the completed core ontology if absent (chapter 01 recovery; default creates no ontology)")
     parser.add_argument("--extended-ontology", action="store_true",
                         help="also upload 17 extension CSVs and deploy a separate 26-entity ont_cos_extended")
     parser.add_argument("--dry-run", action="store_true")

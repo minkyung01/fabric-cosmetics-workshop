@@ -16,7 +16,7 @@ CARDS = [
     ("source", "00", "Lakehouse", "lakehouse_48_item.svg", 70, 190,
      ["lh_cos · gold 11 / 확장 28", "업무 데이터 · 키 · 원본"], "#0078D4", "#CFE4FA"),
     ("ontology", "01", "Ontology", "fabric_48_color.svg", 465, 190,
-     ["핵심 9개 / 확장 26개 엔터티", "키 · 속성 · Lakehouse 바인딩"], "#5C2D91", "#E8DAEF"),
+     ["Ontology Agent로 초안·보강", "키 · 관계 · Lakehouse 바인딩"], "#5C2D91", "#E8DAEF"),
     ("graph", "02", "Graph (선택)", "graph_model_instance_48_item.svg", 860, 190,
      ["ont_cos_graph_… · GQL", "다단계 경로 · 유효 버전 필터"], "#5C2D91", "#E8DAEF"),
     ("dataagent", "03", "Data Agent", "data_agent_48_item.svg", 1255, 190,

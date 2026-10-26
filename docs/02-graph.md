@@ -6,7 +6,7 @@ Ontology는 원본에 바인딩된 업무 모델이며 **Graph가 필수는 아�
 
 ## 시작 전 확인
 
-- 01장에서 관계 10개(`uses_material` 포함)와 `is_active` 속성을 추가했습니다.
+- 01장에서 Ontology Agent로 생성·보강하고 5단계의 핵심 경로(`uses_material` 포함)와 `is_active` 속성 바인딩을 점검했습니다.
 - 질의는 GQL(Graph Query Language)로 씁니다. 기본 형태는 `MATCH (노드:레이블)-[:관계]->(노드:레이블) WHERE … RETURN …`입니다.
 
 ## 1. Graph 만들기
@@ -106,8 +106,8 @@ RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registra
 - **Manage graph**에서 **Ineligible**이면 키뿐 아니라 원본 종류·바인딩 수·지원 속성 형식을 확인합니다. [관리자 제약사항](../admin/preview-limitations.md)의 투영 적격성 항목을 참고합니다.
 - 관계가 **Not mapped**로 나오면 관계 설정에서 양쪽 Property와 원본 열을 확인합니다.
 - 질의가 0행이면 레이블·속성 이름의 대소문자를 Graph model의 스키마(노드·에지 목록)와 비교합니다. 예제는 엔터티 타입·관계 이름을 사용하며, 네임스페이스 접두사가 붙은 환경은 실제 레이블에 맞춰 수정합니다.
-- `is_active`가 없다는 오류가 나면 01장 3단계를 마친 뒤 **Manage graph**로 다시 Materialize합니다. Graph는 Materialize 시점의 데이터 스냅샷입니다.
-- 01장을 끝내지 못했다면 `WHERE fv.status <> '폐기'`로 대신합니다.
+- `is_active`가 없다는 오류가 나면 01장 4단계의 보강과 5단계 점검을 마친 뒤 **Manage graph**로 다시 Materialize합니다. Graph는 Materialize 시점의 데이터 스냅샷입니다.
+- 다른 핵심 경로는 있고 `is_active`만 누락된 경우 임시로 `WHERE fv.status <> '폐기'`를 쓸 수 있습니다. 타입·관계 자체가 없으면 필터로 대신할 수 없으므로 01장에서 보완하거나 `02_answers`로 확인합니다.
 - 원본 ETA만 바뀌었다면 Graph 항목의 **… → Schedule → Refresh now**로 갱신합니다. 스키마 변경 후 재투영과 원본 데이터 새로 고침을 구분합니다.
 
 ## 공식 문서

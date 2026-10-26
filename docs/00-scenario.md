@@ -22,7 +22,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
 ## 미션
 
-1. Ontology에 빠진 관계와 업무 규칙을 채워 **영향 경로가 끊기지 않게** 합니다.
+1. 빈 Ontology에서 **Ontology Agent로 업무 질문에 맞는 초안을 만들고**, 추가 질문에 필요한 대상·관계·업무 맥락을 보강합니다. 적용 전에는 사람이 원본과 설계를 검토합니다.
 2. Graph 또는 Lakehouse SQL로 `RM-HA-120`의 영향 후보를 찾고, **현행·개발중 처방만** 남기도록 필터를 바꿔 봅니다.
 3. Data Agent에 같은 질문을 하고 직접 실행한 질의·Notebook 결과와 비교합니다.
 4. Operations Agent가 **공급 지연을 감지해 Teams로 알리고**, 승인하면 **검토 요청이 기록**되게 합니다.
@@ -46,7 +46,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 | Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review` | 기본 Lakehouse가 `lh_cos` |
 | Notebook | `04_publish_serving` | 승인 후 게시 SQL 생성, 기본 Lakehouse `lh_cos` |
 | Eventhouse | `eh_cos` | KQL 데이터베이스 `eh_cos` 포함 |
-| Ontology | `ont_cos` | 기본 모델(엔터티 9개, 관계 8개) |
+| Ontology | `ont_cos` | **01장에서 직접 생성**. 지금은 없어도 정상 |
 | SQL database | `sqldb_cos` | 관리자가 준비. 06장에서 스키마 생성·게시·조회 |
 
 3. `lh_cos`를 열고 **Tables** → `gold` → `purchase_order`를 누릅니다.
@@ -63,7 +63,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
 - 작업 영역이 보이지 않으면 관리자에게 계정과 작업 영역 번호를 확인합니다.
 - `gold` 테이블이 없거나 `PO-5501`이 이미 `지연` 상태면 관리자에게 초기 상태 복원을 요청합니다. `01_prepare_data` 재실행은 기존 실습 결과를 삭제하므로 임의로 초기화하지 않습니다.
-- `ont_cos`가 없으면 관리자에게 실습 항목 준비를 요청합니다.
+- `ont_cos`는 01장에서 만듭니다. 이미 엔터티가 들어 있는 항목이 있다면 임의로 삭제하지 말고 관리자에게 빈 항목부터 시작할 작업 영역을 확인합니다.
 
 ## 공식 문서
 
@@ -72,4 +72,4 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
 ## 다음 단계
 
-[01. Ontology](01-ontology.md)에서 기본 모델에 빠진 관계와 업무 규칙을 채웁니다.
+[01. Ontology](01-ontology.md)에서 Ontology Agent와 초안을 만들고, 질문의 범위를 넓혀 모델을 보강합니다.

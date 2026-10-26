@@ -77,20 +77,24 @@ SQL database `sqldb_cos`의 업무 데이터는 [06장](../docs/06-serving-db.md
 | ProductionPlan | `production_plan` | `plan_id` |
 | PurchaseOrder | `purchase_order` | `po_id` |
 
-| 관계 | 방향 | 원본 | 기본 모델 |
-|---|---|---|---|
-| `has_ingredient` | RawMaterial → Ingredient | `raw_material` | 있음 |
-| `supplied_by` | RawMaterial → Supplier | `raw_material` | 있음 |
-| `uses_material` | FormulaVersion → RawMaterial | `formula_line` | **없음 (01장에서 추가)** |
-| `made_with` | Product → FormulaVersion | `product` | 있음 |
-| `develops` | DevProject → FormulaVersion | `dev_project` | 있음 |
-| `tests_version` | StabilityTest → FormulaVersion | `stability_test` | 있음 |
-| `for_project` | StabilityTest → DevProject | `stability_test` | 있음 |
-| `produces` | ProductionPlan → Product | `production_plan` | 있음 |
-| `orders` | PurchaseOrder → RawMaterial | `purchase_order` | 있음 |
-| `alternative_to` | RawMaterial → RawMaterial | `material_alternative` | **없음 (01장에서 추가)** |
+기본 과정은 참가자가 빈 `ont_cos`에서 Agent로 생성·보강합니다. 아래는 후속 GQL과 맞추기 위한 핵심 참고 설계이며 초기부터 관리자 배포로 제공하지 않습니다.
 
-기본 모델에는 `FormulaVersion.is_active`, `RawMaterial.cn_registration` 속성도 없습니다. `tools/build_ontology.py`가 `fabric/ont_cos_base`, `fabric/ont_cos_reference`, 선택 확장 `fabric/ont_cos_extended`를 만듭니다. 확장은 위 9개 엔터티·10개 관계를 보존하고 17개 엔터티·30개 관계를 더합니다. 원본·키 표, 업무 경로·정답·핵심과의 경계는 [확장 실습](../docs/extensions/ontology.md)에 있습니다.
+| 관계 | 방향 | 원본 | 질문 범위 |
+|---|---|---|---|
+| `has_ingredient` | RawMaterial → Ingredient | `raw_material` | 초안: 원료의 의미 |
+| `supplied_by` | RawMaterial → Supplier | `raw_material` | 초안: 공급사 |
+| `uses_material` | FormulaVersion → RawMaterial | `formula_line` | 초안: 처방의 사용 원료 |
+| `made_with` | Product → FormulaVersion | `product` | 초안: 제품의 처방 |
+| `develops` | DevProject → FormulaVersion | `dev_project` | 보강: 개발 과제 |
+| `tests_version` | StabilityTest → FormulaVersion | `stability_test` | 보강: 시험 대상 |
+| `for_project` | StabilityTest → DevProject | `stability_test` | 보강: 시험의 개발 과제 |
+| `produces` | ProductionPlan → Product | `production_plan` | 보강: 생산 일정 |
+| `orders` | PurchaseOrder → RawMaterial | `purchase_order` | 초안: 발주·입고 예정일 |
+| `alternative_to` | RawMaterial → RawMaterial | `material_alternative` | 보강: 대체 후보 |
+
+보강 단계에서는 `FormulaVersion.is_active`, `RawMaterial.cn_registration`과 업무 맥락도 추가·검증합니다. Agent가 이미 바인딩한 항목은 중복 생성하지 않습니다. 참고 초안은 성분·원료·공급사·처방·제품·발주 6개와 위 초안 관계 5개, 보강 후 핵심 참고는 9개·10개입니다. 실제 Agent 출력은 달라질 수 있으며 필요한 경로·원본 매핑으로 판정합니다.
+
+`tools/build_ontology.py`는 이전 과정의 중간 참고 `fabric/ont_cos_base`(9개/8개, 두 속성 누락), 완성 복구용 `fabric/ont_cos_reference`, 선택 확장 `fabric/ont_cos_extended`를 만듭니다. **중간 참고 모델은 이번 생성 실습의 초안 산출물이나 기본 배포가 아닙니다.** 확장은 완성 핵심 9개 엔터티·10개 관계를 보존하고 17개 엔터티·30개 관계를 더합니다. 원본·키 표, 업무 경로·정답·핵심과의 경계는 [확장 실습](../docs/extensions/ontology.md)에 있습니다.
 
 ## 업무 규칙
 
