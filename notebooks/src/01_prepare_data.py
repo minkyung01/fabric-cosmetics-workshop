@@ -1,9 +1,10 @@
 # %% [markdown]
 # # 01_prepare_data — 실습 데이터 준비와 초기화
 #
-# `Files/workshop/data/*.csv`(가상 데이터)를 읽어 `gold` 스키마 테이블을 만듭니다.
-# 다시 실행하면 `gold`를 초기 상태로 되돌리고 `ops` 스키마의 실습 결과(영향 분석·검토 요청·조치 이력)를 지웁니다.
-# 기본 과정에서는 00장에서 준비된 데이터를 확인합니다. 초기화가 필요할 때만 안내에 따라 실행하며, 진행 중인 실습 결과를 보존해야 한다면 실행하지 않습니다.
+# 참가자가 **00장**에서 `Files/workshop/data/*.csv`(가상 데이터)를 읽어 `gold` 스키마 테이블을 직접 만듭니다.
+# 기본 `reset_ops = False`는 최초 적재용입니다. 기존 실습 테이블이 있으면 쓰기 전에 오류로 중지합니다.
+# 초기화에 동의한 경우에만 `reset_ops = True`로 바꿉니다. 선택한 `gold` 테이블을 CSV로 덮어쓰고,
+# `ops`의 영향 분석·검토 요청·조치 이력을 지웁니다. 진행 중인 실습이나 07장 이후 모델 확장 중에는 재실행하지 않습니다.
 #
 # - 기본 Lakehouse: `lh_cos` (스키마 사용)
 # - 실제 구매·처방 시스템과 연결되지 않은 **가상 데이터**입니다.
@@ -11,7 +12,7 @@
 
 # %% [parameters]
 data_folder = "Files/workshop/data"
-reset_ops = True
+reset_ops = False
 
 # %%
 from pyspark.sql import functions as F
@@ -79,11 +80,28 @@ def select_tables(available):
         raise ValueError(f"확장 CSV는 17개를 모두 올려야 합니다. 누락: {sorted(extended_files - available)}")
     return {**TABLES, **EXTENDED_TABLES} if has_extended else TABLES
 
+
+def check_existing_data(reset_ops):
+    if not isinstance(reset_ops, bool):
+        raise ValueError("reset_ops는 True 또는 False여야 합니다.")
+    if reset_ops:
+        return
+    names = [f"gold.{table}" for table in (*TABLES, *EXTENDED_TABLES)]
+    names += [f"ops.{table}" for table in OPS_TABLES]
+    existing = [name for name in names if spark.catalog.tableExists(name)]
+    if existing:
+        raise ValueError(
+            f"기존 실습 테이블이 있어 적재를 중지합니다: {', '.join(existing)}. "
+            "현재 결과를 먼저 확인하세요. 초기화에 동의한 경우에만 reset_ops = True로 실행합니다. "
+            "초기화는 gold를 덮어쓰고 ops 실습 결과를 삭제합니다."
+        )
+
 # %%
 from notebookutils import fs
 
 tables_to_load = select_tables({entry.name for entry in fs.ls(data_folder)})
 print(f"데이터 프로필: {len(tables_to_load)}개 테이블")
+check_existing_data(reset_ops)
 
 spark.sql("CREATE SCHEMA IF NOT EXISTS gold")
 spark.sql("CREATE SCHEMA IF NOT EXISTS ops")
@@ -105,7 +123,8 @@ if reset_ops:
 
 # %% [markdown]
 # ## 확인
-# 아래 결과가 `admin/data-design.md`의 행 수와 같아야 합니다.
+# 출력의 데이터 프로필과 `gold.<table>`별 행 수를 확인하고 00장의 완료 기준과 대조합니다.
+# 핵심 프로필은 11개, 확장 CSV까지 준비된 프로필은 28개 테이블이며 `ops`에는 아직 결과 테이블이 없습니다.
 # `PO-5501`(RM-HA-120)의 입고 예정일은 **2026-11-10, 확정** 상태여야 합니다.
 
 # %%

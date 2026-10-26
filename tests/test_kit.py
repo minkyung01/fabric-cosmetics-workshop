@@ -13,9 +13,10 @@ import unittest
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
+from itertools import product
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -137,6 +138,80 @@ class Data(unittest.TestCase):
         self.assertTrue(all(alt_eta <= d - timedelta(days=qc) for _, d, _ in demand))
         self.assertEqual(raw["RM-HA-210"]["cn_registration"], "필요")
         self.assertEqual({m for t, _, m in demand if after[t] < 0}, {"KR", "CN"})
+
+
+class DataPreparation(unittest.TestCase):
+    def check(self, existing):
+        source = (ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        helper = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "check_existing_data")
+        exists = Mock(side_effect=lambda name: name in existing)
+        namespace = {"TABLES": Data().tables(), "EXTENDED_TABLES": Data().tables("EXTENDED_TABLES"),
+                     "OPS_TABLES": ["material_impact", "review_request", "action_log"],
+                     "spark": SimpleNamespace(catalog=SimpleNamespace(tableExists=exists))}
+        exec(compile(ast.Module(body=[helper], type_ignores=[]), source, "exec"), namespace)
+        return namespace["check_existing_data"], exists
+
+    def test_initial_load_accepts_only_an_empty_workshop_state_by_default(self):
+        check, exists = self.check(set())
+        check(False)
+        self.assertEqual(exists.call_count, 31)
+        for name in ("gold.purchase_order", "gold.inventory_balance", "ops.material_impact",
+                     "ops.review_request", "ops.action_log"):
+            with self.subTest(existing=name):
+                check, _ = self.check({name})
+                with self.assertRaisesRegex(ValueError, re.escape(name)):
+                    check(False)
+
+    def test_reset_requires_an_explicit_boolean_true(self):
+        check, exists = self.check({"gold.purchase_order", "ops.review_request"})
+        for invalid in ("false", "true", 0, 1, None):
+            with self.subTest(reset=invalid), self.assertRaises(ValueError):
+                check(invalid)
+        exists.assert_not_called()
+        check(True)
+        exists.assert_not_called()
+
+    def test_existing_data_stops_the_real_notebook_before_any_writes(self):
+        source = (ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8")
+        nodes = [n for n in ast.parse(source).body if not isinstance(n, (ast.Import, ast.ImportFrom))]
+        spark = Mock()
+        spark.catalog.tableExists.side_effect = lambda name: name == "ops.review_request"
+        fs = SimpleNamespace(ls=Mock(return_value=[SimpleNamespace(name=f"{t}.csv") for t in Data().tables()]))
+        namespace = {"spark": spark, "fs": fs, "F": Mock(), "display": Mock()}
+        with redirect_stdout(io.StringIO()), self.assertRaisesRegex(ValueError, "ops.review_request"):
+            exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"), namespace)
+        self.assertIs(namespace["reset_ops"], False)
+        spark.sql.assert_not_called()
+        spark.read.option.assert_not_called()
+
+    def test_notebook_creates_tables_and_drops_ops_only_for_explicit_reset(self):
+        source = (ROOT / "notebooks" / "src" / "01_prepare_data.py").read_text(encoding="utf-8")
+        nodes = [n for n in ast.parse(source).body if not isinstance(n, (ast.Import, ast.ImportFrom))
+                 and not (isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "reset_ops" for t in n.targets))]
+        tables = Data().tables()
+        for reset in (False, True):
+            with self.subTest(reset=reset):
+                spark, raw, frame = Mock(), Mock(), Mock()
+                spark.catalog.tableExists.return_value = False
+                spark.read.option.return_value = spark.read
+                spark.read.csv.return_value = raw
+                raw.columns = {column for schema in tables.values() for column in schema}
+                raw.select.return_value = frame
+                frame.count.return_value = 1
+                frame.write.mode.return_value = frame.write
+                frame.write.option.return_value = frame.write
+                frame.write.format.return_value = frame.write
+                fs = SimpleNamespace(ls=Mock(return_value=[SimpleNamespace(name=f"{t}.csv") for t in tables]))
+                namespace = {"spark": spark, "fs": fs, "F": Mock(), "display": Mock(), "reset_ops": reset}
+                with redirect_stdout(io.StringIO()):
+                    exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"), namespace)
+                self.assertEqual([call.args[0] for call in frame.write.saveAsTable.call_args_list],
+                                 [f"gold.{table}" for table in tables])
+                self.assertTrue(all(call.args == ("overwrite",) for call in frame.write.mode.call_args_list))
+                drops = [call.args[0] for call in spark.sql.call_args_list if call.args[0].startswith("DROP")]
+                self.assertEqual(drops, [f"DROP TABLE IF EXISTS ops.{t}" for t in
+                                         ("material_impact", "review_request", "action_log")] if reset else [])
 
 
 class Docs(unittest.TestCase):
@@ -347,6 +422,25 @@ class Docs(unittest.TestCase):
         self.assertIn("Ontology 엔터티 확장 실습과는 별개", lesson)
         for md in [ROOT / "README.md", *ALL_DOCS, ROOT / "admin" / "README.md"]:
             self.assertNotRegex(md.read_text(encoding="utf-8"), r"확장 [AB]\b|준비된 환경의 확장", md.name)
+
+    def test_learner_creates_gold_tables_before_building_the_ontology(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("실행 전 Notebook 5개", readme)
+        self.assertIn("**`gold` 테이블은 00장**", readme)
+        scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
+        self.assertIn("## 2. CSV 원본 확인", scenario)
+        self.assertIn("## 3. Notebook으로 gold 테이블 직접 만들기", scenario)
+        self.assertLess(scenario.index("## 2. CSV 원본 확인"), scenario.index("## 3. Notebook으로 gold 테이블 직접 만들기"))
+        self.assertIn("reset_ops = False", scenario)
+        self.assertIn("Run all", scenario)
+        self.assertIn("쓰기 전에 오류로 중지", scenario)
+        self.assertIn("28개 테이블", scenario)
+        for table in Data().tables():
+            self.assertIn(f"{table}.csv", scenario)
+        ontology = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        self.assertIn("`01_prepare_data`를 직접 실행해", ontology)
+        extension = (ROOT / "docs" / "extensions" / "ontology.md").read_text(encoding="utf-8")
+        self.assertIn("00장의 첫 적재에서 직접 만든", extension)
 
 
 class DataAgentQueries(unittest.TestCase):
@@ -707,11 +801,8 @@ class ExtendedModel(unittest.TestCase):
 
     def test_provision_uploads_selected_profile_and_keeps_existing_core_ontology(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
-        for reference, extended, existing in ((False, False, False), (False, False, True),
-                                               (True, False, False), (True, False, True),
-                                               (False, True, False), (False, True, True),
-                                               (True, True, False), (True, True, True)):
-            with self.subTest(reference=reference, extended=extended, existing=existing):
+        for reference, extended, existing, run_prepare in product((False, True), repeat=4):
+            with self.subTest(reference=reference, extended=extended, existing=existing, run_prepare=run_prepare):
                 items = [{"type": "Lakehouse", "displayName": "lh_cos", "id": "test-lakehouse"}]
                 if existing:
                     items += [{"type": "Ontology", "displayName": "ont_cos", "id": "existing-core"},
@@ -725,14 +816,18 @@ class ExtendedModel(unittest.TestCase):
                     run_notebook=Mock(),
                 )
                 args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=reference,
-                                       extended_ontology=extended, update_notebooks=False, skip_prepare=False)
+                                       extended_ontology=extended, update_notebooks=False, run_prepare=run_prepare)
                 output = io.StringIO()
                 with redirect_stdout(output):
                     provision["provision"](fab, "p001", args, {})
                 uploads = [c.args[1] for c in fab.call.call_args_list if "?resource=file" in c.args[1]]
                 self.assertEqual(len(uploads), 28 if extended else 11)
                 self.assertTrue(all("/Files/workshop/data/" in url for url in uploads))
-                fab.run_notebook.assert_called_once_with("test-workspace", "test-item", "run 01_prepare_data")
+                if run_prepare:
+                    fab.run_notebook.assert_called_once_with("test-workspace", "test-item", "run 01_prepare_data")
+                else:
+                    fab.run_notebook.assert_not_called()
+                    self.assertIn("leave gold-table loading to participants in chapter 00", output.getvalue())
                 self.assertFalse(any("/eventhouses" in c.args[2] for c in fab.change.call_args_list))
                 self.assertFalse(any(c.args[3].get("type") == "Eventhouse" for c in fab.change.call_args_list))
                 self.assertFalse(any("sqldatabase" in c.args[2].lower() for c in fab.change.call_args_list))
@@ -758,21 +853,23 @@ class ExtendedModel(unittest.TestCase):
     def test_dry_run_describes_participant_creation_or_explicit_recovery(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
         for reference in (False, True):
-            for extended in (False, True):
-                with self.subTest(reference=reference, extended=extended):
+            for extended, run_prepare in product((False, True), repeat=2):
+                with self.subTest(reference=reference, extended=extended, run_prepare=run_prepare):
                     fab = SimpleNamespace(
                         dry_run=True, get_all=Mock(return_value=[]),
                         change=Mock(return_value=(200, {"id": "00000000-0000-0000-0000-000000000000"})),
                         call=Mock(), run_notebook=Mock(),
                     )
                     args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=reference,
-                                           extended_ontology=extended)
+                                           extended_ontology=extended, run_prepare=run_prepare)
                     output = io.StringIO()
                     with redirect_stdout(output):
                         provision["provision"](fab, "p001", args, {})
                     text = output.getvalue()
                     self.assertNotIn("ont_cos_base", text)
                     self.assertIn("leave eh_cos creation to participants in chapter 04", text)
+                    self.assertEqual("leave gold-table loading to participants in chapter 00" in text, not run_prepare)
+                    self.assertEqual("run 01_prepare_data (explicit admin rehearsal/recovery)" in text, run_prepare)
                     self.assertEqual("deploy ont_cos_reference" in text, reference)
                     self.assertEqual("leave ont_cos creation to participants" in text, not reference)
                     self.assertEqual("deploy ont_cos_extended" in text, extended)
@@ -783,18 +880,42 @@ class ExtendedModel(unittest.TestCase):
 
     def test_provision_rejects_existing_notebook_without_explicit_update(self):
         provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
-        fab = SimpleNamespace(
-            dry_run=False,
-            get_all=Mock(side_effect=[[{"displayName": "cos-p001", "id": "test-workspace"}],
-                                     [{"type": "Notebook", "displayName": "01_prepare_data", "id": "old-notebook"}]]),
-            call=Mock(), change=Mock(), run_notebook=Mock(),
-        )
-        args = SimpleNamespace(prefix="cos-", extended_ontology=True, update_notebooks=False)
-        with redirect_stdout(io.StringIO()), self.assertRaisesRegex(ValueError, "--update-notebooks"):
-            provision["provision"](fab, "p001", args, {})
-        fab.call.assert_not_called()
-        fab.change.assert_not_called()
-        fab.run_notebook.assert_not_called()
+        for extended, run_prepare in ((True, False), (False, True)):
+            with self.subTest(extended=extended, run_prepare=run_prepare):
+                fab = SimpleNamespace(
+                    dry_run=False,
+                    get_all=Mock(side_effect=[[{"displayName": "cos-p001", "id": "test-workspace"}],
+                                             [{"type": "Notebook", "displayName": "01_prepare_data", "id": "old-notebook"}]]),
+                    call=Mock(), change=Mock(), run_notebook=Mock(),
+                )
+                args = SimpleNamespace(prefix="cos-", extended_ontology=extended,
+                                       run_prepare=run_prepare, update_notebooks=False)
+                with redirect_stdout(io.StringIO()), self.assertRaisesRegex(ValueError, "--update-notebooks"):
+                    provision["provision"](fab, "p001", args, {})
+                fab.call.assert_not_called()
+                fab.change.assert_not_called()
+                fab.run_notebook.assert_not_called()
+
+    def test_provision_cli_defaults_to_learner_loading_and_preserves_skip_compatibility(self):
+        main = runpy.run_path(str(ROOT / "admin" / "provision.py"))["main"]
+        for flags, expected in (([], False), (["--run-prepare"], True), (["--skip-prepare"], False)):
+            with self.subTest(flags=flags):
+                provision, fabric = Mock(), Mock()
+                argv = ["provision.py", "--capacity", "test-capacity", "--participants", "p001", *flags]
+                with patch.dict(main.__globals__, {"provision": provision, "Fabric": fabric}), patch.object(sys, "argv", argv):
+                    main()
+                self.assertIs(provision.call_args.args[2].run_prepare, expected)
+                self.assertEqual(provision.call_args.args[1], "p001")
+
+    def test_provision_cli_rejects_conflicting_loading_flags(self):
+        main = runpy.run_path(str(ROOT / "admin" / "provision.py"))["main"]
+        fabric = Mock()
+        argv = ["provision.py", "--capacity", "test-capacity", "--participants", "p001", "--run-prepare", "--skip-prepare"]
+        with patch.dict(main.__globals__, {"Fabric": fabric}), patch.object(sys, "argv", argv), redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as error:
+                main()
+        self.assertEqual(error.exception.code, 2)
+        fabric.assert_not_called()
 
     def test_registration_and_batch_source_consistency(self):
         materials = {r["material_code"]: r for r in rows("raw_material")}

@@ -2,7 +2,8 @@
 
 For each participant pNNN this creates (or reuses) workspace cos-pNNN on the given capacity and:
   - a schema-enabled Lakehouse lh_cos, with data/*.csv uploaded to Files/workshop/data
-  - the 5 notebooks bound to lh_cos (01_prepare_data is run once to build the gold tables)
+  - the 5 notebooks bound to lh_cos; participants run 01_prepare_data in chapter 00
+  - no gold-table loading by default (--run-prepare opts in for an admin rehearsal/recovery)
   - no Eventhouse: participants create eh_cos and its default KQL database in chapter 04
   - no core ontology by default: participants create ont_cos with the Ontology agent in chapter 01
   - the completed core ontology only with --reference-ontology (recovery path)
@@ -13,7 +14,7 @@ Uses the Azure CLI login (az login [--tenant ...]); no secrets are stored.
 
 Examples
     python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv --role Member
-    python admin/provision.py --capacity <capacity-id> --participants p001 --reference-ontology
+    python admin/provision.py --capacity <capacity-id> --participants p001 --reference-ontology --run-prepare
     python admin/provision.py --capacity <capacity-id> --participants p001-p003 --dry-run
 
 SQL database sqldb_cos is created by participants in chapter 06 (workspace Member/Admin).
@@ -183,7 +184,11 @@ def provision(fab, pid, args, users):
     else:
         print("  workspace exists")
     if fab.dry_run and ws.startswith("0000"):
-        print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks, run 01_prepare_data")
+        print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks")
+        if args.run_prepare:
+            print("  [dry-run] run 01_prepare_data (explicit admin rehearsal/recovery)")
+        else:
+            print("  [dry-run] leave gold-table loading to participants in chapter 00")
         print(f"  [dry-run] leave {EVENTHOUSE} creation to participants in chapter 04; keep any existing Eventhouse")
         if args.reference_ontology:
             print(f"  [dry-run] deploy ont_cos_reference as {ONTOLOGY} if absent; keep any existing ontology")
@@ -203,8 +208,8 @@ def provision(fab, pid, args, users):
                        {"principal": {"id": oid, "type": "User"}, "role": args.role})
 
     items = {(i["type"], i["displayName"]): i["id"] for i in fab.get_all(f"/workspaces/{ws}/items")}
-    if args.extended_ontology and ("Notebook", "01_prepare_data") in items and not args.update_notebooks:
-        raise ValueError("--extended-ontology on an existing workspace requires --update-notebooks before preparing 28 tables")
+    if (args.extended_ontology or args.run_prepare) and ("Notebook", "01_prepare_data") in items and not args.update_notebooks:
+        raise ValueError("Admin preparation/reference profiles require --update-notebooks when 01_prepare_data already exists")
     if not args.reference_ontology and ("Ontology", ONTOLOGY) in items:
         print(f"  {ONTOLOGY} exists; retained. Chapter 01 starts empty: prepare a fresh workspace for the creation exercise.")
     lh = items.get(("Lakehouse", LAKEHOUSE))
@@ -243,8 +248,13 @@ def provision(fab, pid, args, users):
                                     {"displayName": nb_name, "definition": definition})
             notebook_ids[nb_name] = created["id"]
 
-    if not args.skip_prepare and not fab.dry_run:
-        fab.run_notebook(ws, notebook_ids["01_prepare_data"], "run 01_prepare_data")
+    if args.run_prepare:
+        if fab.dry_run:
+            print("  [dry-run] run 01_prepare_data (explicit admin rehearsal/recovery)")
+        else:
+            fab.run_notebook(ws, notebook_ids["01_prepare_data"], "run 01_prepare_data")
+    else:
+        print("  leave gold-table loading to participants in chapter 00; existing gold/ops data is not reset")
 
     if ("Eventhouse", EVENTHOUSE) in items:
         print(f"  {EVENTHOUSE} exists; retained. Check the database and event history before reusing it in chapter 04.")
@@ -273,7 +283,12 @@ def main():
     parser.add_argument("--prefix", default="cos-", help="workspace name prefix (default cos-)")
     parser.add_argument("--tenant", help="tenant for az get-access-token")
     parser.add_argument("--update-notebooks", action="store_true", help="overwrite existing notebooks")
-    parser.add_argument("--skip-prepare", action="store_true", help="do not run 01_prepare_data")
+    preparation = parser.add_mutually_exclusive_group()
+    preparation.add_argument("--run-prepare", dest="run_prepare", action="store_true",
+                             help="opt in to running 01_prepare_data for an admin rehearsal/recovery, not the learner setup")
+    preparation.add_argument("--skip-prepare", dest="run_prepare", action="store_false",
+                             help="compatibility option: leaving data loading to participants is already the default")
+    parser.set_defaults(run_prepare=False)
     parser.add_argument("--reference-ontology", action="store_true",
                         help="deploy the completed core ontology if absent (chapter 01 recovery; default creates no ontology)")
     parser.add_argument("--extended-ontology", action="store_true",

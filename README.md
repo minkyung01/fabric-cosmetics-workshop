@@ -36,8 +36,8 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | 항목 | 내용 |
 |---|---|
 | 작업 영역 | 관리자가 준비한 참가자별 `cos-pNNN` (예: `cos-p001`). **Member 권한**(Admin도 가능). 06장 SQL DB 생성에는 Contributor만으로 부족 |
-| 준비된 항목 | Lakehouse `lh_cos`(핵심 gold 테이블 11개, 선택 실습 데이터 사전 준비 시 총 28개), Notebook 5개 |
-| 직접 만들 항목 | **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
+| 준비된 항목 | 스키마 사용 설정된 빈 Lakehouse `lh_cos`, `Files/workshop/data`의 핵심 CSV 11개(선택 확장 포함 시 28개), 실행 전 Notebook 5개 |
+| 직접 만들 항목 | **`gold` 테이블은 00장**, **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
@@ -47,7 +47,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | Lesson(장) | 내용 |
 |---|---|
-| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개와 준비된 작업 영역 확인 |
+| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, CSV 확인 → 준비 Notebook 실행 → `gold` 테이블 직접 생성 |
 | [01. Ontology](docs/01-ontology.md) | 빈 Ontology → 업무 질문으로 Agent 초안 생성 → 검토·Act 적용 → 추가 질문으로 모델 보강 → Plan 질의로 검증 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
 | [03. Data Agent](docs/03-data-agent.md) | 6개 유형·12문항으로 의미·규칙·관계·가정·통합 결과 검증, 선택적으로 Graph와 비교 |
@@ -59,14 +59,14 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 Graph를 사용하지 않는 실습 경로는 01 → 03장으로 진행합니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 각 단계에서는 먼저 직접 실행한 뒤 예상 결과와 대조합니다. 마지막에는 Operations Agent 감시와 Spark 세션을 중지합니다.
 
-**기본 과정은 07장 Purview까지입니다.** 이후 원하는 참가자만 [Ontology 엔터티 확장 선택 실습](docs/extensions/ontology.md)을 진행합니다. 추가 데이터가 사전 준비된 환경에서 기존 `ont_cos`를 확장하며, 참고 범위는 **26개 엔터티·40개 관계·28개 테이블**입니다. 선택 실습을 생략해도 기본 과정은 완료됩니다.
+**기본 과정은 07장 Purview까지입니다.** 이후 원하는 참가자만 [Ontology 엔터티 확장 선택 실습](docs/extensions/ontology.md)을 진행합니다. 확장 CSV까지 준비된 환경은 참가자가 **00장의 첫 적재에서 28개 테이블을 생성**하고, 07장 이후 기존 `ont_cos`를 확장합니다. 참고 범위는 **26개 엔터티·40개 관계·28개 테이블**이며, 선택 실습을 생략해도 기본 과정은 완료됩니다.
 
 ## 실습 파일
 
 | 경로 | 내용 |
 |---|---|
 | `data/*.csv` | 시나리오에 사용하는 가상 데이터 11개 테이블 |
-| `notebooks/01_prepare_data.ipynb` | CSV → `gold` 테이블 생성·초기화. 기본 과정에서는 준비된 데이터를 확인하며, 재실행 시 기존 `ops` 결과가 삭제되므로 주의 |
+| `notebooks/01_prepare_data.ipynb` | 참가자가 00장에서 CSV → `gold` 테이블 생성. 기본값은 기존 실습 테이블이 있으면 중지하며, `reset_ops = True`는 명시적 데이터 초기화 |
 | `notebooks/02_answers.ipynb` | 직접 질의한 뒤 결과를 대조하는 참고 Notebook |
 | `notebooks/03_supply_change.ipynb` | 공급 지연 반영 → 영향 분석 → Eventhouse 이벤트 전송 |
 | `notebooks/nb_apply_review.ipynb` | 승인 후 검토 요청·조치 이력 기록 (Operations Agent 액션) |
