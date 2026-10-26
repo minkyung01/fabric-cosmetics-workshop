@@ -312,7 +312,11 @@ material_alternative는 material_code가 원래 원료, alt_material_code가 대
 
 ## 5. 다음 장과 연결되는 모델 점검
 
-Agent의 초안이 모두 같은 이름·방향으로 생성되지는 않습니다. 다음 장의 GQL은 아래 **핵심 참고 이름·방향**을 사용합니다. 설계가 다르면 해당 업무 개념과 원본부터 대조한 뒤, **Agent의 Plan에서 필요한 정렬만 제안받고 검토 후 Act로 적용**합니다. 이름을 바꿨다고 잘못된 원본 연결이 고쳐지는 것은 아닙니다.
+아래 두 표는 **지금까지 만든 모델에 필요한 엔터티·관계가 있는지 확인하는 체크리스트**입니다. 다음 장의 Graph 질의 예제도 이 이름과 연결 방향을 사용합니다. 모든 항목을 다시 만들거나, 이미 확인한 키·원본을 처음부터 다시 검토하라는 뜻은 아닙니다.
+
+1. **필요한 대상과 연결이 있는지 확인합니다.** Explorer의 **Entity Types·Relationship Types** 목록을 아래 표와 대조합니다. 앞에서 확인한 공급·사용처 모델은 그대로 두고, 이번에 추가한 `ProductionPlan`·`DevProject`·`StabilityTest`, 일정·대체 원료 관계와 `is_active`·`cn_registration` 속성을 중심으로 확인합니다.
+2. **이름이 다르면 같은 역할인지 확인합니다.** 예를 들어 내 관계가 `rawMaterial_suppliedBy_supplier`이고 표에는 `supplied_by`라고 되어 있어도, 둘 다 원료에서 공급사로 연결되고 원본 매핑이 같다면 같은 역할입니다. 모델이 틀린 것은 아니지만, 다음 장 예제의 `supplied_by`를 그대로 실행하려면 실제 관계 이름도 맞아야 합니다.
+3. **차이가 있는 부분만 보완합니다.** 다음 장 예제를 그대로 사용할 경우, 이름이 다른 항목이나 빠진 연결만 Agent의 **Plan**에서 수정안으로 요청하고 검토 후 **Act**로 적용합니다. 이미 확인한 항목은 그대로 유지합니다. 연결 방향이나 원본 매핑이 잘못됐다면 이름만 바꾸지 말고 해당 연결도 수정해야 합니다.
 
 | 엔터티 타입 | 원본 테이블 (`gold`) | 키 | 질의에 필요한 주요 속성 |
 |---|---|---|---|
@@ -339,7 +343,7 @@ Agent의 초안이 모두 같은 이름·방향으로 생성되지는 않습니�
 | `orders` | PurchaseOrder → RawMaterial | `purchase_order.po_id → material_code` |
 | `alternative_to` | RawMaterial → RawMaterial | `material_alternative.material_code → alt_material_code` |
 
-**핵심 참고 모델은 엔터티 9개·관계 10개입니다.** 추가 타입이 있다는 이유만으로 실패는 아니지만, 위 핵심 경로·키·바인딩은 있어야 합니다. 02장에서는 핵심 범위를 선택해 투영하며, 네임스페이스 접두사가 붙은 Graph 레이블은 실제 스키마에 맞춥니다.
+**핵심 참고 모델은 엔터티 9개·관계 10개입니다.** 위 항목이 있는지 확인하되, 추가 엔터티·관계가 있다는 이유만으로 삭제하지 않습니다. 필요한 경로·키·바인딩이 있는지가 기준입니다. 02장에서는 핵심 범위를 선택해 투영하며, 네임스페이스 접두사가 붙은 Graph 레이블은 실제 스키마에 맞춥니다. Graph를 생략한다면 예제 이름을 맞추기 위한 변경은 필요하지 않지만, 업무 질문에 필요한 연결과 속성은 있어야 합니다.
 
 수동 조정이 필요하면 **Explorer → 타입 선택 → View Entity Type details → Configure**에서 키와 속성의 **Data source**를 확인하고, **Manage relationships**에서 방향·양끝 키·매핑 원본을 확인합니다. `uses_material`은 `formula_line.version_id → material_code`, `alternative_to`는 `material_alternative.material_code → alt_material_code`입니다. 변경 후 Agent의 Plan에서 재검증합니다. Graph 생성이나 Data Agent 연결 전에 이름·방향·바인딩 점검을 마칩니다.
 

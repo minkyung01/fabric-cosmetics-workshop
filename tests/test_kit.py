@@ -709,6 +709,23 @@ class Docs(unittest.TestCase):
         self.assertIn("참가자가 00장을 시작하기 전에", admin)
         self.assertIn("reset_ops = False", admin)
 
+    def test_model_checkpoint_explains_inventory_and_graph_name_alignment(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        checkpoint = lesson.split("## 5. 다음 장과 연결되는 모델 점검", 1)[1].split("\n## 6.", 1)[0]
+        for requirement in ("필요한 엔터티·관계가 있는지 확인하는 체크리스트",
+                            "이미 확인한 키·원본을 처음부터 다시 검토하라는 뜻은 아닙니다",
+                            "Entity Types·Relationship Types",
+                            "`ProductionPlan`·`DevProject`·`StabilityTest`",
+                            "`is_active`·`cn_registration`",
+                            "`rawMaterial_suppliedBy_supplier`", "`supplied_by`",
+                            "원본 매핑이 같다면 같은 역할",
+                            "차이가 있는 부분만 보완",
+                            "이미 확인한 항목은 그대로 유지",
+                            "이름만 바꾸지 말고 해당 연결도 수정",
+                            "추가 엔터티·관계가 있다는 이유만으로 삭제하지 않습니다",
+                            "Graph를 생략한다면 예제 이름을 맞추기 위한 변경은 필요하지 않지만"):
+            self.assertIn(requirement, checkpoint)
+
     def test_ontology_checkpoint_matches_core_keys_and_relationship_mappings(self):
         spec = runpy.run_path(str(ROOT / "tools" / "build_ontology.py"))
         lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
