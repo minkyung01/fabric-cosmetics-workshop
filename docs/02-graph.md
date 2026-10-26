@@ -82,7 +82,7 @@ RETURN fv.version_id, fv.formula_name, fv.status, fv.is_active
 | `FV-TON-02-01` | 개발중 | true |
 | `FV-AMP-03-02` | 현행 | true |
 
-![Graph Q1 실행 결과: 처방 버전 4행과 fv.status·fv.is_active 열](../assets/screenshots/02-graph-q1-results.png)
+![Graph Q1 실행 결과: 처방 버전 4행과 fv.status·fv.is_active 열](../assets/screenshots/02-graph-q1-results-compact.png)
 
 **Q2. 업무 규칙 적용 — 폐기 버전 제외**
 
@@ -90,7 +90,7 @@ Q1의 `WHERE`에 `AND fv.is_active = true`를 **직접 추가해** **Run query**
 
 **예상 결과:** 3행. `is_active = false`인 `FV-CRM-01-02`가 빠지고, true인 나머지 3개 버전은 남습니다.
 
-![Graph Q2 실행 결과: is_active = true 필터로 폐기 버전이 제외되고 활성 버전 3행만 표시](../assets/screenshots/02-graph-q2-active-results.png)
+![Graph Q2 실행 결과: is_active = true 필터로 폐기 버전이 제외되고 활성 버전 3행만 표시](../assets/screenshots/02-graph-q2-active-results-compact.png)
 
 Q1의 4행과 비교해 보세요. 이 필터는 **조회 결과에서 비활성 버전을 제외**하는 것이며 원본 데이터를 삭제하거나 상태를 변경하지 않습니다. 같은 Graph라도 **필터 하나가 영향 대상을 바꿉니다.**
 

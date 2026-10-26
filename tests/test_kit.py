@@ -761,8 +761,8 @@ class Docs(unittest.TestCase):
                                   "../assets/screenshots/02-graph-projection-summary.png",
                                   "../assets/screenshots/02-graph-created-items.png",
                                   "../assets/screenshots/02-graph-query-now.png",
-                                  "../assets/screenshots/02-graph-q1-results.png",
-                                  "../assets/screenshots/02-graph-q2-active-results.png",
+                                  "../assets/screenshots/02-graph-q1-results-compact.png",
+                                  "../assets/screenshots/02-graph-q2-active-results-compact.png",
                                   "../assets/screenshots/02-graph-q3-production-results.png",
                                   "../assets/screenshots/02-graph-q4-stability-results.png",
                                   "../assets/screenshots/02-graph-q5-supplier-results.png",
@@ -794,8 +794,8 @@ class Docs(unittest.TestCase):
                 ("FV-AMP-03-02", "현행", "true")):
             self.assertIn(f"| `{version}` | {status} | {active} |", queries)
         self.assertLess(queries.index("**Query → Query now**"), queries.index("**Run query**"))
-        self.assertLess(queries.index("**Q1."), queries.index("02-graph-q1-results.png"))
-        self.assertLess(queries.index("**Q2."), queries.index("02-graph-q2-active-results.png"))
+        self.assertLess(queries.index("**Q1."), queries.index("02-graph-q1-results-compact.png"))
+        self.assertLess(queries.index("**Q2."), queries.index("02-graph-q2-active-results-compact.png"))
 
     def test_graph_answers_notebook_details_session_and_query_comparisons(self):
         lesson = (ROOT / "docs" / "02-graph.md").read_text(encoding="utf-8")
