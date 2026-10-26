@@ -13,10 +13,6 @@ Ontology는 원본에 바인딩된 업무 모델이며 **Graph가 필수는 아�
 
 이 장의 예시는 **엔터티 9개·관계 10개**와 원료끼리 직접 연결하는 **`alternative_to` 관계**를 사용합니다.
 
-![참고 모델의 AI Proposal 미리 보기: 엔터티 9개·관계 10개와 alternative_to 자기 관계](../assets/screenshots/02-ontology-reference-proposal.png)
-
-위 화면은 상단에 **proposed ontology** 안내가 있고 왼쪽에 **AI Proposal**이 표시된 **읽기 전용 초안 미리 보기**입니다. 적용 완료 화면이 아니므로, 01장의 검토·Act 적용을 마쳐 **Entity Types에 저장된 모델**을 확인한 뒤 아래로 진행합니다. 그림의 9개·10개는 타입과 관계의 수이지, 실제 원료·처방 데이터 행 수가 아닙니다.
-
 1. `ont_cos`의 리본에서 **Manage graph**를 누릅니다. "Preparing graph..." 후 **Choose what to project** 화면이 열립니다. 처음의 **Graph not materialized**는 아직 Graph를 생성하지 않았다는 상태입니다.
 2. 이번 실습에서 사용할 엔터티와 관계를 선택합니다. 각 행의 **Status**가 **Eligible**인지 확인하고, 엔터티 행 왼쪽의 펼치기 버튼으로 관계도 확인합니다.
 
