@@ -700,9 +700,9 @@ class Docs(unittest.TestCase):
                             "**5 columns, 4 rows**", "**상태 무관**",
                             "Ontology의 모든 관계·바인딩까지 검증했다는 뜻은 아닙니다",
                             "`01_prepare_data`를 다시 실행해 데이터를 초기화하지 않습니다",
-                            "지금은 지연 반영 전", "**영향 3건**",
+                            "지금은 지연 반영 전",
                             "**`03_supply_change`를 먼저 실행하지 않습니다.**",
-                            "기존 영향 분석 표", "**Plan 상태를 유지**"):
+                            "영향 분석 결과 테이블이 아직 없다는 안내", "**Plan 상태를 유지**"):
             self.assertIn(requirement, section)
         for version, status, active in (
                 ("FV-AMP-03-02", "현행", "true"),
@@ -717,6 +717,27 @@ class Docs(unittest.TestCase):
         self.assertLess(section.index("### 6-2."), section.index("### 6-3."))
         self.assertLess(section.index("### 6-3."), section.index("01-answers-q1-formula-versions.png"))
         self.assertLess(section.index("### 6-5."), section.index("01-answers-q6-before-supply-change.png"))
+
+    def test_ontology_agent_answers_have_explicit_comparison_targets(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        section = lesson.split("## 6.", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        agent = section.split("### 6-2.", 1)[0]
+        for requirement in ("모델 설명은 저장된 정의와",
+                            "5번의 참고 표와 Explorer에 저장된 정의",
+                            "5번의 관계 표와 실제 저장된 관계·업무 설명",
+                            "Q1만으로 검증할 수 없습니다",
+                            "6-4의 `02_answers` Q1 결과",
+                            "Agent가 샘플만 확인했다면 답변에 모든 처방이 나올 필요는 없습니다"):
+            self.assertIn(requirement, agent)
+        comparison = section.split("### 6-4.", 1)[1].split("### 6-5.", 1)[0]
+        for requirement in ("6-1의 답변을 옆에 두고",
+                            "같은 `version_id`의 `status`·`is_active`",
+                            "샘플의 누락만으로 원본 데이터나 바인딩 오류라고 판단하지 않습니다",
+                            "같은 처방의 상태 값이 다르다면 Agent가 사용한 원본·근거를 다시 확인"):
+            self.assertIn(requirement, comparison)
+        notice = section.split("### 6-5.", 1)[1]
+        self.assertNotIn("영향 3건", notice)
+        self.assertNotIn("이미 04장을 진행한 환경", notice)
 
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

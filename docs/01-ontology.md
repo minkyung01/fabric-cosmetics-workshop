@@ -362,6 +362,14 @@ uses_material의 양끝과 매핑을 현재 저장된 정의에서 설명해줘.
 확인할 수 없는 값이나 전체 건수·데이터 부재는 추정하지 마.
 ```
 
+**Agent의 답변은 내용에 따라 비교 대상이 다릅니다.** 모델 설명은 저장된 정의와, 처방 사용처는 뒤에서 실행할 Notebook의 Q1 결과와 비교합니다.
+
+| Agent 답변에서 볼 내용 | 무엇과 비교하나요? | 확인할 점 |
+| --- | --- | --- |
+| Ingredient·RawMaterial의 의미, 키·원본, `uses_material`의 매핑 | 5번의 참고 표와 Explorer에 저장된 정의 | 성분과 실제 원료를 구분하는지, RawMaterial의 키가 `material_code`이고 원본이 `gold.raw_material`인지, `uses_material`이 FormulaVersion → RawMaterial을 `gold.formula_line`의 `version_id`·`material_code`로 연결하는지 확인합니다. |
+| 생산 계획·개발 과제·안정성 시험 경로와 업무 설명 | 5번의 관계 표와 실제 저장된 관계·업무 설명 | Agent의 설명이 저장된 연결과 일치하는지 확인합니다. 이 부분은 처방 목록을 조회하는 Q1만으로 검증할 수 없습니다. |
+| `RM-HA-120`의 처방 사용처와 `status`·`is_active` | 6-4의 `02_answers` Q1 결과 | 같은 `version_id`끼리 상태 값을 비교하고, Q1에만 있는 처방이 있는지도 봅니다. Agent가 샘플만 확인했다면 답변에 모든 처방이 나올 필요는 없습니다. |
+
 ### 6-2. `02_answers`에 내 Lakehouse 연결
 
 전체 처방 목록과 건수는 Agent의 샘플이 아닌 **명시적인 Notebook 질의**로 확인합니다. Ontology Agent는 **Plan** 상태로 두고, 작업 영역으로 이동해 조회용 Notebook을 엽니다.
@@ -401,13 +409,15 @@ uses_material의 양끝과 매핑을 현재 저장된 정의에서 설명해줘.
 
 ![02_answers Q1 실행 결과: RM-HA-120을 쓰는 처방 버전 4행과 status·is_active](../assets/screenshots/01-answers-q1-formula-versions.png)
 
-이 질문은 **상태 무관**이므로 폐기된 `FV-CRM-01-02`도 포함되는 것이 맞습니다. Agent의 샘플에서 빠졌던 `FV-AMP-03-02`도 이 조회에서는 확인할 수 있습니다. 이 결과는 해당 원료의 처방 사용처를 확인한 것이며, Ontology의 모든 관계·바인딩까지 검증했다는 뜻은 아닙니다.
+**Agent 답변과 비교:** 6-1의 답변을 옆에 두고 **같은 `version_id`의 `status`·`is_active`**가 Q1과 일치하는지 봅니다. 예를 들어 Agent 답변에 `FV-AMP-03-02`가 없고 Q1에는 있다면, Agent가 샘플만 확인했는지 근거·확인 범위를 확인합니다. **샘플의 누락만으로 원본 데이터나 바인딩 오류라고 판단하지 않습니다.** 같은 처방의 상태 값이 다르다면 Agent가 사용한 원본·근거를 다시 확인합니다.
+
+이 질문은 **상태 무관**이므로 폐기된 `FV-CRM-01-02`도 포함되는 것이 맞습니다. 이 결과는 해당 원료의 처방 사용처를 확인한 것이며, Ontology의 모든 관계·바인딩까지 검증했다는 뜻은 아닙니다.
 
 4행이 아니라면 `material_code`가 `RM-HA-120`인지, 기본 Lakehouse가 내 작업 영역의 `lh_cos`인지 먼저 확인합니다. 테이블 읽기 오류가 나거나 결과가 여전히 다르면 오류·출력을 기록하고 관리자와 확인합니다. 이를 해결하려고 `01_prepare_data`를 다시 실행해 데이터를 초기화하지 않습니다.
 
 ### 6-5. Q6의 ‘아직 없습니다’ 안내 확인
 
-**Q6. 지연 반영 후 영향 분석 결과 (`03_supply_change` 실행 후)** 셀은 나중에 공급 지연을 반영한 뒤 생성되는 `ops.material_impact`를 조회합니다. **지금은 지연 반영 전이므로 아래 안내만 나와도 정상**입니다.
+**지금은 지연 반영 전이므로 아래 안내만 나와도 정상**입니다.
 
 ```text
 ops.material_impact가 아직 없습니다. 4장에서 03_supply_change를 실행한 뒤 다시 확인하세요.
@@ -415,7 +425,7 @@ ops.material_impact가 아직 없습니다. 4장에서 03_supply_change를 실�
 
 ![02_answers Q6 실행 결과: 지연 반영 전 ops.material_impact가 아직 없다는 정상 안내](../assets/screenshots/01-answers-q6-before-supply-change.png)
 
-스크린샷의 셀은 실행이 성공했고, 결과 테이블이 아직 없다는 안내를 출력했습니다. 위쪽 설명에 적힌 **영향 3건**은 **04장에서 `03_supply_change`를 실행한 뒤의 기대값**이지, 지금 나와야 하는 결과가 아닙니다. 이 안내를 없애려고 **`03_supply_change`를 먼저 실행하지 않습니다.** 이미 04장을 진행한 환경에서는 안내 대신 기존 영향 분석 표가 보일 수 있으므로, 초기화하지 말고 현재 진행 상태를 확인합니다.
+오류가 아니라 **영향 분석 결과 테이블이 아직 없다는 안내**입니다. 이 안내를 없애려고 **`03_supply_change`를 먼저 실행하지 않습니다.**
 
 여기서는 Q1의 4행을 확인하고 다음 장으로 넘어갑니다. `02_answers`는 조회용이므로 엔터티·관계·바인딩을 변경하지 않으며, Ontology Agent도 **Plan 상태를 유지**합니다.
 
