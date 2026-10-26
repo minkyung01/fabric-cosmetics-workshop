@@ -88,9 +88,9 @@ RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registra
 
 ## 4. 정답 Notebook과 비교
 
-**예상 코드 실행 시간:** 약 1–3분(세션 준비 제외, 실측 전 리허설용 예상).
+**예상 코드 실행 시간:** 약 1–3분(세션 준비 제외).
 
-1. `02_answers`를 열고 세션이 연결되어 있지 않다면 **Connect**로 시작합니다.
+1. `02_answers`를 열고 기본 Lakehouse가 내 작업 영역의 `lh_cos`인지 확인합니다. 미연결 상태라면 [00장의 연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)에 따라 연결·저장합니다. 세션이 연결되어 있지 않다면 **Connect**로 시작합니다.
 2. 연결 완료 후 **Run all**을 누르고 Q1–Q5 결과를 위 Graph 결과와 비교합니다.
 
 **예상 출력:**

@@ -72,7 +72,7 @@ MaterialSupplyEvent
 
 ## 3. 승인 후 실행할 Notebook 살펴보기
 
-`nb_apply_review`를 열어 내용만 읽습니다. **지금 실행하지 않습니다.**
+`nb_apply_review`를 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). 코드를 읽되 **지금 실행하지 않습니다.** 세션을 직접 시작하지 않아도 됩니다.
 
 - 매개 변수 셀: `event_id`, `material_code`, `eventhouse_name`
 - 최신 상태가 `open`일 때만 동작합니다. 같은 이벤트를 두 번 승인해도 중복 기록하지 않습니다.
@@ -125,9 +125,9 @@ MaterialSupplyEvent
 
 ## 6. 공급 지연 발생시키기
 
-**예상 코드 실행 시간:** 약 2–4분(세션 준비 제외, 실측 전 리허설용 예상). 실행 후 Teams 알림 대기는 별도입니다.
+**예상 코드 실행 시간:** 약 2–4분(세션 준비 제외). 실행 후 Teams 알림 대기는 별도입니다.
 
-1. `03_supply_change`를 열어 매개 변수를 확인합니다: `material_code = "RM-HA-120"`, `delay_days = 35`, `run_tag = "r1"`.
+1. `03_supply_change`를 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). 매개 변수를 확인합니다: `material_code = "RM-HA-120"`, `delay_days = 35`, `run_tag = "r1"`.
 2. 세션이 연결되어 있지 않다면 **Connect**로 시작하고, 연결 완료 후 **Run all**을 누릅니다.
 
 **예상 출력**(기본 매개 변수·첫 이벤트 기준):

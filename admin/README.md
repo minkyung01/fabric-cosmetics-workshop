@@ -116,7 +116,7 @@ python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --par
 3. **Tenant Private Links·Managed VNets**가 적용된 작업 영역은 Starter pool을 지원하지 않습니다. 이 경우 온디맨드 시작 대기를 일정에 반영하며, 속도를 위해 조직의 보안 설정을 해제하지 않습니다.
 4. 장시간 같은 상태이거나 여러 참가자가 함께 지연되면 세션 정보·세션 ID·시작 시각·오류, 용량의 사용량·스로틀링과 서비스 상태를 확인합니다. 데이터 생성이 시작됐는지 확인하지 않고 준비 Notebook을 재실행하지 않습니다.
 
-리허설에서는 **세션 준비 시간과 코드 실행 시간을 구분**해 기록합니다. 참가자는 Lakehouse 연결을 저장한 뒤 `01_prepare_data`에서 **Connect**로 세션을 먼저 시작하고, 연결 완료 후 **Run all**을 누릅니다. 나머지 Notebook은 해당 장에서 실행합니다. Connect만으로 데이터 생성 코드는 실행되지 않습니다.
+리허설에서는 **세션 준비 시간과 코드 실행 시간을 구분**해 기록합니다. 참가자는 00장에서 `01_prepare_data`에만 Lakehouse를 연결·저장한 뒤 **Connect**로 세션을 시작하고, 연결 완료 후 **Run all**을 누릅니다. 나머지 Notebook은 해당 장에서 Lakehouse를 연결합니다. 승인 액션용 `nb_apply_review`는 04장 Action 구성 전에 연결·저장하고 05장 승인 후 실행합니다.
 
 ## SQL Serving DB 준비 (06장)
 
@@ -181,7 +181,7 @@ Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, �
 | 장 | 확인할 값 |
 |---|---|
 | 준비 | 유료 F 용량·Contributor 접근 권한·테넌트/Teams/Purview 공통 조건. Notebook 5개를 모든 참가자 작업 영역에 가져왔으며 Lakehouse·데이터는 미생성 |
-| 00 | Notebook 5개 확인 → 스키마 지원 `lh_cos` 생성 → 각 Notebook 기본 연결 → `01_prepare_data` 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA·original_eta 모두 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
+| 00 | Notebook 5개 확인 → 스키마 지원 `lh_cos` 생성 → `01_prepare_data`에만 기본 연결 → 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA·original_eta 모두 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
 | 01 초안 | 참가자 계정으로 빈 항목 생성 → Plan 원본 조사·초안 검토 → Act 적용 → 저장된 키·바인딩·실제 행 확인 |
 | 01 보강 | 생산·개발 일정과 대체 검토 질문으로 빈틈 진단 → Plan 변경안 → Act 적용. 핵심 참고 9개/10개 경로와 `is_active`, `cn_registration` 바인딩·Plan 질의 확인 |
 | 02 | Graph Q1 4행 → `is_active` 필터 3행, 생산 계획 `PP-1101`·`PP-1102`·`PP-1103`, `ST-0711` |

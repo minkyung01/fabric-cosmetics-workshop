@@ -37,7 +37,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 |---|---|
 | 작업 영역 | 참가자별 `cos-pNNN` (예: `cos-p001`), 기본 **Contributor 권한** |
 | 준비된 항목 | 용량이 할당된 **작업 영역·접근 권한·Notebook 5개**. Lakehouse와 데이터는 참가자가 생성 |
-| 직접 만들 항목 | **00장에서 Lakehouse `lh_cos` 생성 → 준비된 Notebook에 연결 → `gold` 테이블 생성**. **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
+| 직접 만들 항목 | **00장에서 Lakehouse `lh_cos` 생성 → `01_prepare_data`에 연결 → `gold` 테이블 생성**. 나머지 Notebook은 해당 장에서 연결. **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
@@ -47,7 +47,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | Lesson(장) | 내용 |
 |---|---|
-| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, Lakehouse 생성 → 준비된 Notebook에 연결 → 고정 가상 데이터로 `gold` 테이블 생성 |
+| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, Lakehouse 생성 → `01_prepare_data`에 연결 → 고정 가상 데이터로 `gold` 테이블 생성 |
 | [01. Ontology](docs/01-ontology.md) | 빈 Ontology → 업무 질문으로 Agent 초안 생성 → 검토·Act 적용 → 추가 질문으로 모델 보강 → Plan 질의로 검증 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
 | [03. Data Agent](docs/03-data-agent.md) | 6개 유형·12문항으로 의미·규칙·관계·가정·통합 결과 검증, 선택적으로 Graph와 비교 |

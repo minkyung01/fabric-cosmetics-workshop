@@ -577,7 +577,8 @@ class Docs(unittest.TestCase):
         self.assertIn("Lakehouse schemas", scenario)
         self.assertIn("Tables → dbo", scenario)
         self.assertIn("미리 준비되어 있습니다", scenario)
-        self.assertIn("**Notebook 5개 각각**", scenario)
+        self.assertIn("이 장에서는 `01_prepare_data`에만 연결합니다", scenario)
+        self.assertNotIn("Notebook 5개 각각", scenario)
         self.assertIn("**Data items → Add data items → From OneLake catalog**", scenario)
         self.assertIn("**기본 Lakehouse로 고정**(핀)", scenario)
         self.assertIn("세션을 다시 시작", scenario)
@@ -620,7 +621,8 @@ class Docs(unittest.TestCase):
                                   "../assets/screenshots/00-lakehouse-create.png",
                                   "../assets/screenshots/00-select-lakehouse.png",
                                   "../assets/screenshots/00-prepare-data-output.png",
-                                  "../assets/screenshots/00-prepare-data-purchase-order.png"])
+                                  "../assets/screenshots/00-prepare-data-purchase-order.png",
+                                  "../assets/screenshots/00-lakehouse-purchase-order.png"])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
         self.assertLess(scenario.index("## 2. 준비된 Notebook 확인"), scenario.index(images[0]))
@@ -632,15 +634,29 @@ class Docs(unittest.TestCase):
         self.assertLess(scenario.index("## 5. Notebook으로 gold 테이블 직접 만들기"), scenario.index(images[3]))
         self.assertLess(scenario.index(images[3]), scenario.index("## 이 장의 완료 기준"))
         self.assertLess(scenario.index("**예상 출력 — 발주 확인:**"), scenario.index(images[4]))
-        self.assertLess(scenario.index(images[4]), scenario.index("**재실행 주의:**"))
+        sections = (
+            ("### 5-3. 테이블 적재 셀 결과", "### 5-4.", images[3], "tables_to_load = select_tables(include_extended)"),
+            ("### 5-4. 마지막 조회 셀 결과", "### 5-5.", images[4], "WHERE po_id = 'PO-5501'"),
+            ("### 5-5. Lakehouse에서 전체 발주 확인", "**재실행 주의:**", images[5], "Lakehouse 테이블 화면"),
+        )
+        for heading, end, image, identifier in sections:
+            section = scenario.split(heading, 1)[1].split(end, 1)[0]
+            with self.subTest(section=heading):
+                self.assertIn(image, section)
+                self.assertIn(identifier, section)
+                self.assertEqual(re.findall(r"!\[[^]]*\]\(([^)]+)\)", section), [image])
 
-    def test_spark_startup_guidance_separates_attachment_from_compute_and_avoids_fixed_run_times(self):
+    def test_spark_startup_guidance_is_next_to_connect_and_avoids_fixed_run_times(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         self.assertIn("SQL analytics endpoint가 함께 보이면 항목 유형", scenario)
-        self.assertIn("다른 Notebook은 Lakehouse만 연결해 둡니다", scenario)
+        self.assertNotIn("다른 Notebook은 Lakehouse만 연결해 둡니다", scenario)
+        self.assertNotIn("연결 설정을 저장하는 것과", scenario)
         self.assertIn("Spark 세션 준비 단계", scenario)
         self.assertIn("세션 ID·경과 시간·오류", scenario)
-        self.assertIn("2–5분", scenario)
+        startup = scenario.split("### 5-2. Spark 세션 시작 후 전체 실행", 1)[1].split("### 5-3.", 1)[0]
+        self.assertIn("30초–5분", startup)
+        self.assertLess(startup.index("**Connect**"), startup.index("**세션 시작 대기:**"))
+        self.assertLess(startup.index("**세션 시작 대기:**"), startup.index("연결 완료 후 **Run all**"))
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
         self.assertIn("https://learn.microsoft.com/en-us/fabric/data-engineering/spark-compute", admin)
         self.assertIn("Starter pool 용량은 보장되지 않으며", admin)
@@ -663,14 +679,34 @@ class Docs(unittest.TestCase):
         self.assertIn("연결이 완료될 때까지 기다립니다", loading)
         self.assertIn("연결 완료 후 **Run all**", loading)
 
+    def test_later_notebooks_attach_lakehouse_when_their_chapter_uses_them(self):
+        for lesson in ("01-ontology.md", "02-graph.md", "03-data-agent.md",
+                       "04-operations-agent.md", "06-serving-db.md"):
+            with self.subTest(lesson=lesson):
+                text = (ROOT / "docs" / lesson).read_text(encoding="utf-8")
+                self.assertIn("기본 Lakehouse", text)
+                self.assertIn("00-scenario.md#4-notebook에-기본-lakehouse-연결", text)
+        operations = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        action_setup = operations.split("## 3. 승인 후 실행할 Notebook 살펴보기", 1)[1].split("\n## 4.", 1)[0]
+        self.assertIn("`nb_apply_review`", action_setup)
+        self.assertIn("기본 Lakehouse로 연결·저장", action_setup)
+        self.assertIn("지금 실행하지 않습니다", action_setup)
+        supply_setup = operations.split("## 6. 공급 지연 발생시키기", 1)[1].split("\n## 7.", 1)[0]
+        self.assertIn("`03_supply_change`", supply_setup)
+        self.assertLess(supply_setup.index("기본 Lakehouse로 연결·저장"), supply_setup.index("**Connect**"))
+        admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
+        self.assertNotIn("각 Notebook 기본 연결", admin)
+        extension = (ROOT / "admin" / "extended-model.md").read_text(encoding="utf-8")
+        self.assertNotIn("Notebook 5개에 기본 연결", extension)
+
     def test_notebook_guides_distinguish_estimated_code_time_outputs_and_session_startup(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         self.assertIn("| 예상 코드 실행 시간 | 예상 출력 |", scenario)
         self.assertIn("세션 연결 완료 후 코드 실행 기준", scenario)
-        self.assertIn("핵심 11개 적재 셀", scenario)
-        self.assertIn("2분 16초", scenario)
-        self.assertIn("실측 전 리허설용 예상값", scenario)
-        self.assertIn("마지막 조회 표에", scenario)
+        self.assertIn("예상 코드 실행 시간은 세션 연결 완료 후 코드 실행 기준이며, 환경에 따라 달라집니다.", scenario)
+        self.assertNotIn("2분 16초", scenario)
+        self.assertNotIn("제공된 실행 화면", scenario)
+        self.assertIn("**예상 출력 — 발주 확인:**", scenario)
         self.assertIn("**1행**", scenario)
         for lesson in ("00-scenario.md", "01-ontology.md", "02-graph.md", "03-data-agent.md",
                        "04-operations-agent.md", "05-approval.md", "06-serving-db.md"):
@@ -679,6 +715,7 @@ class Docs(unittest.TestCase):
                 self.assertIn("**예상 코드 실행 시간:**", text)
                 self.assertIn("세션 준비 제외", text)
                 self.assertIn("예상 출력", text)
+                self.assertNotIn("실측 전 리허설용 예상", text)
         for lesson in ("01-ontology.md", "02-graph.md", "03-data-agent.md"):
             self.assertIn("ops.material_impact가 아직 없습니다",
                           (ROOT / "docs" / lesson).read_text(encoding="utf-8"))

@@ -17,7 +17,6 @@
 - 05장에서 `nb_apply_review`가 성공했고 현재 이벤트의 요청 3건이 있습니다.
 - 내 실습 작업 영역의 기본 권한은 **Contributor**입니다. SQL DB 생성과 SQL 실행 가능 여부를 이 권한으로 사전 확인한 환경에서 진행합니다. 테넌트·Purview 관리자 권한은 필요하지 않습니다.
 - **SQL database** 항목 `sqldb_cos`와 Serving 스키마는 이 장에서 직접 만듭니다. **Lakehouse의 SQL analytics endpoint와 다릅니다.**
-- `04_publish_serving`의 기본 Lakehouse는 `lh_cos`입니다.
 
 ## 1. SQL database 만들기
 
@@ -48,9 +47,9 @@
 
 ## 3. 승인 결과 게시
 
-**예상 코드 실행 시간:** 약 1–2분(세션 준비 제외, 실측 전 리허설용 예상). SQL DB에서 게시 명령을 실행하는 시간은 별도입니다.
+**예상 코드 실행 시간:** 약 1–2분(세션 준비 제외). SQL DB에서 게시 명령을 실행하는 시간은 별도입니다.
 
-1. `04_publish_serving`을 열고 `event_id`가 05장에서 승인한 이벤트인지 확인합니다. 세션이 연결되어 있지 않다면 **Connect**로 시작하고, 연결 완료 후 **Run all**을 누릅니다.
+1. `04_publish_serving`을 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). `event_id`가 05장에서 승인한 이벤트인지 확인합니다. 세션이 연결되어 있지 않다면 **Connect**로 시작하고, 연결 완료 후 **Run all**을 누릅니다.
 2. 출력의 `EXEC serving.usp_publish_reviews ...;` 명령 전체를 복사합니다. 승인 조치·요청 수가 다르거나 승인 전이면 Notebook이 오류로 멈춥니다.
 3. `sqldb_cos` 쿼리 편집기에 붙여 넣고 실행합니다.
 
