@@ -759,9 +759,36 @@ class Docs(unittest.TestCase):
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", lesson)
         self.assertEqual(images, ["../assets/screenshots/02-graph-choose-projection.png",
                                   "../assets/screenshots/02-graph-projection-summary.png",
-                                  "../assets/screenshots/02-graph-created-items.png"])
+                                  "../assets/screenshots/02-graph-created-items.png",
+                                  "../assets/screenshots/02-graph-query-now.png",
+                                  "../assets/screenshots/02-graph-q1-results.png",
+                                  "../assets/screenshots/02-graph-q2-active-results.png"])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+
+    def test_graph_query_walkthrough_explains_status_and_active_filter(self):
+        lesson = (ROOT / "docs" / "02-graph.md").read_text(encoding="utf-8")
+        queries = lesson.split("## 3. GQL로 질의하기", 1)[1].split("## 4.", 1)[0]
+        for requirement in ("**Data load completed**", "**Query → Query now**",
+                            "**Code editor**", "**Run query**",
+                            "**`fv.status` 열**", "**`fv.is_active` 열**",
+                            "행 순서는 다를 수 있으므로 `version_id`로 대조",
+                            "**폐기는 `status` 값**", "**false는 `is_active` 값**",
+                            "질의 실패라는 뜻이 아닙니다",
+                            "Q1은 활성 여부로 필터링하지 않으므로",
+                            "`status = 현행`과 같은 의미는 아닙니다",
+                            "**개발중이면서 활성(true)**", "AND fv.is_active = true",
+                            "원본 데이터를 삭제하거나 상태를 변경하지 않습니다"):
+            self.assertIn(requirement, queries)
+        for version, status, active in (
+                ("FV-CRM-01-02", "폐기", "false"),
+                ("FV-CRM-01-03", "현행", "true"),
+                ("FV-TON-02-01", "개발중", "true"),
+                ("FV-AMP-03-02", "현행", "true")):
+            self.assertIn(f"| `{version}` | {status} | {active} |", queries)
+        self.assertLess(queries.index("**Query → Query now**"), queries.index("**Run query**"))
+        self.assertLess(queries.index("**Q1."), queries.index("02-graph-q1-results.png"))
+        self.assertLess(queries.index("**Q2."), queries.index("02-graph-q2-active-results.png"))
 
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

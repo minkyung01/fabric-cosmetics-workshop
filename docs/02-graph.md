@@ -46,7 +46,12 @@ Ontology는 원본에 바인딩된 업무 모델이며 **Graph가 필수는 아�
 
 ## 3. GQL로 질의하기
 
-Graph model `ont_cos_graph_…`을 열고 질의 편집기(**Code editor** 또는 **Query**)에서 아래 질의를 하나씩 실행합니다. 각 질의 뒤의 **예상 결과**와 비교합니다.
+1. Graph model `ont_cos_graph_…`을 열고 **Data load completed** 안내를 확인합니다. 상단 **Query → Query now**를 선택합니다.
+
+   ![Graph model에서 데이터 적재 완료를 확인하고 Query 메뉴의 Query now 선택](../assets/screenshots/02-graph-query-now.png)
+
+2. 새 쿼리 탭이 열리면 **Code editor**에서 아래 Q1의 GQL을 붙여 넣습니다.
+3. 상단 **Run query**를 누르고 편집기 아래의 결과 표를 확인합니다. 각 질의 뒤의 **예상 결과**와 비교합니다. 이후 질의도 같은 편집기에서 내용을 바꿔 실행할 수 있습니다.
 
 ### 실행 전: 내 Graph의 이름과 경로에 맞추기
 
@@ -68,13 +73,30 @@ WHERE rm.material_code = 'RM-HA-120'
 RETURN fv.version_id, fv.formula_name, fv.status, fv.is_active
 ```
 
-**예상 결과:** 4행 — `FV-CRM-01-02`(폐기, false), `FV-CRM-01-03`(현행), `FV-TON-02-01`(개발중), `FV-AMP-03-02`(현행).
+**예상 결과:** 4행입니다. `status`와 `is_active`는 서로 다른 열이며, 결과 표에서는 각각 **`fv.status` 열**과 **`fv.is_active` 열**로 표시됩니다. 행 순서는 다를 수 있으므로 `version_id`로 대조합니다.
+
+| version_id | status — 처방 버전의 업무 상태 | is_active — 활성 여부(Boolean) |
+| --- | --- | --- |
+| `FV-CRM-01-02` | 폐기 | false |
+| `FV-CRM-01-03` | 현행 | true |
+| `FV-TON-02-01` | 개발중 | true |
+| `FV-AMP-03-02` | 현행 | true |
+
+![Graph Q1 실행 결과: 처방 버전 4행과 fv.status·fv.is_active 열](../assets/screenshots/02-graph-q1-results.png)
+
+`FV-CRM-01-02`의 **폐기는 `status` 값**으로, 이 처방 버전이 폐기 상태라는 뜻입니다. **false는 `is_active` 값**으로, 활성 버전이 아니라는 뜻이지 질의 실패라는 뜻이 아닙니다. Q1은 활성 여부로 필터링하지 않으므로 이 버전도 조회됩니다.
+
+반대로 **true는 활성 버전이라는 뜻**이며, `status = 현행`과 같은 의미는 아닙니다. 예를 들어 `FV-TON-02-01`은 **개발중이면서 활성(true)** 상태이므로 다음 Q2에서도 남습니다.
 
 **Q2. 업무 규칙 적용 — 폐기 버전 제외**
 
-Q1의 `WHERE`에 `AND fv.is_active = true`를 **직접 추가해** 실행합니다.
+Q1의 `WHERE`에 `AND fv.is_active = true`를 **직접 추가해** **Run query**로 다시 실행합니다.
 
-**예상 결과:** 3행. `FV-CRM-01-02`가 빠집니다. 같은 Graph라도 **필터 하나가 영향 대상을 바꿉니다.**
+**예상 결과:** 3행. `is_active = false`인 `FV-CRM-01-02`가 빠지고, true인 나머지 3개 버전은 남습니다.
+
+![Graph Q2 실행 결과: is_active = true 필터로 폐기 버전이 제외되고 활성 버전 3행만 표시](../assets/screenshots/02-graph-q2-active-results.png)
+
+Q1의 4행과 비교해 보세요. 이 필터는 **조회 결과에서 비활성 버전을 제외**하는 것이며 원본 데이터를 삭제하거나 상태를 변경하지 않습니다. 같은 Graph라도 **필터 하나가 영향 대상을 바꿉니다.**
 
 **Q3. 제품과 생산 계획까지**
 
