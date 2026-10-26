@@ -42,6 +42,10 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 2. 내 계정에 이 작업 영역의 **Contributor 권한**과 항목 생성 기능이 있는지 확인합니다. 테넌트·용량·Teams·Purview의 공통 설정은 관리자가 준비하지만, **작업 영역 안의 실습 항목은 직접 만듭니다.**
 3. 처음에는 작업 영역이 비어 있어야 합니다. 기존 항목이 있다면 삭제하거나 덮어쓰지 말고 관리자에게 새 실습 작업 영역인지 확인합니다.
 
+![빈 작업 영역 화면](../assets/screenshots/00-empty-workspace.png)
+
+위 화면은 테스트 작업 영역 `cos-p901`의 예시입니다. **아래 항목 목록에 `There's nothing here yet`가 보이면 빈 상태**이며, 본인의 작업 영역 번호는 다를 수 있습니다. 위쪽 Task flow 추천 영역은 기본 화면이므로 따로 선택하거나 만들지 않아도 됩니다. 이후 항목 생성은 왼쪽 위 **+ New item**, Notebook 가져오기는 상단 **Import**를 사용합니다.
+
 | 항목 | 이름 | 비고 |
 |---|---|---|
 | Lakehouse | `lh_cos` | **이 장에서 직접 생성**. Lakehouse schemas를 켜고 `gold` 테이블도 직접 적재 |
@@ -53,9 +57,37 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
 ## 2. 실습 파일 내려받기
 
-1. [실습 저장소](https://github.com/minkyung01/fabric-cosmetics-workshop)를 열고 **Code → Download ZIP**으로 내려받아 압축을 풉니다. [ZIP 직접 다운로드](https://github.com/minkyung01/fabric-cosmetics-workshop/archive/refs/heads/main.zip)도 가능합니다. 별도로 안내받은 배포본이 있다면 그 버전을 사용합니다.
-2. 압축을 푼 폴더에서 `data`의 핵심 CSV 11개와 `notebooks`의 `.ipynb` 파일 5개를 확인합니다. `notebooks/src`의 `.py` 파일이 아니라 **`.ipynb` 파일**을 가져옵니다. 로컬 Python·Git 설치는 필요 없습니다.
-3. 07장 이후 선택 확장까지 할지 안내를 확인합니다. 진행할 경우 `data/extended`의 추가 CSV 17개도 **첫 적재 전에** 업로드합니다. 모델 확장 자체는 07장 이후에만 합니다.
+1. **[실습 파일 ZIP 다운로드](../downloads/workshop-files.zip?raw=true)**를 눌러 `workshop-files.zip`을 받습니다. **CSV와 `.ipynb`만 담은 파일**이므로 저장소 전체를 받을 필요가 없습니다. 별도로 안내받은 배포본이 있다면 그 버전을 사용합니다.
+2. 다운로드한 ZIP을 우클릭해 **모두 압축 풀기**를 선택합니다. ZIP 안에서 바로 파일을 선택하지 말고, 압축을 푼 폴더를 엽니다. 로컬 Python·Git 설치는 필요 없습니다.
+3. 그 안에 **`data`와 `notebooks`가 나란히 있는지** 확인합니다. **`.ipynb`는 `data` 안이 아니라 별도의 `notebooks` 폴더에 있습니다.**
+
+    ```text
+    workshop-files
+      data
+        ingredient.csv
+        ...                  (핵심 CSV 11개)
+        extended
+          organization.csv
+          ...                (선택 확장 CSV 17개)
+      notebooks
+        01_prepare_data.ipynb
+        02_answers.ipynb
+        03_supply_change.ipynb
+        nb_apply_review.ipynb
+        04_publish_serving.ipynb
+    ```
+
+**두 파일 종류는 가져오는 위치도 다릅니다.** 아래의 **내 PC 폴더**는 압축을 푼 로컬 폴더이고, **Fabric 위치**는 포털에서 직접 만들거나 가져올 곳입니다.
+
+| 내 PC에서 열 폴더 | 선택할 파일 | Fabric에서 가져올 위치 | 진행 단계 |
+|---|---|---|---|
+| `data` | 핵심 `.csv` 11개 | Lakehouse `lh_cos`의 **Files → workshop → data**에 업로드 | 이 장 4단계 |
+| `notebooks` | `.ipynb` 5개 | **작업 영역 → Import → Notebook**으로 가져오기 | 이 장 5단계 |
+| `data\extended` | 선택 확장 `.csv` 17개 | 핵심 CSV와 **같은 Lakehouse 폴더**에 추가 업로드 | 선택 확장을 할 경우 4단계, **첫 적재 전** |
+
+기본 과정만 진행하면 **`data`의 CSV 11개와 `notebooks`의 `.ipynb` 5개**를 사용합니다. 07장 이후 선택 확장까지 할 경우 `data\extended`의 CSV 17개도 4단계에서 함께 올립니다. 추가 테이블은 첫 적재 때 만들지만, Ontology 모델 확장 자체는 07장 이후에만 합니다.
+
+**CSV는 Lakehouse Files에 업로드하고, `.ipynb`는 작업 영역에 Notebook으로 가져옵니다.** 두 종류를 한곳에 모두 올리지 않습니다. 이미 저장소 전체 ZIP을 받았다면 그 안의 `data`와 `notebooks`를 사용해도 같으며, `notebooks\src`의 `.py`는 가져오지 않습니다. 이후 장에서 쓰는 SQL은 해당 실습 문서의 파일 링크에서 별도로 엽니다.
 
 ## 3. Lakehouse 직접 만들기
 
@@ -68,7 +100,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 ## 4. CSV 업로드와 원본 확인
 
 1. `lh_cos`의 **Files**에서 **… → New subfolder**로 `workshop`을 만들고, 그 아래 `data` 하위 폴더를 만듭니다. 최종 경로는 **Files → workshop → data**입니다.
-2. 이 `data` 폴더 안에서 **Upload files**를 선택하고 로컬 `data` 폴더의 다음 핵심 CSV 11개를 함께 업로드합니다. 폴더 전체가 아닌 **파일을 선택**해 `data/data`처럼 한 단계 더 중첩되지 않게 합니다.
+2. **Fabric의 `Files → workshop → data`** 안에서 **Upload files**를 선택합니다. 파일 선택 창에서는 **내 PC의 압축 푼 폴더 → `data`**를 열어 다음 핵심 **CSV 11개만** 함께 선택합니다. `notebooks`의 `.ipynb`는 여기 올리지 않습니다. 폴더 전체가 아닌 파일을 선택해 `data/data`처럼 한 단계 더 중첩되지 않게 합니다.
 
 ```text
 ingredient.csv          supplier.csv          raw_material.csv
@@ -77,7 +109,7 @@ product.csv             dev_project.csv       stability_test.csv
 production_plan.csv     purchase_order.csv
 ```
 
-3. 선택 확장도 할 경우 로컬 `data/extended`의 CSV 17개를 **같은 `Files/workshop/data` 폴더**에 추가 업로드합니다. Lakehouse 안에 `extended` 하위 폴더를 만들지 않습니다. 핵심만이면 11개, 확장 포함이면 28개가 같은 위치에 있어야 합니다.
+3. 선택 확장도 할 경우 내 PC의 `data\extended`에 있는 CSV 17개를 **같은 `Files/workshop/data` 폴더**에 추가 업로드합니다. Lakehouse 안에 `extended` 하위 폴더를 만들지 않습니다. 핵심만이면 11개, 확장 포함이면 28개가 같은 위치에 있어야 합니다.
 4. `purchase_order.csv`를 미리 보고 `po_id`, `material_code`, `eta`, `status` 등의 열이 있는지 확인합니다. 파일을 테이블로 하나씩 수동 변환하지 않고 다음 Notebook에서 타입·스키마를 맞춰 함께 적재합니다.
 
 확장 CSV가 모두 있으면 아래 Notebook이 총 28개 테이블을 만들지만, 01장의 Ontology는 핵심 11개 테이블만으로 시작합니다. 추가 파일이 일부만 있으면 오류로 중지하므로 첫 적재 전에 파일 구성을 확인합니다.
@@ -85,7 +117,7 @@ production_plan.csv     purchase_order.csv
 ## 5. Notebook 5개 가져오기와 기본 Lakehouse 연결
 
 1. 내 작업 영역으로 돌아가 도구 모음의 **Import → Notebook**(또는 **Import notebook**)을 선택합니다.
-2. 로컬 `notebooks` 폴더의 다음 **`.ipynb` 5개**를 가져옵니다. 가져온 항목 이름도 아래와 같은지 확인합니다.
+2. 파일 선택 창에서 **내 PC의 압축 푼 폴더 → `notebooks`**를 열고 다음 **`.ipynb` 5개**를 가져옵니다. `data`의 CSV를 선택하거나 Lakehouse Files에 `.ipynb`를 업로드하는 단계가 아닙니다. 가져온 항목 이름도 아래와 같은지 확인합니다.
 
     ```text
     01_prepare_data.ipynb

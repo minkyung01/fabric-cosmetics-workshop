@@ -20,7 +20,7 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 | SQL database | 사전 생성하지 않음. 참가자가 06장에서 본인 실습 작업 영역에 `sqldb_cos`와 Serving 스키마 직접 생성 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. 선택 활동인 DLP 정책 팁 확인·카탈로그 자산 검색은 아래 별도 조건 확인 |
 
-**참가자용 작업 영역 안에는 항목을 미리 배포하지 않습니다.** 빈 작업 영역으로 시작해도 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스 준비는 필요합니다. 워크샵 파일은 저장소 ZIP으로 배포하며 참가자가 [00장](../docs/00-scenario.md)을 따라 직접 가져옵니다.
+**참가자용 작업 영역 안에는 항목을 미리 배포하지 않습니다.** 빈 작업 영역으로 시작해도 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스 준비는 필요합니다. 워크샵 파일은 [CSV·Notebook 전용 ZIP](../downloads/workshop-files.zip?raw=true)으로 배포하며 참가자가 [00장](../docs/00-scenario.md)을 따라 직접 가져옵니다. 저장소 전체 다운로드는 필요하지 않습니다.
 
 ## 1. Fabric 테넌트 설정
 
@@ -151,7 +151,9 @@ python tools/build_architecture.py
 python -m unittest discover -s tests -v
 ```
 
-Notebook·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Lesson 순서, CSV와 기대 영향 계산, 게시 SQL 생성 등을 오프라인으로 점검합니다. **Fabric 배포·SQL 엔진 동작·Teams 승인·Purview 정책 평가를 대신하지 않습니다.** 실제 테넌트 사전 점검을 별도로 수행합니다.
+`build_notebooks.py`는 Notebook 5개와 **`downloads/workshop-files.zip`을 함께 재생성**합니다. CSV나 Notebook 원본이 바뀌면 다시 실행하고 ZIP도 함께 반영합니다. ZIP에는 핵심 CSV 11개·선택 확장 CSV 17개·`.ipynb` 5개만 넣으며, 관리자 스크립트·문서·스크린샷·`.py`는 포함하지 않습니다. `python tools/build_notebooks.py --check`로 Notebook과 ZIP의 최신 여부를 함께 확인할 수 있습니다.
+
+Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Lesson 순서, CSV와 기대 영향 계산, 게시 SQL 생성 등을 오프라인으로 점검합니다. **Fabric 배포·SQL 엔진 동작·Teams 승인·Purview 정책 평가를 대신하지 않습니다.** 실제 테넌트 사전 점검을 별도로 수행합니다.
 
 보관된 정의는 `fabric/ont_cos_base`(이전 과정의 중간 복구 참고 모델), `fabric/ont_cos_reference`(핵심 완성 복구 모델), `fabric/ont_cos_extended`(선택 확장 완성 모델)입니다. **`ont_cos_base`는 기본 배포 대상이 아닙니다.** 준비 Notebook은 참가자가 00장에서 최초 실행합니다. 초기화가 필요한 경우에는 현재 `gold`·`ops` 상태를 확인하고 명시적으로 동의한 뒤 `reset_ops = True`를 사용합니다.
 

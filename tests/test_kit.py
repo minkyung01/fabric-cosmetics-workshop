@@ -11,12 +11,14 @@ import subprocess
 import sys
 import unittest
 import xml.etree.ElementTree as ET
+import zipfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from contextlib import redirect_stderr, redirect_stdout
 from itertools import product
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
+from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -50,6 +52,28 @@ class Notebooks(unittest.TestCase):
 
     def test_expected_set(self):
         self.assertEqual(sorted(p.stem for p in (ROOT / "notebooks").glob("*.ipynb")), sorted(NOTEBOOKS))
+
+    def test_participant_download_contains_only_exact_csv_and_notebook_files(self):
+        expected = {f"data/{name}.csv" for name in Data().tables()}
+        expected |= {f"data/extended/{name}.csv" for name in Data().tables("EXTENDED_TABLES")}
+        expected |= {f"notebooks/{name}.ipynb" for name in NOTEBOOKS}
+        self.assertEqual(len(expected), 33)
+        with zipfile.ZipFile(ROOT / "downloads" / "workshop-files.zip") as archive:
+            self.assertEqual(archive.namelist(), sorted(expected))
+            self.assertIsNone(archive.testzip())
+            for info in archive.infolist():
+                with self.subTest(file=info.filename):
+                    self.assertFalse(info.is_dir())
+                    self.assertEqual(info.date_time, (1980, 1, 1, 0, 0, 0))
+                    self.assertEqual(archive.read(info.filename), (ROOT / info.filename).read_bytes())
+
+    def test_participant_download_generation_is_deterministic(self):
+        builder = runpy.run_path(str(ROOT / "tools" / "build_notebooks.py"))
+        notebooks = {f"{name}.ipynb": builder["build"](ROOT / "notebooks" / "src" / f"{name}.py")
+                     for name in NOTEBOOKS}
+        download = builder["build_download"](notebooks)
+        self.assertEqual(download, builder["build_download"](dict(reversed(list(notebooks.items())))))
+        self.assertEqual(download, (ROOT / "downloads" / "workshop-files.zip").read_bytes())
 
     def test_provision_imports_all_notebooks(self):
         tree = ast.parse((ROOT / "admin" / "provision.py").read_text(encoding="utf-8"))
@@ -227,7 +251,7 @@ class Docs(unittest.TestCase):
             for link in re.findall(r"\]\(([^)]+)\)", text):
                 if link.startswith(("http", "#", "mailto:")):
                     continue
-                path = (md.parent / link.split("#")[0]).resolve()
+                path = (md.parent / unquote(urlsplit(link).path)).resolve()
                 self.assertTrue(path.exists(), f"{md.name}: {link}")
 
     def test_chapter_navigation(self):
@@ -438,7 +462,7 @@ class Docs(unittest.TestCase):
             "## 4. CSV 업로드와 원본 확인", "## 5. Notebook 5개 가져오기와 기본 Lakehouse 연결",
             "## 6. Notebook으로 gold 테이블 직접 만들기",
         ])
-        self.assertIn("Code → Download ZIP", scenario)
+        self.assertIn("../downloads/workshop-files.zip?raw=true", scenario)
         self.assertIn("Lakehouse schemas", scenario)
         self.assertIn("Tables → dbo", scenario)
         self.assertIn("Upload files", scenario)
@@ -460,6 +484,30 @@ class Docs(unittest.TestCase):
         self.assertIn("`01_prepare_data`를 직접 실행해", ontology)
         extension = (ROOT / "docs" / "extensions" / "ontology.md").read_text(encoding="utf-8")
         self.assertIn("00장의 첫 적재에서 직접 만든", extension)
+
+    def test_scenario_separates_local_download_folders_and_fabric_destinations(self):
+        scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
+        download = scenario.split("## 2. 실습 파일 내려받기\n", 1)[1].split("\n## 3.", 1)[0]
+        self.assertIn("CSV와 `.ipynb`만 담은 파일", download)
+        self.assertIn("`data`와 `notebooks`가 나란히", download)
+        self.assertIn("`.ipynb`는 `data` 안이 아니라", download)
+        self.assertIn("| 내 PC에서 열 폴더 | 선택할 파일 | Fabric에서 가져올 위치 | 진행 단계 |", download)
+        self.assertIn("| `data` | 핵심 `.csv` 11개 |", download)
+        self.assertIn("| `notebooks` | `.ipynb` 5개 |", download)
+        self.assertIn("**작업 영역 → Import → Notebook**", download)
+        self.assertIn("첫 적재 전", download)
+        self.assertNotIn("archive/refs/heads/main.zip", download)
+        self.assertIn("downloads/workshop-files.zip?raw=true", (ROOT / "README.md").read_text(encoding="utf-8"))
+
+    def test_scenario_includes_actual_empty_workspace_screenshot_before_downloads(self):
+        scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
+        image = "../assets/screenshots/00-empty-workspace.png"
+        self.assertIn(f"![빈 작업 영역 화면]({image})", scenario)
+        self.assertLess(scenario.index(image), scenario.index("## 2. 실습 파일 내려받기"))
+        self.assertIn("`cos-p901`", scenario)
+        self.assertIn("`There's nothing here yet`", scenario)
+        self.assertIn("따로 선택하거나 만들지 않아도 됩니다", scenario)
+        self.assertTrue((ROOT / "assets" / "screenshots" / "00-empty-workspace.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
     def test_admin_default_is_empty_workspace_not_prestaged_items(self):
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
