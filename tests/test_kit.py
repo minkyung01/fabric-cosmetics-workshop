@@ -433,6 +433,9 @@ class Docs(unittest.TestCase):
         lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
         self.assertIn("## 1. 빈 Ontology 만들기", lesson)
         self.assertIn("## 4. 추가 질문으로 모델 보강하기", lesson)
+        self.assertIn("4-1에서 부족한 부분 발견 → 4-2에서 보강안 제안·검토 → Act로 적용", lesson)
+        self.assertIn("앞선 Act 적용이 실패했다는 뜻은 아닙니다", lesson)
+        self.assertIn("제안만으로 바인딩이 추가되지는 않으며", lesson)
         self.assertIn("기존 항목·ID·키·바인딩은 보존", lesson)
         self.assertNotIn("관리자가 배포한 기본 Ontology", lesson)
         prompts = re.findall(r"```text\n(.*?)```", lesson, re.S)
@@ -449,6 +452,8 @@ class Docs(unittest.TestCase):
         self.assertIn("Boolean", improvement)
         self.assertIn("cn_registration", improvement)
         self.assertIn("변경 미리 보기", improvement)
+        improvement_approval = next(p for p in prompts if "검토한 보강 변경안만 현재 ont_cos에 적용해줘." in p)
+        self.assertIn("원본 데이터와 다른 Fabric 항목은 바꾸지 마.", improvement_approval)
         for prompt in prompts:
             if "검토한 초안만 현재 ont_cos에 적용해줘." in prompt:
                 self.assertIn("원본은 읽기만 하고", prompt)
@@ -484,6 +489,7 @@ class Docs(unittest.TestCase):
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", lesson)
         self.assertEqual(images, ["../assets/screenshots/01-create-ontology.png",
                                   "../assets/screenshots/01-agent-preview-button.png",
+                                  "../assets/screenshots/01-ontology-applied.png",
                                   "../assets/screenshots/01-formula-line-proposal.png",
                                   "../assets/screenshots/01-formula-line-relationship.png",
                                   "../assets/screenshots/01-incomplete-proposal.png"])
