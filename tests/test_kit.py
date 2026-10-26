@@ -607,15 +607,22 @@ class Docs(unittest.TestCase):
         self.assertIn("**같은 대화의 Plan**", review)
         prompt = re.findall(r"```text\n(.*?)```", review, re.S)[0]
         for requirement in ("lh_cos.gold에서 확인 가능한 원본 샘플", "RM-HA-120",
-                            "원료명·성분·공급사·발주·처방·제품",
-                            "샘플에서 실제로 확인한 값과 그 원본 테이블·열",
-                            "'샘플에서 미확인'", "'없음'으로 바꾸지 마",
-                            "테이블별 샘플에서 읽은 값과 관계 설계로 해석한 연결을 구분",
+                            "표 1. 원료·공급 요약", "확인할 대상 | 확인한 값",
+                            "원료: material_code와 원료명", "성분: ingredient_id와 INCI명",
+                            "공급사: supplier_id와 공급사명", "해당 원료 발주: po_id, eta, status",
+                            "표 2. 처방 버전별 사용처",
+                            "처방 버전(version_id) | status | 연결된 판매 제품(product_id)",
+                            "샘플에 보이는 폐기·개발중 처방도 제외하지 마",
+                            "'샘플에서 미확인'", "'없음'으로 바꾸거나",
+                            "관계 설계만으로 값을 추측하지 마",
                             "전체 건수나 제품의 부재는 단정하지 마",
-                            "실행하지 않은 검증은 미실행",
-                            "바인딩은 미확인", "오류를 보고하고 중단",
+                            "근거 원본 테이블과 샘플 확인 범위·한계만 최대 2문장",
+                            "서론 없이 표부터", "긴 해설은 출력하지 마",
+                            "오류를 보고하고 중단",
                             "원본 데이터와 현재 Ontology는 변경하지 마"):
             self.assertIn(requirement, prompt)
+        self.assertNotIn("각 연결을 지원하는 초안의 관계·양끝 키·매핑 원본도 별도로 설명", prompt)
+        self.assertIn("관계·키·바인딩 상세는 3단계", review)
         self.assertIn("**Preview ontology**", review)
         self.assertIn("2-1·2-2 표와 대조", review)
         self.assertIn("별도 SQL 실습으로 이동하지 않습니다", review)
