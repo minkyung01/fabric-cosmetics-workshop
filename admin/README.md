@@ -20,7 +20,7 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 | SQL database | 사전 생성하지 않음. 참가자가 06장에서 본인 실습 작업 영역에 `sqldb_cos`와 Serving 스키마 직접 생성 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. 선택 활동인 DLP 정책 팁 확인·카탈로그 자산 검색은 아래 별도 조건 확인 |
 
-**참가자용 작업 영역 안에는 항목을 미리 배포하지 않습니다.** 빈 작업 영역으로 시작해도 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스 준비는 필요합니다. 워크샵 파일은 [CSV·Notebook 전용 ZIP](../downloads/workshop-files.zip?raw=true)으로 배포하며 참가자가 [00장](../docs/00-scenario.md)을 따라 직접 가져옵니다. 저장소 전체 다운로드는 필요하지 않습니다.
+**참가자용 작업 영역 안에는 항목을 미리 배포하지 않습니다.** 빈 작업 영역으로 시작해도 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스 준비는 필요합니다. 워크샵 파일은 [실습 파일 ZIP](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)으로 배포하며 참가자가 [00장](../docs/00-scenario.md)을 따라 직접 가져옵니다.
 
 ## 1. Fabric 테넌트 설정
 
@@ -85,7 +85,7 @@ python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --par
 
 완성 복구 모델은 바인딩할 원본 테이블이 먼저 있어야 합니다. 새 복구 환경은 `--prefill-items --run-prepare --reference-ontology`를 함께 사용하고, 이미 적재된 원본이 있으면 적재 옵션을 생략합니다.
 
-`--prefill-items`는 CSV를 다시 업로드할 수 있으며, 기존 Notebook은 `--update-notebooks`를 명시할 때만 교체합니다. 이전 교재의 Notebook만 최신화하려면 참가자 편집 내용을 먼저 보존하고 **`--prefill-items --update-notebooks`**를 사용합니다. `--run-prepare`는 붙이지 않습니다. 기존 `ont_cos`·`eh_cos`는 보존하며 자동 삭제·초기화하지 않습니다. 참가자 과정 중간이나 07장 이후 모델 확장을 위해 항목 준비·적재를 재실행하지 않습니다.
+`--prefill-items`는 CSV를 다시 업로드할 수 있으며, 기존 Notebook은 `--update-notebooks`를 명시할 때만 교체합니다. 이전 교재의 Notebook만 최신화하려면 참가자 편집 내용을 먼저 보존하고 `--prefill-items --update-notebooks`를 사용합니다. `--run-prepare`는 붙이지 않습니다. 기존 `ont_cos`·`eh_cos`는 보존하며 자동 삭제·초기화하지 않습니다. 참가자 과정 중간이나 07장 이후 모델 확장을 위해 항목 준비·적재를 재실행하지 않습니다.
 
 | 옵션 | 용도 |
 |---|---|

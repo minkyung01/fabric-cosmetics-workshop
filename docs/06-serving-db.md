@@ -2,7 +2,7 @@
 
 [목차](../README.md) \| 이전: [05. 승인과 조치 기록](05-approval.md) \| 다음: [07. Purview 거버넌스](07-purview.md)
 
-승인 결과가 Lakehouse에만 있으면 담당자는 분석용 테이블을 직접 읽어야 합니다. 이 장에서는 **SQL database in Fabric**에 검토 요청을 게시하고 **담당 팀별 조회 → 검토 착수 → 상태 이력**을 처리합니다. 앱·API가 사용할 업무용 데이터 계층을 경험하며, 별도의 웹 앱은 만들지 않습니다.
+이 장에서는 **SQL database in Fabric**에 승인된 검토 요청을 게시하고 **담당 팀별 조회 → 검토 착수 → 상태 이력**을 처리합니다.
 
 | 계층 | 항목 | 담당하는 상태 |
 |---|---|---|
@@ -10,7 +10,7 @@
 | 이벤트 감시 | `eh_cos` | `open` → `review_requested` |
 | 업무 Serving | `sqldb_cos`의 `serving` | 담당 팀별 요청 목록과 `요청됨` → `검토중` |
 
-**SQL DB를 고른 이유:** 요청·담당 팀·상태·이력은 구조가 일정하고 키·제약 조건·트랜잭션이 유용합니다. JSON 중심·가변 스키마·대규모 저지연 문서 조회가 주된 요구라면 Cosmos DB in Fabric도 후보지만, 이 실습에서는 DB를 두 개 붙이지 않습니다.
+**SQL DB를 고른 이유:** 검토 요청·담당 팀·상태·이력은 키·제약 조건·트랜잭션으로 관리하기 좋습니다.
 
 ## 시작 전 확인
 
@@ -34,7 +34,7 @@
 ## 2. Serving 스키마 만들기
 
 1. `sqldb_cos`의 **SQL database** 쿼리 편집기를 엽니다.
-2. 새 쿼리를 열고 [serving.sql](../fabric/sql/serving.sql)의 전체 내용을 실행합니다(`GO` 포함).
+2. [serving.sql](../fabric/sql/serving.sql)의 전체 내용을 복사해 새 쿼리에 붙여 넣고 실행합니다(`GO` 포함).
 3. Explorer를 새로 고쳐 다음 객체를 확인합니다.
 
 | 객체 | 용도 |
@@ -104,16 +104,15 @@ ORDER BY history_id;
 
 - **읽기 전용/테이블 생성 불가:** SQL analytics endpoint가 아닌 SQL database를 열었는지 확인합니다.
 - **SQL database가 없거나 생성이 거부됨:** 현재 작업 영역·용량·Contributor 역할과 SQL DB 생성 기능을 관리자와 확인합니다. 공식 문서의 권한 안내 차이는 [관리자 가이드](../admin/README.md#sql-serving-db-준비-06장)에 정리되어 있습니다. 오류를 확인하지 않은 채 Member나 테넌트·Purview 관리자 권한으로 임의 승격하지 않습니다.
-- **DDL·프로시저 실행 권한 오류:** SQL database 편집기를 사용 중인지, 본인 실습 DB의 생성·실행 권한이 있는지 확인합니다. 관리자에게 오류와 실행 대상을 전달하고, 스키마·게시를 완료하지 못한 상태를 성공으로 표시하지 않습니다.
+- **DDL·프로시저 실행 권한 오류:** SQL database 편집기를 사용 중인지, 본인 실습 DB의 생성·실행 권한이 있는지 확인하고 관리자에게 오류와 실행 대상을 전달합니다.
 - **프로시저가 없음:** `serving.sql` 전체를 `GO` 경계까지 실행했는지 확인합니다.
-- **승인 조치가 없음/건수 불일치:** 같은 `event_id`로 05장을 완료했는지 확인합니다. 임의 샘플로 채워 성공한 것처럼 진행하지 않습니다.
+- **승인 조치가 없음/건수 불일치:** 같은 `event_id`로 05장을 완료했는지 확인합니다.
 - **이전 실습 이력이 남음:** `01_prepare_data`는 SQL DB를 초기화하지 않습니다. 새 이벤트를 쓰거나 관리자에게 실습 DB 재생성을 요청합니다.
 
 ## 공식 문서
 
 - [SQL database 만들기·권한](https://learn.microsoft.com/en-us/fabric/database/sql/create)
 - [SQL database 연결·SQL analytics endpoint 구분](https://learn.microsoft.com/en-us/fabric/database/sql/connect)
-- [Cosmos DB in Fabric의 Serving 역할](https://learn.microsoft.com/en-us/fabric/database/cosmos-db/overview)
 
 ## 다음 단계
 

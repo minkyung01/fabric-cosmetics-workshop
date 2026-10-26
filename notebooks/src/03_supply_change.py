@@ -32,11 +32,14 @@ from datetime import date, timedelta
 from pyspark.sql import functions as F
 
 AS_OF = date.fromisoformat(as_of_date)
-DATA = "Files/workshop/data"
-
-original = (spark.read.option("header", True).csv(f"{DATA}/purchase_order.csv")
-            .where(F.col("material_code") == material_code)
-            .select("po_id", F.to_date("eta").alias("original_eta")).collect())
+purchase_orders = spark.table("gold.purchase_order")
+if "original_eta" not in purchase_orders.columns:
+    raise ValueError(
+        "gold.purchase_order에 original_eta가 없습니다. 00장의 최신 준비 코드와 테이블 스키마를 확인하세요. "
+        "진행 중인 실습을 초기화하지 말고 관리자와 확인하세요."
+    )
+original = (purchase_orders.where(F.col("material_code") == material_code)
+            .select("po_id", "original_eta").collect())
 if not original:
     raise ValueError(f"{material_code} 발주가 없습니다. 원료 코드를 확인하세요.")
 orig_eta = {r.po_id: r.original_eta for r in original}

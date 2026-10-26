@@ -119,7 +119,7 @@ MaterialSupplyEvent
 1. **Generate playbook**을 누릅니다.
 2. **Business term glossary**와 **Rules**를 검토합니다.
 
-**확인할 결과:** 규칙 조건이 `event_status`가 `open`으로 **바뀔 때(Becomes / Changes to)**로 만들어졌는지 확인합니다. 조건이 `Is open`이면 같은 이벤트로 5분마다 알림이 반복될 수 있으므로 지침 문장을 고쳐 다시 생성합니다. 규칙 작업에 `RequestMaterialReview`가 연결되어 있는지도 확인합니다.
+**확인할 결과:** 규칙 조건이 `event_status`가 `open`으로 **바뀔 때**(Becomes / Changes to)로 만들어졌는지 확인합니다. 조건이 `Is open`이면 같은 이벤트로 5분마다 알림이 반복될 수 있으므로 지침 문장을 고쳐 다시 생성합니다. 규칙 작업에 `RequestMaterialReview`가 연결되어 있는지도 확인합니다.
 
 3. 저장한 뒤 **Start**를 누릅니다.
 
@@ -159,9 +159,11 @@ MaterialSupplyEvent
 - 메시지가 오지 않으면 `oa_cos`의 **View activity**에서 규칙 실행 기록을 봅니다. 규칙이 실행되지 않았으면 **Start** 상태인지, 실행됐는데 조건이 안 맞았으면 Playbook 규칙 조건을 확인합니다.
 - `03_supply_change`가 "이미 보낸 이벤트"라고 하면 `run_tag`를 `r2`처럼 바꿔 다시 실행합니다. 지연 일수는 원래 ETA 기준으로 계산하므로 다시 실행해도 누적되지 않습니다.
 - "MaterialSupplyEvent 테이블이 없다"는 오류가 나면 2단계를 먼저 실행합니다.
-- **New item에 Eventhouse가 없거나 생성이 거부되면** 내 작업 영역·용량·Contributor 이상 권한과 항목 생성 설정을 관리자와 확인합니다. 생성하지 못한 상태에서 다음 단계로 넘어가지 않습니다.
+- Action에 매개변수가 보이지 않으면 `nb_apply_review`의 첫 셀을 **Toggle parameter cell**로 지정하고 저장합니다.
+- `original_eta`가 없다는 오류는 이전 준비 코드로 만든 테이블일 수 있습니다. 최신 00장과 스키마를 확인하고, 진행 중인 실습을 임의로 초기화하지 않습니다.
+- **New item에 Eventhouse가 없거나 생성이 거부되면** 내 작업 영역·용량·Contributor 이상 권한과 항목 생성 설정을 관리자와 확인합니다.
 - Eventhouse를 찾지 못하면 현재 작업 영역과 `eventhouse_name` 매개 변수를 확인합니다. Eventhouse는 찾지만 데이터베이스 오류가 나면 기본 KQL Database 이름도 `eh_cos`인지 확인합니다.
-- Teams 앱이 없거나 메시지를 받을 수 없으면 앱 사용 권한과 Fabric·Teams 로그인 계정을 관리자와 확인합니다. 해결 전에는 알림·승인 단계를 완료한 것으로 표시하지 않습니다.
+- Teams 앱이 없거나 메시지를 받을 수 없으면 앱 사용 권한과 Fabric·Teams 로그인 계정을 관리자와 확인합니다.
 
 ## 공식 문서
 

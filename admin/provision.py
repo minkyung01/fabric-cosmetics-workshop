@@ -2,17 +2,18 @@
 
 By default, this creates workspace cos-pNNN on the given capacity or reuses it unchanged,
 and assigns Contributor access when --users is provided. No workspace items are created or modified.
-Participants create the Lakehouse, upload CSVs, import notebooks and load data in chapter 00.
+Participants create the Lakehouse and notebooks, paste code and generate data in chapter 00.
 
 Only --prefill-items enables the optional admin rehearsal/recovery setup:
-  - a schema-enabled Lakehouse lh_cos, with data/*.csv uploaded to Files/workshop/data
+  - a schema-enabled Lakehouse lh_cos (no source-file uploads)
   - the 5 notebooks bound to lh_cos; participants run 01_prepare_data in chapter 00
   - no gold-table loading by default (--run-prepare opts in for an admin rehearsal/recovery)
   - no Eventhouse: participants create eh_cos and its default KQL database in chapter 04
   - no core ontology by default: participants create ont_cos with the Ontology agent in chapter 01
   - the completed core ontology only with --reference-ontology (recovery path)
-  - optional 17 additional CSVs and a separate ont_cos_extended with --extended-ontology
+  - include_extended = True and a separate ont_cos_extended with --extended-ontology
 Existing items are reused; notebooks are only overwritten with --update-notebooks.
+Use item-definition deployment only in an approved rehearsal environment, not to bypass file-upload policies.
 
 Uses the Azure CLI login (az login [--tenant ...]); no secrets are stored.
 
@@ -34,13 +35,11 @@ import shutil
 import subprocess
 import time
 import urllib.error
-import urllib.parse
 import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 API = "https://api.fabric.microsoft.com/v1"
-ONELAKE = "https://onelake.dfs.fabric.microsoft.com"
 NOTEBOOKS = ["01_prepare_data", "02_answers", "03_supply_change", "nb_apply_review", "04_publish_serving"]
 LAKEHOUSE, EVENTHOUSE, ONTOLOGY = "lh_cos", "eh_cos", "ont_cos"
 _tokens = {}
@@ -155,26 +154,6 @@ def definition_parts(folder, replacements):
     return parts
 
 
-def data_files(extended):
-    files = sorted((ROOT / "data").glob("*.csv"))
-    if extended:
-        files += sorted((ROOT / "data" / "extended").glob("*.csv"))
-    if len(files) != (28 if extended else 11):
-        raise ValueError("Expected 11 core CSVs and, when selected, 17 extension CSVs")
-    return files
-
-
-def upload(fab, base, rel_path, data):
-    storage = "https://storage.azure.com"
-    url = f"{base}/{urllib.parse.quote(rel_path)}"
-    for method, suffix, body, ctype in (("PUT", "?resource=file&overwrite=true", b"", "application/json"),
-                                        ("PATCH", "?action=append&position=0", data, "application/octet-stream"),
-                                        ("PATCH", f"?action=flush&position={len(data)}", b"", "application/json")):
-        status, _, payload = fab.call(method, url + suffix, raw=body, resource=storage, ctype=ctype)
-        if status >= 300:
-            raise RuntimeError(f"upload {rel_path}: {status} {payload[:300]}")
-
-
 def provision(fab, pid, args, users):
     name = f"{args.prefix}{pid}"
     print(f"{pid}: {name}")
@@ -194,7 +173,7 @@ def provision(fab, pid, args, users):
         if not args.prefill_items:
             print("  [dry-run] workspace-only: leave workspace empty; participants create items and load data in chapter 00")
             return
-        print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks")
+        print(f"  [dry-run] {LAKEHOUSE}, self-contained notebooks; no source-file uploads")
         if args.run_prepare:
             print("  [dry-run] run 01_prepare_data (explicit admin rehearsal/recovery)")
         else:
@@ -205,7 +184,7 @@ def provision(fab, pid, args, users):
         else:
             print(f"  [dry-run] leave {ONTOLOGY} creation to participants in chapter 01; keep any existing ontology")
         if args.extended_ontology:
-            print("  [dry-run] 28 CSVs total, deploy ont_cos_extended as a separate ontology")
+            print("  [dry-run] include_extended = True (28 tables), deploy ont_cos_extended as a separate ontology")
         return
 
     if pid in users:
@@ -235,15 +214,6 @@ def provision(fab, pid, args, users):
                                 {"displayName": LAKEHOUSE, "creationPayload": {"enableSchemas": True}})
         lh = created["id"]
 
-    base = f"{ONELAKE}/{ws}/{lh}/Files/workshop/data"
-    if not fab.dry_run:
-        for folder in (f"{ONELAKE}/{ws}/{lh}/Files/workshop", base):
-            fab.call("PUT", folder + "?resource=directory", raw=b"", resource="https://storage.azure.com")
-        files = data_files(args.extended_ontology)
-        for path in files:
-            upload(fab, base, path.name, path.read_bytes())
-        print(f"  upload Files/workshop/data ({len(files)} csv)")
-
     notebook_ids = {}
     for nb_name in NOTEBOOKS:
         exists = ("Notebook", nb_name) in items
@@ -251,6 +221,12 @@ def provision(fab, pid, args, users):
             notebook_ids[nb_name] = items[("Notebook", nb_name)]
             continue
         notebook = json.loads((ROOT / "notebooks" / f"{nb_name}.ipynb").read_text(encoding="utf-8"))
+        if nb_name == "01_prepare_data" and args.extended_ontology:
+            params = next(c for c in notebook["cells"] if "parameters" in c["metadata"].get("tags", []))
+            text = "".join(params["source"])
+            if text.count("include_extended = False") != 1:
+                raise ValueError("01_prepare_data must define include_extended = False in its parameter cell")
+            params["source"] = text.replace("include_extended = False", "include_extended = True").splitlines(keepends=True)
         notebook["metadata"]["dependencies"] = {"lakehouse": {
             "default_lakehouse": lh, "default_lakehouse_name": LAKEHOUSE, "default_lakehouse_workspace_id": ws}}
         payload = base64.b64encode(json.dumps(notebook, ensure_ascii=False).encode("utf-8")).decode()
@@ -300,7 +276,7 @@ def main():
     parser.add_argument("--prefix", default="cos-", help="workspace name prefix (default cos-)")
     parser.add_argument("--tenant", help="tenant for az get-access-token")
     parser.add_argument("--prefill-items", action="store_true",
-                        help="opt in to staging Lakehouse, CSVs and notebooks for an admin rehearsal/recovery")
+                        help="opt in to staging Lakehouse and self-contained notebooks in an approved rehearsal environment")
     parser.add_argument("--update-notebooks", action="store_true", help="overwrite existing notebooks")
     preparation = parser.add_mutually_exclusive_group()
     preparation.add_argument("--run-prepare", dest="run_prepare", action="store_true",
@@ -311,7 +287,7 @@ def main():
     parser.add_argument("--reference-ontology", action="store_true",
                         help="deploy the completed core ontology if absent (chapter 01 recovery; default creates no ontology)")
     parser.add_argument("--extended-ontology", action="store_true",
-                        help="also upload 17 extension CSVs and deploy a separate 26-entity ont_cos_extended")
+                        help="enable all 28 generated tables and deploy a separate 26-entity ont_cos_extended")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if not args.prefill_items and (args.run_prepare or args.update_notebooks or args.reference_ontology or args.extended_ontology):

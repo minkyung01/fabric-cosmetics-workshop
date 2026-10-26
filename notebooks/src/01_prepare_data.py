@@ -1,20 +1,23 @@
 # %% [markdown]
 # # 01_prepare_data — 실습 데이터 준비와 초기화
 #
-# 참가자가 **00장**에서 `Files/workshop/data/*.csv`(가상 데이터)를 읽어 `gold` 스키마 테이블을 직접 만듭니다.
+# 참가자가 **00장**에서 코드에 포함된 고정 가상 데이터로 `gold` 스키마 테이블을 직접 만듭니다.
 # 기본 `reset_ops = False`는 최초 적재용입니다. 기존 실습 테이블이 있으면 쓰기 전에 오류로 중지합니다.
-# 초기화에 동의한 경우에만 `reset_ops = True`로 바꿉니다. 선택한 `gold` 테이블을 CSV로 덮어쓰고,
+# 초기화에 동의한 경우에만 `reset_ops = True`로 바꿉니다. 선택한 `gold` 테이블을 초기 데이터로 덮어쓰고,
 # `ops`의 영향 분석·검토 요청·조치 이력을 지웁니다. 진행 중인 실습이나 07장 이후 모델 확장 중에는 재실행하지 않습니다.
 #
 # - 기본 Lakehouse: `lh_cos` (스키마 사용)
 # - 실제 구매·처방 시스템과 연결되지 않은 **가상 데이터**입니다.
-# - 확장 CSV 17개를 같은 폴더에 모두 올린 경우에만 확장 테이블도 생성합니다(총 28개).
+# - `include_extended = True`이면 선택 확장용 17개도 함께 생성합니다(총 28개).
+# - 파일 업로드나 외부 데이터 다운로드는 필요하지 않습니다.
 
 # %% [parameters]
-data_folder = "Files/workshop/data"
+include_extended = False
 reset_ops = False
 
 # %%
+import csv
+import io
 from pyspark.sql import functions as F
 
 TABLES = {
@@ -70,15 +73,10 @@ EXTENDED_TABLES = {
 OPS_TABLES = ["material_impact", "review_request", "action_log"]
 
 
-def select_tables(available):
-    missing_core = {f"{table}.csv" for table in TABLES} - available
-    if missing_core:
-        raise ValueError(f"핵심 CSV 누락: {sorted(missing_core)}")
-    extended_files = {f"{table}.csv" for table in EXTENDED_TABLES}
-    has_extended = bool(available & extended_files)
-    if has_extended and not extended_files <= available:
-        raise ValueError(f"확장 CSV는 17개를 모두 올려야 합니다. 누락: {sorted(extended_files - available)}")
-    return {**TABLES, **EXTENDED_TABLES} if has_extended else TABLES
+def select_tables(include_extended):
+    if not isinstance(include_extended, bool):
+        raise ValueError("include_extended는 True 또는 False여야 합니다.")
+    return {**TABLES, **EXTENDED_TABLES} if include_extended else TABLES
 
 
 def check_existing_data(reset_ops):
@@ -97,9 +95,10 @@ def check_existing_data(reset_ops):
         )
 
 # %%
-from notebookutils import fs
+# {{SCENARIO_DATA}}
 
-tables_to_load = select_tables({entry.name for entry in fs.ls(data_folder)})
+# %%
+tables_to_load = select_tables(include_extended)
 print(f"데이터 프로필: {len(tables_to_load)}개 테이블")
 check_existing_data(reset_ops)
 
@@ -107,11 +106,14 @@ spark.sql("CREATE SCHEMA IF NOT EXISTS gold")
 spark.sql("CREATE SCHEMA IF NOT EXISTS ops")
 
 for table, columns in tables_to_load.items():
-    raw = spark.read.option("header", True).option("encoding", "UTF-8").csv(f"{data_folder}/{table}.csv")
-    missing = set(columns) - set(raw.columns)
-    if missing:
-        raise ValueError(f"{table}.csv에 없는 열: {sorted(missing)}")
+    reader = csv.DictReader(io.StringIO(SCENARIO_DATA[table]))
+    if reader.fieldnames != list(columns):
+        raise ValueError(f"{table}: 포함된 데이터의 열과 스키마가 일치하지 않습니다.")
+    records = [{column: row[column] or None for column in columns} for row in reader]
+    raw = spark.createDataFrame(records, schema=", ".join(f"{column} string" for column in columns))
     df = raw.select([F.col(c).cast(t).alias(c) for c, t in columns.items()])
+    if table == "purchase_order":
+        df = df.withColumn("original_eta", F.col("eta"))
     df.write.mode("overwrite").option("overwriteSchema", "true").format("delta").saveAsTable(f"gold.{table}")
     print(f"gold.{table:<22} {df.count():>3} rows")
 
@@ -124,7 +126,8 @@ if reset_ops:
 # %% [markdown]
 # ## 확인
 # 출력의 데이터 프로필과 `gold.<table>`별 행 수를 확인하고 00장의 완료 기준과 대조합니다.
-# 핵심 프로필은 11개, 확장 CSV까지 준비된 프로필은 28개 테이블이며 `ops`에는 아직 결과 테이블이 없습니다.
+# 핵심 프로필은 11개, `include_extended = True` 프로필은 28개이며 `ops`에는 아직 결과 테이블이 없습니다.
+# `purchase_order.original_eta`는 이후 지연을 중복 가산하지 않도록 최초 입고 예정일을 보존합니다.
 # `PO-5501`(RM-HA-120)의 입고 예정일은 **2026-11-10, 확정** 상태여야 합니다.
 
 # %%

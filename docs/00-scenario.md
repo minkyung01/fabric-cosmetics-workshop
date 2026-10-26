@@ -22,7 +22,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
 ## 미션
 
-1. 준비된 CSV를 확인하고 Notebook을 실행해 **`lh_cos.gold`에 실습 테이블을 직접 만듭니다.**
+1. Notebook에 코드를 붙여 넣고 실행해 **`lh_cos.gold`에 실습 테이블을 직접 만듭니다.**
 2. 빈 Ontology에서 **Ontology Agent로 업무 질문에 맞는 초안을 만들고**, 추가 질문에 필요한 대상·관계·업무 맥락을 보강합니다. 적용 전에는 사람이 원본과 설계를 검토합니다.
 3. Graph 또는 Lakehouse SQL로 `RM-HA-120`의 영향 후보를 찾고, **현행·개발중 처방만** 남기도록 필터를 바꿔 봅니다.
 4. Data Agent에 같은 질문을 하고 직접 실행한 질의·Notebook 결과와 비교합니다.
@@ -39,143 +39,103 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 ## 1. 빈 작업 영역과 권한 확인
 
 1. [Fabric 포털](https://app.fabric.microsoft.com)에 로그인하고 왼쪽 **Workspaces**에서 `cos-pNNN`(예: `cos-p001`)을 엽니다.
-2. 내 계정에 이 작업 영역의 **Contributor 권한**과 항목 생성 기능이 있는지 확인합니다. 테넌트·용량·Teams·Purview의 공통 설정은 관리자가 준비하지만, **작업 영역 안의 실습 항목은 직접 만듭니다.**
+2. 내 계정에 이 작업 영역의 **Contributor 권한**과 항목 생성 기능이 있는지 확인합니다.
 3. 처음에는 작업 영역이 비어 있어야 합니다. 기존 항목이 있다면 삭제하거나 덮어쓰지 말고 관리자에게 새 실습 작업 영역인지 확인합니다.
 
 ![빈 작업 영역 화면](../assets/screenshots/00-empty-workspace.png)
 
-위 화면은 테스트 작업 영역 `cos-p901`의 예시입니다. **아래 항목 목록에 `There's nothing here yet`가 보이면 빈 상태**이며, 본인의 작업 영역 번호는 다를 수 있습니다. 위쪽 Task flow 추천 영역은 기본 화면이므로 따로 선택하거나 만들지 않아도 됩니다. 이후 항목 생성은 왼쪽 위 **+ New item**, Notebook 가져오기는 상단 **Import**를 사용합니다.
+빈 작업 영역 예시(`cos-p901`).
 
 | 항목 | 이름 | 비고 |
 |---|---|---|
 | Lakehouse | `lh_cos` | **이 장에서 직접 생성**. Lakehouse schemas를 켜고 `gold` 테이블도 직접 적재 |
-| 원본 CSV | `Files/workshop/data` | **이 장에서 직접 업로드**. 핵심 11개, 선택 확장 포함 시 28개 |
-| Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review`, `04_publish_serving` | **이 장에서 5개를 직접 가져오고**, 각각 `lh_cos`를 기본 Lakehouse로 연결 |
-| Eventhouse | `eh_cos` | **04장에서 직접 생성**. 지금은 없어도 정상. 같은 이름의 기본 KQL Database 자동 생성 |
-| Ontology | `ont_cos` | **01장에서 직접 생성**. 지금은 없어도 정상 |
-| SQL database | `sqldb_cos` | **06장에서 직접 생성**. 지금은 없어도 정상. 항목 생성 가능 여부는 사전 확인 |
+| 데이터 | 준비 코드에 포함된 고정 가상 데이터 | 핵심 11개, 선택 확장 포함 시 28개 테이블 |
+| Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review`, `04_publish_serving` | **이 장에서 5개를 새로 만들고 코드를 붙여 넣습니다.** 각각 `lh_cos`를 기본 Lakehouse로 연결 |
+| Eventhouse | `eh_cos` | **04장에서 직접 생성** |
+| Ontology | `ont_cos` | **01장에서 직접 생성** |
+| SQL database | `sqldb_cos` | **06장에서 직접 생성** |
 
-## 2. 실습 파일 내려받기
+## 2. 복사할 코드 확인
 
-1. **[실습 파일 ZIP 다운로드](../downloads/workshop-files.zip?raw=true)**를 눌러 `workshop-files.zip`을 받습니다. **CSV와 `.ipynb`만 담은 파일**이므로 저장소 전체를 받을 필요가 없습니다. 별도로 안내받은 배포본이 있다면 그 버전을 사용합니다.
-2. 다운로드한 ZIP을 우클릭해 **모두 압축 풀기**를 선택합니다. ZIP 안에서 바로 파일을 선택하지 말고, 압축을 푼 폴더를 엽니다. 로컬 Python·Git 설치는 필요 없습니다.
-3. 그 안에 **`data`와 `notebooks`가 나란히 있는지** 확인합니다. **`.ipynb`는 `data` 안이 아니라 별도의 `notebooks` 폴더에 있습니다.**
+아래 링크의 **매개변수 셀**과 **실행 코드 셀**을 사용합니다. CSV 업로드나 `.ipynb` 가져오기는 하지 않습니다.
 
-    ```text
-    workshop-files
-      data
-        ingredient.csv
-        ...                  (핵심 CSV 11개)
-        extended
-          organization.csv
-          ...                (선택 확장 CSV 17개)
-      notebooks
-        01_prepare_data.ipynb
-        02_answers.ipynb
-        03_supply_change.ipynb
-        nb_apply_review.ipynb
-        04_publish_serving.ipynb
-    ```
+| Notebook 이름 | 복사할 코드 | 실행 시점 |
+|---|---|---|
+| `01_prepare_data` | [코드 열기](../notebooks/paste/01_prepare_data.md) | 이 장에서 데이터 생성 |
+| `02_answers` | [코드 열기](../notebooks/paste/02_answers.md) | 직접 질의한 뒤 결과 대조 |
+| `03_supply_change` | [코드 열기](../notebooks/paste/03_supply_change.md) | 04장 공급 지연 반영 |
+| `nb_apply_review` | [코드 열기](../notebooks/paste/nb_apply_review.md) | 05장 승인 후 자동 실행 |
+| `04_publish_serving` | [코드 열기](../notebooks/paste/04_publish_serving.md) | 06장 게시 SQL 생성 |
 
-**두 파일 종류는 가져오는 위치도 다릅니다.** 아래의 **내 PC 폴더**는 압축을 푼 로컬 폴더이고, **Fabric 위치**는 포털에서 직접 만들거나 가져올 곳입니다.
-
-| 내 PC에서 열 폴더 | 선택할 파일 | Fabric에서 가져올 위치 | 진행 단계 |
-|---|---|---|---|
-| `data` | 핵심 `.csv` 11개 | Lakehouse `lh_cos`의 **Files → workshop → data**에 업로드 | 이 장 4단계 |
-| `notebooks` | `.ipynb` 5개 | **작업 영역 → Import → Notebook**으로 가져오기 | 이 장 5단계 |
-| `data\extended` | 선택 확장 `.csv` 17개 | 핵심 CSV와 **같은 Lakehouse 폴더**에 추가 업로드 | 선택 확장을 할 경우 4단계, **첫 적재 전** |
-
-기본 과정만 진행하면 **`data`의 CSV 11개와 `notebooks`의 `.ipynb` 5개**를 사용합니다. 07장 이후 선택 확장까지 할 경우 `data\extended`의 CSV 17개도 4단계에서 함께 올립니다. 추가 테이블은 첫 적재 때 만들지만, Ontology 모델 확장 자체는 07장 이후에만 합니다.
-
-**CSV는 Lakehouse Files에 업로드하고, `.ipynb`는 작업 영역에 Notebook으로 가져옵니다.** 두 종류를 한곳에 모두 올리지 않습니다. 이미 저장소 전체 ZIP을 받았다면 그 안의 `data`와 `notebooks`를 사용해도 같으며, `notebooks\src`의 `.py`는 가져오지 않습니다. 이후 장에서 쓰는 SQL은 해당 실습 문서의 파일 링크에서 별도로 엽니다.
+내려받아 확인하려면 [실습 파일 ZIP](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)의 `notebooks\paste`를 사용합니다.
 
 ## 3. Lakehouse 직접 만들기
 
 1. 내 작업 영역에서 **+ New item → Lakehouse**를 선택합니다.
-2. 이름을 **`lh_cos`**로 입력하고 **Lakehouse schemas** 체크를 유지한 채 **Create**를 누릅니다.
-3. 생성이 끝나면 **Tables → dbo**와 **Files**가 보이는지 확인합니다. `dbo`는 스키마 지원 Lakehouse의 기본 스키마이며, `gold`·`ops`는 아직 없어도 정상입니다. SQL analytics endpoint는 Lakehouse와 함께 만들어지는 항목으로, 06장의 쓰기 가능한 SQL DB와 다릅니다.
+2. 이름을 `lh_cos`로 입력하고 **Lakehouse schemas** 체크를 유지한 채 **Create**를 누릅니다.
+3. **Tables → dbo**와 **Files**가 보이는지 확인합니다. `gold`·`ops`는 Notebook 실행 후 생성됩니다.
 
 스키마를 끈 Lakehouse나 기존 항목을 임의로 삭제·재생성하지 않습니다. `dbo`가 보이지 않으면 관리자와 스키마 설정을 확인한 뒤 진행합니다.
 
-## 4. CSV 업로드와 원본 확인
+## 4. Notebook 5개 만들기와 코드 붙여넣기
 
-1. `lh_cos`의 **Files**에서 **… → New subfolder**로 `workshop`을 만들고, 그 아래 `data` 하위 폴더를 만듭니다. 최종 경로는 **Files → workshop → data**입니다.
-2. **Fabric의 `Files → workshop → data`** 안에서 **Upload files**를 선택합니다. 파일 선택 창에서는 **내 PC의 압축 푼 폴더 → `data`**를 열어 다음 핵심 **CSV 11개만** 함께 선택합니다. `notebooks`의 `.ipynb`는 여기 올리지 않습니다. 폴더 전체가 아닌 파일을 선택해 `data/data`처럼 한 단계 더 중첩되지 않게 합니다.
+각 Notebook에 다음 절차를 반복합니다.
 
-```text
-ingredient.csv          supplier.csv          raw_material.csv
-material_alternative.csv formula_version.csv  formula_line.csv
-product.csv             dev_project.csv       stability_test.csv
-production_plan.csv     purchase_order.csv
-```
+1. 내 작업 영역에서 **+ New item → Notebook**을 선택하고 위 표의 이름으로 저장합니다. 언어는 **PySpark (Python)**을 사용합니다.
+2. 첫 코드 셀에 해당 링크의 **매개변수 셀** 코드만 붙여 넣습니다. 셀의 **… → Toggle parameter cell**로 매개변수 셀로 지정합니다.
+3. 아래에 코드 셀을 하나 추가하고 **실행 코드 셀**의 코드 전체를 붙여 넣습니다. 매개변수 코드를 이 셀에 다시 넣지 않습니다.
+4. **Add lakehouse → Existing lakehouse**에서 내 작업 영역의 `lh_cos`를 선택하고 **기본 Lakehouse로 고정**(핀)합니다. 이미 실행 중인 Spark 세션이 있다면 세션을 다시 시작합니다.
+5. 저장한 뒤 다른 Notebook도 같은 방식으로 만듭니다.
 
-3. 선택 확장도 할 경우 내 PC의 `data\extended`에 있는 CSV 17개를 **같은 `Files/workshop/data` 폴더**에 추가 업로드합니다. Lakehouse 안에 `extended` 하위 폴더를 만들지 않습니다. 핵심만이면 11개, 확장 포함이면 28개가 같은 위치에 있어야 합니다.
-4. `purchase_order.csv`를 미리 보고 `po_id`, `material_code`, `eta`, `status` 등의 열이 있는지 확인합니다. 파일을 테이블로 하나씩 수동 변환하지 않고 다음 Notebook에서 타입·스키마를 맞춰 함께 적재합니다.
+`nb_apply_review`의 첫 셀은 반드시 매개변수 셀이어야 합니다. 04장 Action에 `event_id`, `material_code`, `eventhouse_name`을 전달할 때 사용합니다.
 
-확장 CSV가 모두 있으면 아래 Notebook이 총 28개 테이블을 만들지만, 01장의 Ontology는 핵심 11개 테이블만으로 시작합니다. 추가 파일이 일부만 있으면 오류로 중지하므로 첫 적재 전에 파일 구성을 확인합니다.
+**지금은 `01_prepare_data`만 실행합니다.**
 
-## 5. Notebook 5개 가져오기와 기본 Lakehouse 연결
+## 5. Notebook으로 gold 테이블 직접 만들기
 
-1. 내 작업 영역으로 돌아가 도구 모음의 **Import → Notebook**(또는 **Import notebook**)을 선택합니다.
-2. 파일 선택 창에서 **내 PC의 압축 푼 폴더 → `notebooks`**를 열고 다음 **`.ipynb` 5개**를 가져옵니다. `data`의 CSV를 선택하거나 Lakehouse Files에 `.ipynb`를 업로드하는 단계가 아닙니다. 가져온 항목 이름도 아래와 같은지 확인합니다.
-
-    ```text
-    01_prepare_data.ipynb
-    02_answers.ipynb
-    03_supply_change.ipynb
-    nb_apply_review.ipynb
-    04_publish_serving.ipynb
-    ```
-
-3. **각 Notebook을 하나씩 열어** Lakehouse 탐색기의 **Add lakehouse → Existing lakehouse**로 내 작업 영역의 `lh_cos`를 선택합니다. 새 Lakehouse를 또 만들지 않습니다.
-4. `lh_cos`를 **기본 Lakehouse로 고정(핀)**하고 저장 상태를 확인합니다. 연결만 추가한 상태가 아니라 기본 표시가 있는지, 작업 영역도 내 `cos-pNNN`인지 확인합니다. 이미 Spark 세션이 시작됐다면 기본 Lakehouse를 바꾼 뒤 세션을 다시 시작합니다.
-
-**지금은 `01_prepare_data`만 실행합니다.** 나머지는 각 장의 질의·지연 반영·승인 후 조치·게시 단계에서 사용합니다. 특히 `03_supply_change`나 `nb_apply_review`를 미리 실행하지 않습니다. 승인 액션으로 실행할 `nb_apply_review`도 기본 Lakehouse를 미리 연결해야 합니다.
-
-## 6. Notebook으로 gold 테이블 직접 만들기
-
-1. 작업 영역에서 **`01_prepare_data`**를 엽니다. 파일 이름은 `01_`로 시작하지만 **이 00장에서 실행하는 준비 Notebook**입니다.
-2. Notebook의 기본 Lakehouse가 내 작업 영역의 `lh_cos`인지 확인합니다. 연결이 없거나 다른 Lakehouse이면 `lh_cos`를 기본 Lakehouse로 연결한 뒤 진행합니다.
-3. 매개변수 셀을 확인합니다. 최초 적재는 다음 기본값을 유지합니다.
+1. `01_prepare_data`를 열고 기본 Lakehouse가 내 작업 영역의 `lh_cos`인지 확인합니다.
+2. 매개변수 셀은 다음 기본값을 유지합니다.
 
     ```python
-    data_folder = "Files/workshop/data"
+    include_extended = False
     reset_ops = False
     ```
 
-4. **Run all**을 누르고 모든 셀이 성공할 때까지 기다립니다. 출력의 **`데이터 프로필: 11개 테이블`**과 `gold.<table>`별 행 수를 확인합니다. 확장 CSV도 준비된 환경은 **28개 테이블**로 표시됩니다.
-5. `lh_cos`로 돌아가 탐색기를 새로 고칩니다. **Tables → gold**에서 핵심 테이블 11개(확장 포함 시 28개)를 확인합니다. `ops` 스키마도 생성하지만 영향 분석·승인 결과 테이블은 아직 없습니다.
-6. **gold → purchase_order**를 열어 초기 데이터를 확인합니다.
+   **07장 이후 엔터티 확장도 할 경우에만 첫 실행 전에 `include_extended = True`로 바꿉니다.** 28개 테이블을 준비하되, 01장에서는 핵심 11개만 사용합니다.
 
-**예상 결과:** `purchase_order` 6행, `PO-5501`(RM-HA-120)의 `eta = 2026-11-10`, `status = 확정`입니다. CSV를 업무 테이블로 적재했으며 아직 지연은 반영하지 않았습니다.
+3. **Run all** 실행 후 데이터 프로필(11개/28개 테이블)과 `gold.<table>`별 행 수를 확인합니다.
+4. `lh_cos`의 **Tables → gold**에서 테이블을 확인하고 **purchase_order**를 엽니다. `ops` 스키마에는 아직 결과 테이블이 없습니다.
 
-**재실행 주의:** 기본 `reset_ops = False`에서는 기존 실습 테이블이 있으면 **쓰기 전에 오류로 중지**합니다. 단순히 다시 확인하려고 값을 True로 바꾸지 않습니다. `reset_ops = True`는 기존 `gold`를 CSV로 덮어쓰고 `ops` 결과를 삭제하는 명시적 초기화이며, 현재 결과를 확인하고 초기화에 동의한 경우에만 사용합니다. 기존 테이블을 재사용했다면 직접 생성한 범위와 구분해 기록합니다.
+**예상 결과:** `purchase_order` 6행, `PO-5501`(RM-HA-120)의 `eta = 2026-11-10`, `status = 확정`입니다. `original_eta`에도 같은 초기 날짜가 보존되며 아직 지연은 반영하지 않았습니다.
+
+**재실행 주의:** `reset_ops = False`는 기존 실습 테이블이 있으면 **쓰기 전에 오류로 중지**합니다. `True`는 `gold`를 초기 데이터로 덮어쓰고 `ops` 결과를 삭제하므로, 초기화에 동의한 경우에만 사용합니다. 07장 이후 모델 확장을 위해 다시 실행하지 않습니다.
 
 ## 이 장의 완료 기준
 
 - 공급 지연의 영향과 대체 원료 검토에 필요한 질문을 설명할 수 있습니다.
 - 실습 중 기록할 항목과 승인 후 실행할 조치의 범위를 이해했습니다.
-- `lh_cos`를 스키마 지원 상태로 만들고 CSV를 올렸으며, Notebook 5개를 가져와 각각 기본 Lakehouse를 연결했습니다.
+- `lh_cos`를 스키마 지원 상태로 만들고 Notebook 5개에 코드를 붙여 넣었으며, 각각 기본 Lakehouse와 매개변수 셀을 설정했습니다.
 - `01_prepare_data`를 직접 실행해 `gold` 테이블을 만들었습니다.
 - 테이블 수와 `PO-5501`의 초기 ETA·상태, 06장·07장의 환경 조건을 확인했습니다.
 
 ## Troubleshooting
 
 - 작업 영역이 보이지 않으면 관리자에게 계정과 작업 영역 번호를 확인합니다.
-- **항목 생성·가져오기 메뉴가 없거나 거부됨:** 작업 영역의 Contributor 권한, 유료 용량과 테넌트 설정을 관리자와 확인합니다. 테넌트·Purview 관리자 권한을 요청하거나 다른 사람 작업 영역에 항목을 만들지 않습니다.
-- 처음에 `gold`가 없는 것은 정상입니다. 위 적재를 수행하고, 실패했다면 오류·CSV 폴더·기본 Lakehouse 연결을 확인합니다. 테이블을 만들지 못한 채 01장으로 넘어가지 않습니다.
+- **항목 생성이 거부됨:** 작업 영역의 Contributor 권한, 유료 용량과 테넌트 설정을 관리자와 확인합니다.
+- **`gold` 테이블 없음:** `01_prepare_data` 실행 결과와 기본 Lakehouse 연결을 확인합니다.
 - **기존 실습 테이블 오류:** 일부 테이블만 생성된 실패 이력도 포함합니다. 현재 테이블·승인 결과를 관리자와 확인하고, 초기화가 필요한 경우에만 동의 후 `reset_ops = True`로 실행합니다.
-- **CSV 경로/파일 오류:** `Files/workshop/data`에 핵심 11개가 있는지, 확장 파일은 17개 전체가 같은 폴더에 있는지 확인합니다. `data/data`나 `data/extended` 하위 폴더에 잘못 올리지 않았는지 확인하며, 데이터가 없는데 적재 성공으로 처리하지 않습니다.
-- **가져온 Notebook에서 Files/테이블을 찾지 못함:** 해당 Notebook의 기본 Lakehouse가 내 `lh_cos`인지 확인합니다. Notebook Resources에 CSV를 올린 것은 Lakehouse Files 업로드와 다릅니다.
+- **붙여 넣은 뒤 SyntaxError/NameError:** 두 코드 블록을 빠짐없이 복사했는지, 실행 코드가 매개변수 셀 아래에 있는지 확인합니다.
+- **Action에 매개변수가 보이지 않음:** `nb_apply_review`의 첫 셀을 매개변수 셀로 지정하고 저장했는지 확인합니다.
+- **Notebook에서 테이블을 찾지 못함:** 기본 Lakehouse가 내 `lh_cos`인지 확인합니다.
 - Notebook은 성공했지만 SQL analytics endpoint에 테이블이 아직 안 보이면 탐색기를 새로 고치고 동기화 상태를 확인합니다. 동기화 대기를 이유로 적재 Notebook을 재실행하지 않습니다.
 - `PO-5501`이 이미 `지연`이면 기존 진행 상태입니다. 임의로 초기화하지 말고 관리자와 재사용·복구 범위를 확인합니다.
-- `ont_cos`는 01장에서 만듭니다. 이미 엔터티가 들어 있는 항목이 있다면 임의로 삭제하지 말고 관리자에게 빈 항목부터 시작할 작업 영역을 확인합니다.
 
 ## 공식 문서
 
 - [Microsoft Fabric IQ와 Ontology 개요](https://learn.microsoft.com/en-us/fabric/iq/ontology/overview)
 - [Lakehouse schemas와 생성 설정](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-schemas)
-- [Notebook 가져오기·기본 Lakehouse 연결](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook)
+- [Notebook 생성·기본 Lakehouse 연결](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook)
+- [Notebook 실행·매개변수 셀](https://learn.microsoft.com/en-us/fabric/data-engineering/author-execute-notebook)
 - [Operations agent 개요](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent)
 
 ## 다음 단계

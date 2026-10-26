@@ -35,9 +35,9 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | 항목 | 내용 |
 |---|---|
-| 작업 영역 | 관리자가 준비한 참가자별 `cos-pNNN` (예: `cos-p001`). 기본 **Contributor 권한**. 06장 SQL DB 생성도 이 권한으로 사전 리허설하며, 공식 문서의 권한 안내 차이는 [관리자 가이드](admin/README.md#sql-serving-db-준비-06장) 참고 |
+| 작업 영역 | 참가자별 `cos-pNNN` (예: `cos-p001`), 기본 **Contributor 권한** |
 | 준비된 항목 | 용량이 할당된 **빈 작업 영역과 접근 권한만**. Lakehouse·CSV·Notebook 등 실습 항목은 사전 배포하지 않음 |
-| 직접 만들 항목 | **00장에서 Lakehouse `lh_cos` 생성 → CSV 업로드 → Notebook 5개 가져오기·연결 → `gold` 테이블 생성**. **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
+| 직접 만들 항목 | **00장에서 Lakehouse `lh_cos` 생성 → Notebook 5개 생성·코드 붙여넣기 → `gold` 테이블 생성**. **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
 | Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
@@ -47,7 +47,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 | Lesson(장) | 내용 |
 |---|---|
-| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, 빈 작업 영역에서 Lakehouse 생성 → CSV 업로드 → Notebook 가져오기·연결 → `gold` 테이블 생성 |
+| [00. 시나리오와 미션](docs/00-scenario.md) | 업무 흐름·미션 소개, Lakehouse·Notebook 생성 → 코드 붙여넣기 → 고정 가상 데이터로 `gold` 테이블 생성 |
 | [01. Ontology](docs/01-ontology.md) | 빈 Ontology → 업무 질문으로 Agent 초안 생성 → 검토·Act 적용 → 추가 질문으로 모델 보강 → Plan 질의로 검증 |
 | [02. Graph](docs/02-graph.md) | 변경 원료에서 영향 대상까지 경로 추적, 질의·필터로 대상 구분 |
 | [03. Data Agent](docs/03-data-agent.md) | 6개 유형·12문항으로 의미·규칙·관계·가정·통합 결과 검증, 선택적으로 Graph와 비교 |
@@ -59,27 +59,30 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 
 Graph를 사용하지 않는 실습 경로는 01 → 03장으로 진행합니다. 06장은 05장의 승인 결과가 필요하고, 07장의 레이블 적용은 감시·승인과 독립적으로 진행할 수 있습니다. 각 단계에서는 먼저 직접 실행한 뒤 예상 결과와 대조합니다. 마지막에는 Operations Agent 감시와 Spark 세션을 중지합니다.
 
-**기본 과정은 07장 Purview까지입니다.** 이후 원하는 참가자만 [Ontology 엔터티 확장 선택 실습](docs/extensions/ontology.md)을 진행합니다. 확장 실습도 할 참가자는 **00장에서 추가 CSV 17개도 업로드하고 첫 적재에서 28개 테이블을 생성**한 뒤, 07장 이후 기존 `ont_cos`를 확장합니다. 참고 범위는 **26개 엔터티·40개 관계·28개 테이블**이며, 선택 실습을 생략해도 기본 과정은 완료됩니다.
+**기본 과정은 07장 Purview까지입니다.** 이후 원하는 참가자만 [Ontology 엔터티 확장 선택 실습](docs/extensions/ontology.md)을 진행합니다. 확장 실습도 할 참가자는 **00장 첫 실행 전에 `include_extended = True`로 설정해 28개 테이블을 생성**한 뒤, 07장 이후 기존 `ont_cos`를 확장합니다. 참고 범위는 **26개 엔터티·40개 관계·28개 테이블**이며, 선택 실습을 생략해도 기본 과정은 완료됩니다.
 
 ## 실습 파일
 
-**[참가자용 실습 파일 ZIP 다운로드](downloads/workshop-files.zip?raw=true)** — 핵심 CSV 11개·선택 확장 CSV 17개·Notebook 5개만 포함합니다. 압축을 풀면 `data`와 `notebooks`가 나란히 있으며, CSV는 Lakehouse Files에, `.ipynb`는 작업 영역의 Import로 각각 가져옵니다. 저장소 전체를 받을 필요는 없습니다. SQL 참고 파일은 각 장의 문서 링크에서 별도로 엽니다.
+실습은 [복사할 코드](docs/00-scenario.md#2-복사할-코드-확인)를 새 Notebook에 붙여 넣는 방식으로 진행합니다. 파일 업로드나 `.ipynb` 가져오기는 필요하지 않습니다.
+
+[실습 파일 ZIP 다운로드](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)
 
 | 경로 | 내용 |
 |---|---|
-| `data/*.csv` | 시나리오에 사용하는 가상 데이터 11개 테이블 |
-| `notebooks/01_prepare_data.ipynb` | 참가자가 00장에서 CSV → `gold` 테이블 생성. 기본값은 기존 실습 테이블이 있으면 중지하며, `reset_ops = True`는 명시적 데이터 초기화 |
+| `notebooks/paste/*.md` | Notebook별 매개변수·실행 코드. 복사·붙여넣기용 |
+| `data/*.csv` | 핵심 가상 데이터의 관리용 원본. 준비 코드에 포함됨 |
+| `notebooks/01_prepare_data.ipynb` | 코드에 포함된 고정 데이터 → `gold` 테이블 생성. 기본값은 기존 실습 테이블이 있으면 중지하며, `reset_ops = True`는 명시적 데이터 초기화 |
 | `notebooks/02_answers.ipynb` | 직접 질의한 뒤 결과를 대조하는 참고 Notebook |
 | `notebooks/03_supply_change.ipynb` | 공급 지연 반영 → 영향 분석 → Eventhouse 이벤트 전송 |
 | `notebooks/nb_apply_review.ipynb` | 승인 후 검토 요청·조치 이력 기록 (Operations Agent 액션) |
 | `notebooks/04_publish_serving.ipynb` | 승인된 요청을 SQL DB에 게시할 T-SQL 생성 (참가자가 DB 편집기에서 실행) |
 | `fabric/sql/serving.sql` | SQL Serving 스키마·검토 착수 프로시저 |
-| `data/extended/*.csv` | 선택 확장용 가상 데이터 17개 테이블 |
+| `data/extended/*.csv` | 선택 확장용 가상 데이터 17개 테이블의 관리용 원본. 준비 코드에 포함됨 |
 | `fabric/sql/extended-queries.sql` | 확장 모델의 로트·재고·등록·설비·검토 담당 경로를 검증하는 읽기 전용 SQL |
 | `notebooks/src/*.py` | Notebook의 읽기 쉬운 Python 원본 |
 
 ## 환경 준비 안내
 
-이 README와 `docs/`는 실습자용입니다. 테넌트 설정·작업 영역 준비·초기화·운영 점검은 별도의 [관리자 가이드](admin/README.md)에 있습니다. 참가자는 [00장](docs/00-scenario.md)에서 **CSV·Notebook 전용 ZIP**을 내려받아 Fabric 포털에서 준비하며, 로컬 Python·Git이나 관리자 스크립트를 실행할 필요가 없습니다.
+테넌트·작업 영역 준비와 운영 점검은 [관리자 가이드](admin/README.md)를 참고합니다.
 
 > Caldova는 Microsoft가 만든 가상 제약 회사이며, 이 교재에서는 **화장품 R&D 업무로 각색**했습니다. 회사·제품·원료·공급사·수치는 실습용 **가상 데이터**입니다. 시장별 원료 등록 상태는 사내 가상 기준이며 실제 법규·규제 정보가 아닙니다.

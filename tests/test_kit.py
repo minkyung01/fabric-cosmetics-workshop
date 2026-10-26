@@ -7,9 +7,11 @@ import json
 import re
 import runpy
 import sqlite3
+import string
 import subprocess
 import sys
 import unittest
+import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
 from datetime import date, datetime, timedelta
@@ -25,6 +27,10 @@ DATA = ROOT / "data"
 DOCS = sorted((ROOT / "docs").glob("*.md"))
 ALL_DOCS = sorted((ROOT / "docs").rglob("*.md"))
 NOTEBOOKS = ["01_prepare_data", "02_answers", "03_supply_change", "nb_apply_review", "04_publish_serving"]
+WORKSHOP_DOWNLOAD_URL = (
+    "https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/"
+    "main/downloads/workshop-files.zip"
+)
 PLACEHOLDERS = ("{{WORKSPACE_ID}}", "{{LAKEHOUSE_ID}}")
 
 
@@ -254,6 +260,33 @@ class Docs(unittest.TestCase):
                 path = (md.parent / unquote(urlsplit(link).path)).resolve()
                 self.assertTrue(path.exists(), f"{md.name}: {link}")
 
+    def test_download_links_use_the_public_absolute_zip_url(self):
+        for md in (ROOT / "README.md", ROOT / "docs" / "00-scenario.md", ROOT / "admin" / "README.md"):
+            links = re.findall(r"\]\(([^)]+)\)", md.read_text(encoding="utf-8"))
+            with self.subTest(document=md.relative_to(ROOT)):
+                self.assertEqual([link for link in links if "workshop-files.zip" in link], [WORKSHOP_DOWNLOAD_URL])
+
+    def test_bold_delimiters_do_not_end_in_punctuation_before_attached_words(self):
+        for md in [ROOT / "README.md", *ALL_DOCS, *sorted((ROOT / "admin").glob("*.md")),
+                   ROOT / "assets" / "icon-attribution.md"]:
+            fence = None
+            for number, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1):
+                stripped = line.lstrip()
+                if stripped.startswith(("```", "~~~")):
+                    marker = stripped[:3]
+                    if fence is None:
+                        fence = marker
+                    elif fence == marker:
+                        fence = None
+                    continue
+                if fence:
+                    continue
+                for span in re.finditer(r"(?<!\\)\*\*([^*\n]+)\*\*([^\W_])", line):
+                    last = span[1][-1]
+                    with self.subTest(document=md.relative_to(ROOT), line=number, span=span[0]):
+                        self.assertFalse(last in string.punctuation or unicodedata.category(last).startswith("P"),
+                                         "Punctuation before ** followed by an attached word prevents bold from closing")
+
     def test_chapter_navigation(self):
         for i, doc in enumerate(DOCS):
             lines = doc.read_text(encoding="utf-8").splitlines()
@@ -340,7 +373,7 @@ class Docs(unittest.TestCase):
             else:
                 self.assertNotRegex(prompt, r"Ontology나 작업 영역은 변경하지 마|아직 적용하지 마|먼저 Plan에서")
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
-        self.assertIn("지금은 없어도 정상", scenario)
+        self.assertIn("| Ontology | `ont_cos` | **01장에서 직접 생성** |", scenario)
 
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -384,7 +417,7 @@ class Docs(unittest.TestCase):
         self.assertNotIn("Eventhouse", prepared)
         self.assertIn("Eventhouse `eh_cos`는 04장", readme)
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
-        self.assertIn("**04장에서 직접 생성**. 지금은 없어도 정상", scenario)
+        self.assertIn("| Eventhouse | `eh_cos` | **04장에서 직접 생성** |", scenario)
         lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
         self.assertIn("**+ New item**", lesson)
         self.assertIn("같은 이름의 기본 KQL Database가 자동 생성", lesson)
@@ -399,7 +432,7 @@ class Docs(unittest.TestCase):
         self.assertNotIn("sqldb_cos", prepared)
         self.assertIn("SQL DB `sqldb_cos`는 06장에서 직접 생성", readme)
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
-        self.assertIn("**06장에서 직접 생성**. 지금은 없어도 정상", scenario)
+        self.assertIn("| SQL database | `sqldb_cos` | **06장에서 직접 생성** |", scenario)
         lesson = (ROOT / "docs" / "06-serving-db.md").read_text(encoding="utf-8")
         headings = re.findall(r"^## \d\. .+$", lesson, re.M)
         self.assertEqual(headings, [
@@ -462,13 +495,13 @@ class Docs(unittest.TestCase):
             "## 4. CSV 업로드와 원본 확인", "## 5. Notebook 5개 가져오기와 기본 Lakehouse 연결",
             "## 6. Notebook으로 gold 테이블 직접 만들기",
         ])
-        self.assertIn("../downloads/workshop-files.zip?raw=true", scenario)
+        self.assertIn(WORKSHOP_DOWNLOAD_URL, scenario)
         self.assertIn("Lakehouse schemas", scenario)
         self.assertIn("Tables → dbo", scenario)
         self.assertIn("Upload files", scenario)
         self.assertIn("**같은 `Files/workshop/data` 폴더**", scenario)
-        self.assertIn("**각 Notebook을 하나씩 열어**", scenario)
-        self.assertIn("기본 Lakehouse로 고정(핀)", scenario)
+        self.assertIn("각 Notebook을 열고", scenario)
+        self.assertIn("**기본 Lakehouse로 고정**(핀)", scenario)
         self.assertIn("세션을 다시 시작", scenario)
         self.assertIn("**지금은 `01_prepare_data`만 실행합니다.**", scenario)
         names = runpy.run_path(str(ROOT / "admin" / "provision.py"))["NOTEBOOKS"]
@@ -488,16 +521,16 @@ class Docs(unittest.TestCase):
     def test_scenario_separates_local_download_folders_and_fabric_destinations(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         download = scenario.split("## 2. 실습 파일 내려받기\n", 1)[1].split("\n## 3.", 1)[0]
-        self.assertIn("CSV와 `.ipynb`만 담은 파일", download)
-        self.assertIn("`data`와 `notebooks`가 나란히", download)
-        self.assertIn("`.ipynb`는 `data` 안이 아니라", download)
-        self.assertIn("| 내 PC에서 열 폴더 | 선택할 파일 | Fabric에서 가져올 위치 | 진행 단계 |", download)
+        self.assertIn(WORKSHOP_DOWNLOAD_URL, download)
+        self.assertIn("| 내 PC 폴더 | 파일 | Fabric 위치 |", download)
         self.assertIn("| `data` | 핵심 `.csv` 11개 |", download)
         self.assertIn("| `notebooks` | `.ipynb` 5개 |", download)
-        self.assertIn("**작업 영역 → Import → Notebook**", download)
+        self.assertIn("작업 영역 → Import → Notebook", download)
         self.assertIn("첫 적재 전", download)
         self.assertNotIn("archive/refs/heads/main.zip", download)
-        self.assertIn("downloads/workshop-files.zip?raw=true", (ROOT / "README.md").read_text(encoding="utf-8"))
+        self.assertNotIn("저장소 전체", download)
+        self.assertNotIn("Python·Git 설치", download)
+        self.assertIn(WORKSHOP_DOWNLOAD_URL, (ROOT / "README.md").read_text(encoding="utf-8"))
 
     def test_scenario_includes_actual_empty_workspace_screenshot_before_downloads(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
@@ -505,8 +538,6 @@ class Docs(unittest.TestCase):
         self.assertIn(f"![빈 작업 영역 화면]({image})", scenario)
         self.assertLess(scenario.index(image), scenario.index("## 2. 실습 파일 내려받기"))
         self.assertIn("`cos-p901`", scenario)
-        self.assertIn("`There's nothing here yet`", scenario)
-        self.assertIn("따로 선택하거나 만들지 않아도 됩니다", scenario)
         self.assertTrue((ROOT / "assets" / "screenshots" / "00-empty-workspace.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
     def test_admin_default_is_empty_workspace_not_prestaged_items(self):
