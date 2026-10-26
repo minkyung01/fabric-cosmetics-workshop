@@ -766,7 +766,13 @@ class Docs(unittest.TestCase):
                                   "../assets/screenshots/02-graph-q3-production-results.png",
                                   "../assets/screenshots/02-graph-q4-stability-results.png",
                                   "../assets/screenshots/02-graph-q5-supplier-results.png",
-                                  "../assets/screenshots/02-graph-q6-alternative-results.png"])
+                                  "../assets/screenshots/02-graph-q6-alternative-results.png",
+                                  "../assets/screenshots/02-answers-q1-formula-versions.png",
+                                  "../assets/screenshots/02-answers-q2-impact-candidates.png",
+                                  "../assets/screenshots/02-answers-q3-alternatives.png",
+                                  "../assets/screenshots/02-answers-q4-supplier-materials.png",
+                                  "../assets/screenshots/02-answers-q5-schedule-slack.png",
+                                  "../assets/screenshots/02-answers-q6-before-supply-change.png"])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
@@ -790,6 +796,28 @@ class Docs(unittest.TestCase):
         self.assertLess(queries.index("**Query → Query now**"), queries.index("**Run query**"))
         self.assertLess(queries.index("**Q1."), queries.index("02-graph-q1-results.png"))
         self.assertLess(queries.index("**Q2."), queries.index("02-graph-q2-active-results.png"))
+
+    def test_graph_answers_notebook_details_session_and_query_comparisons(self):
+        lesson = (ROOT / "docs" / "02-graph.md").read_text(encoding="utf-8")
+        section = lesson.split("## 4. 정답 Notebook과 비교", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        for requirement in ("**`02_answers` Notebook**", "**기본 Lakehouse로 고정**",
+                            "**Add data items → From OneLake catalog**",
+                            "**SQL analytics endpoint**", "Notebook을 저장",
+                            "세션을 다시 시작", 'material_code = "RM-HA-120"', "qc_lead_days = 7",
+                            "**Connect**", "**Connecting**", "**30초–5분**",
+                            "연결 완료 후 **Run all**", "재시작하지 않고 실행",
+                            "기존 결과로 비교해도 됩니다",
+                            "Graph와 Notebook은 Q번호가 같아도 질문이 다릅니다",
+                            "**Graph Q1**", "**Graph Q2**", "**Graph Q3**", "**Graph Q4**",
+                            "**Graph Q5**의 5행", "**Graph Q6**",
+                            "`RM-HA-120`을 제외한 2행", "`is_impacted`가 모두 false",
+                            "지연 반영 전의 정상 출력", "`03_supply_change`를 먼저 실행하지 않습니다",
+                            "**Graph Q6과 다른 질문**"):
+            self.assertIn(requirement, section)
+        self.assertLess(section.index("**Connect**"), section.index("연결 완료 후 **Run all**"))
+        for number in range(1, 7):
+            self.assertIn(f"#### Notebook Q{number}.", section)
+        self.assertEqual(len(re.findall(r"!\[[^]]*\]\(([^)]+)\)", section)), 6)
 
     def test_graph_queries_quote_reserved_product_label(self):
         lesson = (ROOT / "docs" / "02-graph.md").read_text(encoding="utf-8")

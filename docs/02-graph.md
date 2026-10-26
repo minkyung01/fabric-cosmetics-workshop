@@ -145,25 +145,69 @@ RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registra
 
 ## 4. 정답 Notebook과 비교
 
+### 4-1. `02_answers`의 기본 Lakehouse 확인
+
+1. 작업 영역에서 **`02_answers` Notebook**을 엽니다. Graph 쿼리 탭이 아니라 Notebook에서 실행합니다.
+2. 왼쪽 **Data items**에서 내 작업 영역의 `lh_cos`가 **기본 Lakehouse로 고정**(핀)되어 있는지 확인합니다. 01장에서 이미 연결했다면 설정을 그대로 사용합니다.
+3. 미연결 상태라면 **Add data items → From OneLake catalog**에서 내 작업 영역의 **Lakehouse** `lh_cos`를 선택하고 **Add**를 누릅니다. 같은 이름의 **SQL analytics endpoint**를 선택하지 않습니다. 선택 화면은 [00장의 연결 예시](00-scenario.md#4-notebook에-기본-lakehouse-연결)를 참고합니다.
+4. 추가한 `lh_cos`를 기본 Lakehouse로 고정하고 Notebook을 저장합니다. 실행 중인 Spark 세션의 기본 Lakehouse를 바꿨다면 세션을 다시 시작합니다.
+5. 매개변수 셀은 아래 기본값을 유지합니다.
+
+   ```python
+   material_code = "RM-HA-120"
+   qc_lead_days = 7
+   ```
+
+### 4-2. Spark 세션 연결 후 실행
+
 **예상 코드 실행 시간:** 약 1–3분(세션 준비 제외).
 
-1. `02_answers`를 열고 기본 Lakehouse가 내 작업 영역의 `lh_cos`인지 확인합니다. 미연결 상태라면 [00장의 연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)에 따라 연결·저장합니다. 세션이 연결되어 있지 않다면 **Connect**로 시작합니다.
-2. 연결 완료 후 **Run all**을 누르고 Q1–Q5 결과를 위 Graph 결과와 비교합니다.
+1. 세션이 연결되어 있지 않다면 Notebook 상단 **Connect**를 누릅니다. Graph에서 질의를 실행한 것과 Notebook의 Spark 세션 연결은 별개입니다.
+2. **Connecting**이 표시되면 연결 완료를 기다립니다. 보통 **30초–5분** 정도 걸리며 환경에 따라 더 길어질 수 있습니다. 대기 중 **Connect**나 **Run all**을 반복해서 누르지 않습니다.
+3. 연결 완료 후 **Run all**을 한 번 누릅니다. 이미 세션이 연결되어 있고 기본 Lakehouse도 맞다면 재시작하지 않고 실행합니다.
+4. 실행이 끝나면 아래 Q1–Q6 셀 출력을 확인합니다. 결과를 보기 위해 각 셀을 다시 실행할 필요는 없습니다. 01장에서 실행한 결과가 남아 있고 원본·매개변수가 그대로라면 기존 결과로 비교해도 됩니다.
 
-**예상 출력:**
+### 4-3. Notebook 결과를 Graph와 비교
 
-| 출력 | 행 수와 확인할 값 |
-|---|---|
-| Q1 처방 버전 | 4행, 폐기 버전 1개 포함 |
-| Q2 영향 후보 | 4행, 제품 3개·개발 과제 1개 |
-| Q3 대체 원료 | 2행, `RM-HA-210` 승인·`RM-HA-305` 검토중 |
-| Q4 같은 공급사 원료 | 2행, `RM-PHE-002`를 쓰는 활성 처방 |
-| Q5 필요일 대비 여유 | 4행, 여유일 8·15·64·3일 |
-| Q6 영향 분석 | `ops.material_impact가 아직 없습니다` 안내 |
+**예상 출력:** 아래 화면처럼 나옵니다. **Graph와 Notebook은 Q번호가 같아도 질문이 다릅니다.** 각 항목에 적힌 비교 대상을 사용하고, 행 순서보다 ID와 값을 대조합니다.
 
-지연 반영 전 Q6 안내는 정상입니다. 이를 없애려고 `03_supply_change`를 먼저 실행하지 않습니다. 뒤에 나오는 DA 보조 조회 표는 03장에서 사용합니다.
+#### Notebook Q1. 처방 버전
 
-**확인할 결과:** Graph의 Q2·Q3·Q4는 `02_answers`의 Q1·Q2와, Graph의 Q6은 Q3과 같은 대상을 가리킵니다. `02_answers`의 Q5는 **원료 필요일과 여유일**까지 계산합니다(지연 전: `PP-1101` 8일, `PP-1102` 15일, `PP-1103` 64일, `ST-0711` 3일).
+**4행**, 폐기 버전 `FV-CRM-01-02`를 포함합니다. **Graph Q1**과 `version_id`·`status`·`is_active`를 비교합니다. 이 중 `is_active = true`인 3개 버전은 **Graph Q2**와 같습니다.
+
+![Notebook Q1 실행 결과: RM-HA-120의 처방 버전 4행과 상태·활성 여부](../assets/screenshots/02-answers-q1-formula-versions.png)
+
+#### Notebook Q2. 영향 후보
+
+**4행** — 제품 `P-101`·`P-102`·`P-301`, 개발 과제 `DP-2026-07`입니다. **Graph Q3**의 제품 ID와 **Graph Q4**의 개발 과제 ID를 각각 비교합니다.
+
+![Notebook Q2 실행 결과: 활성 처방에 연결된 제품 3개와 개발 과제 1개의 4행](../assets/screenshots/02-answers-q2-impact-candidates.png)
+
+#### Notebook Q3. 대체 원료
+
+**2행** — `RM-HA-210`은 승인, `RM-HA-305`는 검토중입니다. **Graph Q6**과 대체 원료 코드·리드타임·CN 등록 상태·공급사를 비교하고, Notebook에서 승인 상태와 조건도 확인합니다.
+
+![Notebook Q3 실행 결과: 대체 원료 2행의 승인 상태·리드타임·CN 등록 상태·공급사·조건](../assets/screenshots/02-answers-q3-alternatives.png)
+
+#### Notebook Q4. 같은 공급사의 다른 원료
+
+**2행** — `RM-PHE-002`를 쓰는 `FV-CRM-01-03`·`FV-AMP-03-02`입니다. **Graph Q5**의 5행 중 원래 원료 `RM-HA-120`을 제외한 2행과 비교합니다.
+
+![Notebook Q4 실행 결과: 같은 공급사의 다른 원료 RM-PHE-002를 사용하는 활성 처방 2행](../assets/screenshots/02-answers-q4-supplier-materials.png)
+
+#### Notebook Q5. 필요일 대비 여유
+
+**4행** — `PP-1101` 8일, `PP-1102` 15일, `PP-1103` 64일, `ST-0711` 3일입니다. **Graph Q3의 생산 계획 3건·Q4의 시험 1건**에 대해, Notebook은 원료 필요일과 여유일을 계산합니다. 지연 반영 전에는 `is_impacted`가 모두 false입니다.
+
+![Notebook Q5 실행 결과: 생산 계획 3건과 안정성 시험 1건의 필요일·입고 예정일·여유일](../assets/screenshots/02-answers-q5-schedule-slack.png)
+
+#### Notebook Q6. 영향 분석
+
+`ops.material_impact가 아직 없습니다` 안내는 **지연 반영 전의 정상 출력**입니다. 이를 없애려고 `03_supply_change`를 먼저 실행하지 않습니다. 이 Q6은 대체 원료를 조회한 **Graph Q6과 다른 질문**입니다.
+
+![Notebook Q6 실행 결과: 지연 반영 전 ops.material_impact가 아직 없다는 정상 안내](../assets/screenshots/02-answers-q6-before-supply-change.png)
+
+뒤에 나오는 DA 보조 조회 표는 03장에서 사용합니다.
 
 > **토론 포인트:** Graph는 "무엇이 연결되어 있는가"를 빠르게 보여 줍니다. 그러나 "며칠 늦으면 문제인가" 같은 날짜 계산과 판정은 **명시적인 질의·Notebook**으로 하는 편이 정확하고 검증하기 쉽습니다. 4장의 `03_supply_change`가 그 역할을 합니다.
 
