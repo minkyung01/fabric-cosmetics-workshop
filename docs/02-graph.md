@@ -84,10 +84,6 @@ RETURN fv.version_id, fv.formula_name, fv.status, fv.is_active
 
 ![Graph Q1 실행 결과: 처방 버전 4행과 fv.status·fv.is_active 열](../assets/screenshots/02-graph-q1-results.png)
 
-`FV-CRM-01-02`의 **폐기는 `status` 값**으로, 이 처방 버전이 폐기 상태라는 뜻입니다. **false는 `is_active` 값**으로, 활성 버전이 아니라는 뜻이지 질의 실패라는 뜻이 아닙니다. Q1은 활성 여부로 필터링하지 않으므로 이 버전도 조회됩니다.
-
-반대로 **true는 활성 버전이라는 뜻**이며, `status = 현행`과 같은 의미는 아닙니다. 예를 들어 `FV-TON-02-01`은 **개발중이면서 활성(true)** 상태이므로 다음 Q2에서도 남습니다.
-
 **Q2. 업무 규칙 적용 — 폐기 버전 제외**
 
 Q1의 `WHERE`에 `AND fv.is_active = true`를 **직접 추가해** **Run query**로 다시 실행합니다.
@@ -101,12 +97,14 @@ Q1의 4행과 비교해 보세요. 이 필터는 **조회 결과에서 비활성
 **Q3. 제품과 생산 계획까지**
 
 ``` gql
-MATCH (pp:ProductionPlan)-[:produces]->(p:Product)-[:made_with]->(fv:FormulaVersion)-[:uses_material]->(rm:RawMaterial)
+MATCH (pp:ProductionPlan)-[:produces]->(p:`Product`)-[:made_with]->(fv:FormulaVersion)-[:uses_material]->(rm:RawMaterial)
 WHERE rm.material_code = 'RM-HA-120' AND fv.is_active = true
 RETURN pp.plan_id, pp.planned_date, p.product_id, p.product_name, p.market
 ```
 
 **예상 결과:** 3행 — `PP-1101`(2026-11-25, `P-101`, KR), `PP-1102`(2026-12-02, `P-102`, CN), `PP-1103`(2027-01-20, `P-301`, KR).
+
+![Graph Q3 실행 결과: Product 레이블을 백틱으로 감싼 질의와 생산 계획 3행](../assets/screenshots/02-graph-q3-production-results.png)
 
 **Q4. 개발 과제와 안정성 시험까지**
 
@@ -119,6 +117,8 @@ RETURN dp.project_id, dp.project_name, st.test_id, st.batch_date, st.status
 
 **예상 결과:** 1행 — `DP-2026-07` 하이드라 토너 출시, `ST-0711`, 배치일 2026-11-20, `예정`.
 
+![Graph Q4 실행 결과: 개발 과제 DP-2026-07과 안정성 시험 ST-0711의 1행](../assets/screenshots/02-graph-q4-stability-results.png)
+
 **Q5. 공급사 관점 — 같은 공급사의 원료를 쓰는 처방은? (도전)**
 
 ``` gql
@@ -129,6 +129,8 @@ RETURN rm.material_code, rm.material_name, fv.version_id
 
 **예상 결과:** 5행 — `RM-HA-120` × 3개 버전, `RM-PHE-002`(페녹시에탄올) × 2개 버전(`FV-CRM-01-03`, `FV-AMP-03-02`). 같은 공급사에 문제가 번지면 수분 장벽 크림·시카 앰플은 원료 두 개가 동시에 걸립니다.
 
+![Graph Q5 실행 결과: SUP-02 공급사의 원료 2종과 활성 처방 버전 연결 5행](../assets/screenshots/02-graph-q5-supplier-results.png)
+
 **Q6. 대체 원료 후보**
 
 ``` gql
@@ -138,6 +140,8 @@ RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registra
 ```
 
 **예상 결과:** 2행 — `RM-HA-210`(리드타임 10일, CN `필요`, 한빛바이오), `RM-HA-305`(42일, `완료`, Nordic Actives). 승인 상태(`승인`·`검토중`)는 참고 관계에 속성이 없어 이 질의에 나오지 않습니다. `02_answers` Q3에서 확인합니다.
+
+![Graph Q6 실행 결과: 대체 원료 후보 2행의 리드타임·CN 등록 상태·공급사](../assets/screenshots/02-graph-q6-alternative-results.png)
 
 ## 4. 정답 Notebook과 비교
 
@@ -173,6 +177,7 @@ RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registra
 
 - **Manage graph**에서 **Ineligible**이면 키뿐 아니라 원본 종류·바인딩 수·지원 속성 형식을 확인합니다. [관리자 제약사항](../admin/preview-limitations.md)의 투영 적격성 항목을 참고합니다.
 - 관계가 **Not mapped**로 나오면 관계 설정에서 양쪽 Property와 원본 열을 확인합니다.
+- **Reserved keyword 'Product'** 오류가 나면 Q3처럼 레이블을 백틱으로 감싸 ``(p:`Product`)``로 씁니다. Ontology의 엔터티 이름을 바꿀 필요는 없습니다.
 - 질의가 0행이면 레이블·속성 이름의 대소문자를 Graph model의 스키마(노드·에지 목록)와 비교합니다. 예제는 엔터티 타입·관계 이름을 사용하며, 네임스페이스 접두사가 붙은 환경은 실제 레이블에 맞춰 수정합니다.
 - `is_active`가 없다는 오류가 나면 01장 4단계의 보강과 5단계 점검을 마친 뒤 **Manage graph**로 다시 Materialize합니다. Graph는 Materialize 시점의 데이터 스냅샷입니다.
 - 다른 핵심 경로는 있고 `is_active`만 누락된 경우 임시로 `WHERE fv.status <> '폐기'`를 쓸 수 있습니다. 타입·관계 자체가 없으면 필터로 대신할 수 없으므로 01장에서 보완하거나 `02_answers`로 확인합니다.

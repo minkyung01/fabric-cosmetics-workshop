@@ -762,7 +762,11 @@ class Docs(unittest.TestCase):
                                   "../assets/screenshots/02-graph-created-items.png",
                                   "../assets/screenshots/02-graph-query-now.png",
                                   "../assets/screenshots/02-graph-q1-results.png",
-                                  "../assets/screenshots/02-graph-q2-active-results.png"])
+                                  "../assets/screenshots/02-graph-q2-active-results.png",
+                                  "../assets/screenshots/02-graph-q3-production-results.png",
+                                  "../assets/screenshots/02-graph-q4-stability-results.png",
+                                  "../assets/screenshots/02-graph-q5-supplier-results.png",
+                                  "../assets/screenshots/02-graph-q6-alternative-results.png"])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
@@ -773,11 +777,8 @@ class Docs(unittest.TestCase):
                             "**Code editor**", "**Run query**",
                             "**`fv.status` 열**", "**`fv.is_active` 열**",
                             "행 순서는 다를 수 있으므로 `version_id`로 대조",
-                            "**폐기는 `status` 값**", "**false는 `is_active` 값**",
-                            "질의 실패라는 뜻이 아닙니다",
-                            "Q1은 활성 여부로 필터링하지 않으므로",
-                            "`status = 현행`과 같은 의미는 아닙니다",
-                            "**개발중이면서 활성(true)**", "AND fv.is_active = true",
+                            "status — 처방 버전의 업무 상태",
+                            "is_active — 활성 여부(Boolean)", "AND fv.is_active = true",
                             "원본 데이터를 삭제하거나 상태를 변경하지 않습니다"):
             self.assertIn(requirement, queries)
         for version, status, active in (
@@ -789,6 +790,15 @@ class Docs(unittest.TestCase):
         self.assertLess(queries.index("**Query → Query now**"), queries.index("**Run query**"))
         self.assertLess(queries.index("**Q1."), queries.index("02-graph-q1-results.png"))
         self.assertLess(queries.index("**Q2."), queries.index("02-graph-q2-active-results.png"))
+
+    def test_graph_queries_quote_reserved_product_label(self):
+        lesson = (ROOT / "docs" / "02-graph.md").read_text(encoding="utf-8")
+        queries = re.findall(r"``` ?gql\n(.*?)```", lesson, re.S)
+        self.assertTrue(any("(p:`Product`)" in query for query in queries))
+        for query in queries:
+            self.assertNotRegex(query, r":\s*Product\b")
+        self.assertIn("Reserved keyword 'Product'", lesson)
+        self.assertIn("Ontology의 엔터티 이름을 바꿀 필요는 없습니다", lesson)
 
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
