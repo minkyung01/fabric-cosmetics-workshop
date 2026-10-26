@@ -116,15 +116,13 @@ reset_ops = False
 
 ### 5-3. 테이블 적재 셀 결과
 
-**확인할 셀:** 첫 줄이 `tables_to_load = select_tables(include_extended)`인 코드 셀입니다. 이 셀이 `gold` 테이블을 만듭니다.
+![gold 테이블을 생성하는 코드 셀](../assets/screenshots/00-prepare-data-load-cell.png)
 
 **예상 출력 — 테이블 적재:** `데이터 프로필: 11개 테이블`과 테이블별 행 수가 표시됩니다. 확장을 선택했다면 `28개 테이블`과 추가 테이블의 행 수가 나옵니다.
 
 ![핵심 11개 테이블 적재 결과: 테이블별 행 수와 purchase_order 6행](../assets/screenshots/00-prepare-data-output.png)
 
-### 5-4. 마지막 조회 셀 결과
-
-**확인할 셀:** Notebook 맨 아래, 다음 코드가 있는 셀입니다.
+### 5-4. 발주 확인 셀 결과
 
 ```python
 display(spark.sql("SELECT po_id, material_code, eta, status FROM gold.purchase_order WHERE po_id = 'PO-5501'"))
@@ -132,13 +130,13 @@ display(spark.sql("SELECT po_id, material_code, eta, status FROM gold.purchase_o
 
 **예상 출력 — 발주 확인:** `PO-5501`, `RM-HA-120`, `eta = 2026-11-10`, `status = 확정`의 **1행**이 나옵니다. 이 셀은 발주 1건을 조회하며 데이터를 변경하지 않습니다.
 
-![마지막 셀의 발주 확인 결과: PO-5501, RM-HA-120, eta 2026-11-10, status 확정의 1행](../assets/screenshots/00-prepare-data-purchase-order.png)
+![발주 확인 셀의 조회 결과: PO-5501, RM-HA-120, eta 2026-11-10, status 확정의 1행](../assets/screenshots/00-prepare-data-purchase-order.png)
 
 ### 5-5. Lakehouse에서 전체 발주 확인
 
 작업 영역에서 `lh_cos`를 열고 **Tables → gold → purchase_order**를 선택합니다. 다음은 Notebook 셀 출력이 아니라 **Lakehouse 테이블 화면**입니다.
 
-**예상 결과:** 발주 전체 **6행**이 보입니다. `PO-5501`의 `eta`와 `original_eta`는 모두 `2026-11-10`, `status`는 `확정`입니다. 아직 지연은 반영하지 않았으며, `ops` 스키마에는 결과 테이블이 없습니다.
+**예상 결과:** 발주 전체 **6행**이 보입니다. `PO-5501`의 `eta`와 `original_eta`는 모두 `2026-11-10`, `status`는 `확정`입니다. `ops` 스키마에는 결과 테이블이 없습니다.
 
 ![Lakehouse의 gold.purchase_order 전체 6행: PO-5501의 eta와 original_eta 모두 2026-11-10, 상태 확정](../assets/screenshots/00-lakehouse-purchase-order.png)
 

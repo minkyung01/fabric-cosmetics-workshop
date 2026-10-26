@@ -620,6 +620,7 @@ class Docs(unittest.TestCase):
         self.assertEqual(images, ["../assets/screenshots/00-prepared-notebooks.png",
                                   "../assets/screenshots/00-lakehouse-create.png",
                                   "../assets/screenshots/00-select-lakehouse.png",
+                                  "../assets/screenshots/00-prepare-data-load-cell.png",
                                   "../assets/screenshots/00-prepare-data-output.png",
                                   "../assets/screenshots/00-prepare-data-purchase-order.png",
                                   "../assets/screenshots/00-lakehouse-purchase-order.png"])
@@ -633,18 +634,20 @@ class Docs(unittest.TestCase):
         self.assertLess(scenario.index(images[2]), scenario.index("## 5. Notebook으로 gold 테이블 직접 만들기"))
         self.assertLess(scenario.index("## 5. Notebook으로 gold 테이블 직접 만들기"), scenario.index(images[3]))
         self.assertLess(scenario.index(images[3]), scenario.index("## 이 장의 완료 기준"))
-        self.assertLess(scenario.index("**예상 출력 — 발주 확인:**"), scenario.index(images[4]))
+        self.assertLess(scenario.index("**예상 출력 — 발주 확인:**"), scenario.index(images[5]))
+        self.assertNotIn("확인할 셀:", scenario)
+        self.assertNotIn("마지막 조회 셀 결과", scenario)
+        self.assertNotIn("아직 지연은 반영하지 않았으며", scenario)
         sections = (
-            ("### 5-3. 테이블 적재 셀 결과", "### 5-4.", images[3], "tables_to_load = select_tables(include_extended)"),
-            ("### 5-4. 마지막 조회 셀 결과", "### 5-5.", images[4], "WHERE po_id = 'PO-5501'"),
-            ("### 5-5. Lakehouse에서 전체 발주 확인", "**재실행 주의:**", images[5], "Lakehouse 테이블 화면"),
+            ("### 5-3. 테이블 적재 셀 결과", "### 5-4.", images[3:5], "gold 테이블을 생성하는 코드 셀"),
+            ("### 5-4. 발주 확인 셀 결과", "### 5-5.", images[5:6], "WHERE po_id = 'PO-5501'"),
+            ("### 5-5. Lakehouse에서 전체 발주 확인", "**재실행 주의:**", images[6:7], "Lakehouse 테이블 화면"),
         )
-        for heading, end, image, identifier in sections:
+        for heading, end, expected_images, identifier in sections:
             section = scenario.split(heading, 1)[1].split(end, 1)[0]
             with self.subTest(section=heading):
-                self.assertIn(image, section)
                 self.assertIn(identifier, section)
-                self.assertEqual(re.findall(r"!\[[^]]*\]\(([^)]+)\)", section), [image])
+                self.assertEqual(re.findall(r"!\[[^]]*\]\(([^)]+)\)", section), expected_images)
 
     def test_spark_startup_guidance_is_next_to_connect_and_avoids_fixed_run_times(self):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
