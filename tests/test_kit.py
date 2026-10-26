@@ -635,34 +635,39 @@ class Docs(unittest.TestCase):
         self.assertIn("전체 경로를 조인 질의로 검증했다는 뜻은 아닙니다", review)
         self.assertIn("3단계의 Act 적용 후 확인", review)
         self.assertIn("`02_answers` Q1", review)
+        self.assertIn("‘샘플에서 미확인’은 ‘데이터에 없음’이 아닙니다", review)
+        self.assertIn("전체 사용처·제품 목록이나 누락 여부까지 확인했다고 볼 수 없습니다", review)
+        self.assertIn("샘플 크기·선정 방식", review)
 
-    def test_initial_model_review_requires_definition_evidence_before_act(self):
+    def test_initial_act_reuses_previous_review_and_checks_saved_model(self):
         lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
-        review = lesson.split("## 3. 초안 검토 → Act 적용 → 실제 데이터 확인", 1)[1].split("\n## 4.", 1)[0]
+        review = lesson.split("## 3. Act 적용 → 저장된 모델 확인", 1)[1].split("\n## 4.", 1)[0]
+        main_flow = review.split("**보완 예시 — 필요한 경우에만 펼치기**", 1)[0]
+        self.assertIn("2-1·2-2에서", main_flow)
+        self.assertIn("**검토표를 다시 요청할 필요는 없습니다**", main_flow)
+        self.assertIn("누락·불일치가 있을 때만 **Plan**", main_flow)
+        self.assertIn("바인딩이 미확인이거나 읽기 오류가 남아 있다면 승인하지 않습니다", main_flow)
+        self.assertIn("**이 장에서 처음 Act로 전환하는 시점입니다.**", main_flow)
+        self.assertNotIn("현재 적용하려는 Ontology 초안 자체를 검토", review)
+        self.assertNotIn("항목별로 기대 설계와의 일치·불일치·미확인", review)
+        self.assertEqual(len(re.findall(r"```text\n(.*?)```", main_flow, re.S)), 1)
         prompt = re.findall(r"```text\n(.*?)```", review, re.S)[0]
-        for requirement in ("저장된 기존 모델과 적용 전 초안을 혼동하지 마",
-                            "엔터티 표: 타입명, 고유 키, 원본 테이블, 속성별 원본 열",
-                            "관계 표: 관계명, 출발 타입·키, 도착 타입·키",
-                            "확인 범위 표", "미확인·미실행 항목과 이유",
-                            "FormulaVersion → RawMaterial",
-                            "gold.formula_line의 version_id와 material_code",
-                            "전수 질의를 실행하지 못하면",
-                            "0건이나 전체 건수를 샘플만으로 단정하지 마",
-                            "원본을 조회해 얻은 사실과 초안 정의에서 확인한 바인딩을 구분",
-                            "미확인으로 표시", "일치·불일치·미확인",
-                            "오류를 보고하고 중단",
-                            "원본 데이터와 현재 Ontology는 변경하지 마"):
+        for requirement in ("2단계에서 검토한 설계와 원본 근거",
+                            "검토한 초안만 현재 ont_cos에 적용",
+                            "lh_cos.gold 원본은 읽기만",
+                            "원본 테이블·데이터나 다른 Fabric 항목은 변경하지 마"):
             self.assertIn(requirement, prompt)
-        self.assertIn("어디서 무엇을 보는가?", review)
-        self.assertIn("2-1 표와 대조", review)
-        self.assertIn("2-2 경로와 대조", review)
-        self.assertIn("**미확인 상태로 두고 승인하지 않습니다**", review)
-        self.assertIn("**설계의 키·속성·관계 바인딩을 확인하지 못한 경우**", review)
-        self.assertIn("이 제한을 기록하고 모델 적용으로 진행할 수 있습니다", review)
-        self.assertIn("Agent의 “일치” 판정만 믿기보다", review)
-        self.assertIn("`FormulaVersion / formula_id`이면 불일치", review)
-        self.assertLess(review.index("현재 적용하려는 Ontology 초안 자체를 검토"),
-                        review.index("**Switch to 'Act' + approve**"))
+        for requirement in ("**Entity Types**", "View Entity Type details → Configure", "**Data source**",
+                            "**Manage relationships**", "**Instances**",
+                            "`FormulaVersion → RawMaterial`", "`gold.formula_line`",
+                            "`version_id`·`material_code`",
+                            "AI Proposal이나 완료 메시지만으로 저장을 판단하지 않습니다",
+                            "**Plan으로 복귀**",
+                            "해당 제한을 기록하고 진행할 수 있으며"):
+            self.assertIn(requirement, main_flow)
+        self.assertLess(main_flow.index("**Switch to 'Act' + approve**"),
+                        main_flow.index("**Entity Types**"))
+        self.assertLess(main_flow.index("**Instances**"), main_flow.index("**Plan으로 복귀**"))
         first_prompt = re.findall(r"```text\n(.*?)```", lesson, re.S)[0]
         self.assertNotIn("처방 버전 4개", first_prompt)
         self.assertNotIn("판매 제품 3개", first_prompt)
