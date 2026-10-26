@@ -19,19 +19,27 @@ flowchart LR
 ## 시작 전 확인
 
 - **유료 Fabric 용량**(F SKU)이 필요합니다. Operations agent는 Trial 용량을 지원하지 않습니다.
+- 내 작업 영역 `cos-pNNN`에 **Contributor 이상** 권한이 있고 Fabric 항목을 생성할 수 있어야 합니다. `eh_cos`는 이 장에서 직접 만듭니다.
 - 테넌트에서 Operations agent, Copilot·Azure OpenAI, (필요 시) 지역 간 처리 설정이 켜져 있어야 합니다(관리자 준비 사항).
 - Teams에 **Fabric Operations Agent** 앱이 설치되어 있어야 메시지를 받을 수 있습니다.
 - 규칙 질의는 **5분 주기**로 실행됩니다. 알림까지 수 분이 걸리는 것이 정상입니다.
 
-## 1. Eventhouse 확인
+## 1. Eventhouse 만들기
 
-작업 영역에서 Eventhouse `eh_cos`와 같은 이름의 KQL Database가 있는지 확인합니다.
+1. 내 작업 영역 `cos-pNNN`에서 **+ New item**을 누릅니다.
+2. 검색 칸에 `Eventhouse`를 입력하고 **Eventhouse**를 선택합니다.
+3. 이름을 `eh_cos`로 입력하고 **Create**를 누릅니다.
+4. Eventhouse의 **System overview**가 열리면 왼쪽 **KQL Databases**에서 `eh_cos`를 선택합니다.
 
-**확인할 결과:** `eh_cos` KQL Database가 열리고, 아직 테이블은 없습니다.
+**확인할 결과:** Eventhouse와 **같은 이름의 기본 KQL Database가 자동 생성**됩니다. `eh_cos` KQL Database가 열리고 처음 만든 데이터베이스에는 아직 테이블이 없습니다. 별도의 KQL Database를 추가로 만들 필요는 없습니다.
+
+**이름 확인:** 뒤의 Notebook은 같은 작업 영역에서 Eventhouse를 찾고, `eventhouse_name`을 KQL Database 이름으로도 사용합니다. **Eventhouse와 기본 KQL Database 이름을 모두 `eh_cos`로 유지**합니다.
+
+이미 `eh_cos`가 있다면 중복 생성하거나 삭제하지 말고 기존 KQL Database와 테이블을 확인합니다. 이전 실습 이력은 보존하며, 반복 실행할 때는 6단계의 `run_tag`를 새 값으로 바꿉니다.
 
 ## 2. 이벤트 테이블 만들기
 
-`eh_cos` KQL Database에서 **Explore your data**(또는 KQL queryset)를 열고 아래 명령을 실행합니다.
+`eh_cos` KQL Database에서 **Explore your data**(또는 KQL queryset)를 열고, 실행할 데이터베이스가 `eh_cos`인지 확인한 뒤 아래 명령을 실행합니다.
 
 ``` kql
 .create-merge table MaterialSupplyEvent (
@@ -53,7 +61,14 @@ flowchart LR
 
 이벤트는 상태가 바뀔 때마다 **새 행으로 추가**됩니다. `open`(검토 필요) → `review_requested`(검토 요청 등록됨) 순서입니다.
 
-**예상 결과:** `MaterialSupplyEvent` 테이블이 생기고 행은 0개입니다.
+아래 질의로 행 수를 확인합니다.
+
+``` kql
+MaterialSupplyEvent
+| count
+```
+
+**예상 결과:** 처음 만든 `MaterialSupplyEvent` 테이블의 행은 0개입니다. 기존 테이블을 재사용했다면 이전 행은 그대로 남으며, 임의로 지우지 않습니다.
 
 ## 3. 승인 후 실행할 Notebook 살펴보기
 
@@ -135,6 +150,7 @@ MaterialSupplyEvent
 
 ## 이 장의 완료 기준
 
+- Eventhouse와 기본 KQL Database `eh_cos`를 직접 생성하고 `MaterialSupplyEvent` 테이블을 만들었습니다. 기존 항목을 재사용했다면 해당 범위를 구분합니다.
 - `oa_cos`가 시작(Start) 상태이고 Knowledge·Action·Playbook이 구성되어 있습니다.
 - Eventhouse에 `open` 이벤트가 있고 Teams 제안 메시지를 받았습니다.
 
@@ -143,11 +159,13 @@ MaterialSupplyEvent
 - 메시지가 오지 않으면 `oa_cos`의 **View activity**에서 규칙 실행 기록을 봅니다. 규칙이 실행되지 않았으면 **Start** 상태인지, 실행됐는데 조건이 안 맞았으면 Playbook 규칙 조건을 확인합니다.
 - `03_supply_change`가 "이미 보낸 이벤트"라고 하면 `run_tag`를 `r2`처럼 바꿔 다시 실행합니다. 지연 일수는 원래 ETA 기준으로 계산하므로 다시 실행해도 누적되지 않습니다.
 - "MaterialSupplyEvent 테이블이 없다"는 오류가 나면 2단계를 먼저 실행합니다.
-- Eventhouse를 찾지 못하면 `eventhouse_name` 매개 변수와 Eventhouse 이름이 같은지 확인합니다.
+- **New item에 Eventhouse가 없거나 생성이 거부되면** 내 작업 영역·용량·Contributor 이상 권한과 항목 생성 설정을 관리자와 확인합니다. 생성하지 못한 상태에서 다음 단계로 넘어가지 않습니다.
+- Eventhouse를 찾지 못하면 현재 작업 영역과 `eventhouse_name` 매개 변수를 확인합니다. Eventhouse는 찾지만 데이터베이스 오류가 나면 기본 KQL Database 이름도 `eh_cos`인지 확인합니다.
 - Teams 앱이 없거나 메시지를 받을 수 없으면 앱 사용 권한과 Fabric·Teams 로그인 계정을 관리자와 확인합니다. 해결 전에는 알림·승인 단계를 완료한 것으로 표시하지 않습니다.
 
 ## 공식 문서
 
+- [Eventhouse 만들기·기본 KQL Database 자동 생성](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/create-eventhouse)
 - [Operations agent 만들기와 구성](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent)
 - [Operations agent 작업(Actions)](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent-actions)
 

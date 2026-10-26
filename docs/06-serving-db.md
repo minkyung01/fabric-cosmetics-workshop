@@ -15,13 +15,25 @@
 ## 시작 전 확인
 
 - 05장에서 `nb_apply_review`가 성공했고 현재 이벤트의 요청 3건이 있습니다.
-- 관리자가 **SQL database** 항목 `sqldb_cos`를 만들었습니다. **Lakehouse의 SQL analytics endpoint와 다릅니다.** SQL DB 생성에는 작업 영역 Admin/Member가 필요하며, Contributor만으로 생성할 수 있다고 가정하지 않습니다.
-- 참가자는 `sqldb_cos` 쿼리 편집기에서 이 장의 DDL·프로시저 실행이 가능한 권한을 받았습니다. 관리자가 스키마를 사전 생성했다면 1단계는 확인만 합니다.
+- 내 실습 작업 영역의 **Member 또는 Admin** 권한이 필요합니다. **Contributor만으로는 SQL DB를 생성할 수 없습니다.** Member 권한은 본인 실습 작업 영역에만 부여하며 테넌트·Purview 관리자 권한은 필요하지 않습니다.
+- **SQL database** 항목 `sqldb_cos`와 Serving 스키마는 이 장에서 직접 만듭니다. **Lakehouse의 SQL analytics endpoint와 다릅니다.**
 - `04_publish_serving`의 기본 Lakehouse는 `lh_cos`입니다.
 
-## 1. Serving 스키마 만들기
+## 1. SQL database 만들기
 
-1. 작업 영역에서 `sqldb_cos`를 엽니다. 항목 전환 메뉴가 있으면 **SQL database**를 선택합니다.
+1. 내 작업 영역 `cos-pNNN`에서 **+ New item**을 누릅니다.
+2. `SQL database`를 검색해 선택합니다. Fabric 포털의 **Databases → New → SQL database**로 진입한 경우에도 생성 대상이 본인 실습 작업 영역인지 확인합니다.
+3. 이름을 `sqldb_cos`로 입력하고 **Create**를 누릅니다.
+4. 생성이 끝나고 DB의 **Home**과 **Explorer**가 열릴 때까지 기다립니다. 샘플 데이터는 넣지 않습니다.
+5. **T-SQL** 타일 또는 새 쿼리를 열어 쓰기 가능한 **SQL database** 편집기인지 확인합니다. 항목 전환 메뉴가 있으면 SQL analytics endpoint가 아니라 **SQL database**를 선택합니다.
+
+**확인할 결과:** 본인 작업 영역에 `sqldb_cos`가 생기고 쿼리 편집기를 열 수 있습니다. 아직 `serving` 테이블·프로시저는 없습니다.
+
+이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고 기존 항목을 엽니다. 아래 예상 결과는 첫 실행 기준이며, 반복 실습은 기존 이력을 보존하고 05장에서 승인한 새 이벤트를 사용합니다.
+
+## 2. Serving 스키마 만들기
+
+1. `sqldb_cos`의 **SQL database** 쿼리 편집기를 엽니다.
 2. 새 쿼리를 열고 [serving.sql](../fabric/sql/serving.sql)의 전체 내용을 실행합니다(`GO` 포함).
 3. Explorer를 새로 고쳐 다음 객체를 확인합니다.
 
@@ -32,9 +44,9 @@
 | `serving.usp_publish_reviews` | 승인 결과를 신규 요청만 추가하는 방식으로 게시 |
 | `serving.usp_start_review` | 요청 상태를 확인하고 상태 변경·이력을 한 트랜잭션으로 기록 |
 
-**확인할 결과:** 테이블 2개·프로시저 2개가 있고 테이블은 비어 있습니다. 스키마 스크립트 재실행은 기존 데이터를 지우지 않습니다.
+**확인할 결과:** 테이블 2개·프로시저 2개가 있고 첫 실행에서는 테이블이 비어 있습니다. 스키마 스크립트 재실행은 기존 데이터를 지우지 않습니다.
 
-## 2. 승인 결과 게시
+## 3. 승인 결과 게시
 
 1. `04_publish_serving`을 열고 `event_id`가 05장에서 승인한 이벤트인지 확인한 뒤 **Run all**합니다.
 2. 출력의 `EXEC serving.usp_publish_reviews ...;` 명령 전체를 복사합니다. 승인 조치·요청 수가 다르거나 승인 전이면 Notebook이 오류로 멈춥니다.
@@ -44,7 +56,7 @@
 
 > 연결·드라이버·자격 증명 배포가 핵심 실습을 가리지 않도록 **명시적인 SQL 게시**를 사용합니다. 원본은 해당 이벤트의 승인된 요청이며 하드코딩한 샘플 3행이 아닙니다. 자동 게시·CDC·역방향 동기화는 구성하지 않습니다.
 
-## 3. 담당 팀별 조회
+## 4. 담당 팀별 조회
 
 ```sql
 SELECT target_id, assignee_team, slack_days, suggestion, request_status
@@ -56,7 +68,7 @@ ORDER BY target_id;
 
 **예상 결과:** `PP-1101`, `PP-1102` 2행. 팀을 `처방개발`로 바꾸면 `ST-0711` 1행입니다. 여기의 `WHERE`는 조회 조건이지 팀별 접근 통제(RLS)가 아닙니다.
 
-## 4. 검토 착수와 이력 확인
+## 5. 검토 착수와 이력 확인
 
 ```sql
 EXEC serving.usp_start_review
@@ -76,22 +88,23 @@ ORDER BY history_id;
 
 이 단계는 **검토를 시작했다는 상태 변경**일 뿐, 대체 원료 승인이나 처방·발주 변경이 아닙니다.
 
-## 5. 재게시해도 업무 상태가 유지되는지 확인
+## 6. 재게시해도 업무 상태가 유지되는지 확인
 
-2단계에서 생성한 게시 SQL을 다시 실행하고 4단계 조회를 반복합니다.
+3단계에서 생성한 게시 SQL을 다시 실행하고 5단계 조회를 반복합니다.
 
 **예상 결과:** `inserted_count = 0`, 요청 3행, 이력 1행이며 `PP-1101`은 계속 `검토중`입니다. Lakehouse 원본은 승인 당시 `요청됨` 스냅샷을 유지합니다. 새 이벤트로 다시 진행할 때는 새 `run_tag`와 해당 `event_id`를 모든 질의에 사용합니다.
 
 ## 이 장의 완료 기준
 
-- SQL DB와 Lakehouse SQL 분석 엔드포인트의 역할 차이를 설명할 수 있습니다.
+- `sqldb_cos`와 Serving 스키마를 직접 만들고 SQL DB와 Lakehouse SQL 분석 엔드포인트의 역할 차이를 설명할 수 있습니다. 기존 항목을 재사용했다면 해당 범위를 구분합니다.
 - 승인된 요청 3건을 게시하고 구매·생산계획 2건 / 처방개발 1건을 조회했습니다.
 - 검토 착수·이력·중복 착수 오류·재게시 시 상태 보존을 확인했습니다.
 
 ## Troubleshooting
 
 - **읽기 전용/테이블 생성 불가:** SQL analytics endpoint가 아닌 SQL database를 열었는지 확인합니다.
-- **권한 오류:** 관리자에게 DDL 실행 또는 사전 스키마 생성과 필요한 SELECT/EXECUTE 권한을 요청합니다. 참가자에게 Purview 관리자 권한을 주는 것으로 해결하지 않습니다.
+- **SQL database가 없거나 생성이 거부됨:** 현재 작업 영역·용량과 **Member 또는 Admin** 권한을 관리자와 확인합니다. Contributor 권한이나 Purview 관리자 권한으로 대체할 수 없습니다.
+- **DDL·프로시저 실행 권한 오류:** SQL database 편집기를 사용 중인지, 본인 실습 DB의 생성·실행 권한이 있는지 확인합니다. 관리자에게 오류와 실행 대상을 전달하고, 스키마·게시를 완료하지 못한 상태를 성공으로 표시하지 않습니다.
 - **프로시저가 없음:** `serving.sql` 전체를 `GO` 경계까지 실행했는지 확인합니다.
 - **승인 조치가 없음/건수 불일치:** 같은 `event_id`로 05장을 완료했는지 확인합니다. 임의 샘플로 채워 성공한 것처럼 진행하지 않습니다.
 - **이전 실습 이력이 남음:** `01_prepare_data`는 SQL DB를 초기화하지 않습니다. 새 이벤트를 쓰거나 관리자에게 실습 DB 재생성을 요청합니다.

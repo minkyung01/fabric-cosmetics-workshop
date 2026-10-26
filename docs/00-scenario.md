@@ -26,7 +26,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 2. Graph 또는 Lakehouse SQL로 `RM-HA-120`의 영향 후보를 찾고, **현행·개발중 처방만** 남기도록 필터를 바꿔 봅니다.
 3. Data Agent에 같은 질문을 하고 직접 실행한 질의·Notebook 결과와 비교합니다.
 4. Operations Agent가 **공급 지연을 감지해 Teams로 알리고**, 승인하면 **검토 요청이 기록**되게 합니다.
-5. 승인된 요청을 SQL DB로 게시하고, 담당 팀별 조회와 검토 착수·이력 확인을 수행합니다.
+5. SQL DB를 직접 만들어 승인된 요청을 게시하고, 담당 팀별 조회와 검토 착수·이력 확인을 수행합니다.
 6. 연구 데이터에 민감도 레이블을 적용하고, 준비된 환경에서 DLP 정책과 연결합니다.
 
 **탐색할 질문:** 같은 원료를 쓰는 대상이 모두 지연될까요? 연결되어 있다는 사실만으로 영향을 확정할 수 있을까요? 대체 원료가 있어도 바로 사용할 수 없는 경우는 무엇일까요?
@@ -38,16 +38,16 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 ## 1. 내 작업 영역 확인
 
 1. [Fabric 포털](https://app.fabric.microsoft.com)에 로그인하고 왼쪽 **Workspaces**에서 `cos-pNNN`(예: `cos-p001`)을 엽니다.
-2. 아래 항목이 있는지 확인합니다.
+2. 아래 표에서 준비된 항목과 직접 만들 항목을 구분합니다.
 
 | 항목 | 이름 | 비고 |
 |---|---|---|
 | Lakehouse | `lh_cos` | `gold` 스키마 아래 핵심 테이블 11개(선택 확장 준비 시 28개) |
 | Notebook | `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review` | 기본 Lakehouse가 `lh_cos` |
 | Notebook | `04_publish_serving` | 승인 후 게시 SQL 생성, 기본 Lakehouse `lh_cos` |
-| Eventhouse | `eh_cos` | KQL 데이터베이스 `eh_cos` 포함 |
+| Eventhouse | `eh_cos` | **04장에서 직접 생성**. 지금은 없어도 정상. 같은 이름의 기본 KQL Database 자동 생성 |
 | Ontology | `ont_cos` | **01장에서 직접 생성**. 지금은 없어도 정상 |
-| SQL database | `sqldb_cos` | 관리자가 준비. 06장에서 스키마 생성·게시·조회 |
+| SQL database | `sqldb_cos` | **06장에서 직접 생성**. 지금은 없어도 정상. 생성에는 Member 또는 Admin 권한 필요 |
 
 3. `lh_cos`를 열고 **Tables** → `gold` → `purchase_order`를 누릅니다.
 

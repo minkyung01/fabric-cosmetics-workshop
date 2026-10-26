@@ -3,7 +3,7 @@
 For each participant pNNN this creates (or reuses) workspace cos-pNNN on the given capacity and:
   - a schema-enabled Lakehouse lh_cos, with data/*.csv uploaded to Files/workshop/data
   - the 5 notebooks bound to lh_cos (01_prepare_data is run once to build the gold tables)
-  - an Eventhouse eh_cos (KQL database eh_cos) for the Operations agent
+  - no Eventhouse: participants create eh_cos and its default KQL database in chapter 04
   - no core ontology by default: participants create ont_cos with the Ontology agent in chapter 01
   - the completed core ontology only with --reference-ontology (recovery path)
   - optional 17 additional CSVs and a separate ont_cos_extended with --extended-ontology
@@ -12,11 +12,12 @@ Existing items are reused; notebooks are only overwritten with --update-notebook
 Uses the Azure CLI login (az login [--tenant ...]); no secrets are stored.
 
 Examples
-    python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv
+    python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv --role Member
     python admin/provision.py --capacity <capacity-id> --participants p001 --reference-ontology
     python admin/provision.py --capacity <capacity-id> --participants p001-p003 --dry-run
 
-SQL database sqldb_cos is created manually by a workspace Admin/Member (see admin/README.md).
+SQL database sqldb_cos is created by participants in chapter 06 (workspace Member/Admin).
+Use --role Member for new participant assignments in the full workshop; existing assignments are unchanged.
 Before deployment, check Ontology old/new experience compatibility in admin/preview-limitations.md.
 users.csv (optional): participant,upn   e.g.  p001,p001@example.com
 """
@@ -182,7 +183,8 @@ def provision(fab, pid, args, users):
     else:
         print("  workspace exists")
     if fab.dry_run and ws.startswith("0000"):
-        print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks, run 01_prepare_data, {EVENTHOUSE}")
+        print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks, run 01_prepare_data")
+        print(f"  [dry-run] leave {EVENTHOUSE} creation to participants in chapter 04; keep any existing Eventhouse")
         if args.reference_ontology:
             print(f"  [dry-run] deploy ont_cos_reference as {ONTOLOGY} if absent; keep any existing ontology")
         else:
@@ -244,8 +246,10 @@ def provision(fab, pid, args, users):
     if not args.skip_prepare and not fab.dry_run:
         fab.run_notebook(ws, notebook_ids["01_prepare_data"], "run 01_prepare_data")
 
-    if ("Eventhouse", EVENTHOUSE) not in items:
-        fab.change(f"create eventhouse {EVENTHOUSE}", "POST", f"/workspaces/{ws}/eventhouses", {"displayName": EVENTHOUSE})
+    if ("Eventhouse", EVENTHOUSE) in items:
+        print(f"  {EVENTHOUSE} exists; retained. Check the database and event history before reusing it in chapter 04.")
+    else:
+        print(f"  leave {EVENTHOUSE} creation to participants in chapter 04")
 
     models = [(ONTOLOGY, "ont_cos_reference")] if args.reference_ontology else []
     if args.extended_ontology:
@@ -264,7 +268,8 @@ def main():
     parser.add_argument("--capacity", required=True, help="Fabric capacity ID for new workspaces (paid F SKU, not Trial)")
     parser.add_argument("--participants", required=True, help="e.g. p001-p012 or p001,p005")
     parser.add_argument("--users", help="CSV with participant,upn to grant workspace access")
-    parser.add_argument("--role", default="Contributor", choices=["Admin", "Member", "Contributor"])
+    parser.add_argument("--role", default="Contributor", choices=["Admin", "Member", "Contributor"],
+                        help="role for new participant assignments; use Member for SQL database creation in chapter 06")
     parser.add_argument("--prefix", default="cos-", help="workspace name prefix (default cos-)")
     parser.add_argument("--tenant", help="tenant for az get-access-token")
     parser.add_argument("--update-notebooks", action="store_true", help="overwrite existing notebooks")

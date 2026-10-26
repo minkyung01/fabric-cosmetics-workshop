@@ -279,6 +279,47 @@ class Docs(unittest.TestCase):
                              r"^\| `(\w+)` \| (\w+) → (\w+) \| `(\w+)\.(\w+) → (\w+)` \|", lesson, re.M)}
         self.assertEqual(relationships, {name: value[:5] for name, value in spec["RELATIONSHIPS"].items()})
 
+    def test_eventhouse_is_created_by_participants_in_chapter_04(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        prepared = next(line for line in readme.splitlines() if line.startswith("| 준비된 항목 |"))
+        self.assertNotIn("Eventhouse", prepared)
+        self.assertIn("Eventhouse `eh_cos`는 04장", readme)
+        scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
+        self.assertIn("**04장에서 직접 생성**. 지금은 없어도 정상", scenario)
+        lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        self.assertIn("**+ New item**", lesson)
+        self.assertIn("같은 이름의 기본 KQL Database가 자동 생성", lesson)
+        self.assertIn("Eventhouse와 기본 KQL Database 이름을 모두 `eh_cos`로 유지", lesson)
+        self.assertLess(lesson.index("## 1. Eventhouse 만들기"), lesson.index("## 2. 이벤트 테이블 만들기"))
+        self.assertIn("이미 `eh_cos`가 있다면 중복 생성하거나 삭제하지 말고", lesson)
+        self.assertIn("MaterialSupplyEvent\n| count", lesson)
+
+    def test_sql_database_is_created_by_participants_before_schema_and_publishing(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        prepared = next(line for line in readme.splitlines() if line.startswith("| 준비된 항목 |"))
+        self.assertNotIn("sqldb_cos", prepared)
+        self.assertIn("SQL DB `sqldb_cos`는 06장에서 직접 생성", readme)
+        scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
+        self.assertIn("**06장에서 직접 생성**. 지금은 없어도 정상", scenario)
+        lesson = (ROOT / "docs" / "06-serving-db.md").read_text(encoding="utf-8")
+        headings = re.findall(r"^## \d\. .+$", lesson, re.M)
+        self.assertEqual(headings, [
+            "## 1. SQL database 만들기", "## 2. Serving 스키마 만들기", "## 3. 승인 결과 게시",
+            "## 4. 담당 팀별 조회", "## 5. 검토 착수와 이력 확인", "## 6. 재게시해도 업무 상태가 유지되는지 확인",
+        ])
+        self.assertIn("**+ New item**", lesson)
+        self.assertIn("이름을 `sqldb_cos`로 입력하고 **Create**", lesson)
+        self.assertIn("Contributor만으로는 SQL DB를 생성할 수 없습니다", lesson)
+        self.assertIn("**Member 또는 Admin**", lesson)
+        self.assertIn("샘플 데이터는 넣지 않습니다", lesson)
+        self.assertIn("이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고", lesson)
+        self.assertIn("3단계에서 생성한 게시 SQL을 다시 실행하고 5단계 조회를 반복", lesson)
+        admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("--users users.csv --role Member", admin)
+        self.assertIn("참가자용 `sqldb_cos`와 Serving 스키마는 사전 생성하지 않습니다", admin)
+        self.assertIn("기존 역할 할당은 이 옵션으로 자동 승격하지 않으므로", admin)
+        self.assertNotIn("관리자가 **SQL database** 항목 `sqldb_cos`를 만들었습니다", lesson)
+
 
 class Serving(unittest.TestCase):
     def setUp(self):
@@ -348,7 +389,7 @@ class Serving(unittest.TestCase):
                 self.publish(self.event, [record], 1)
 
     def test_sql_guards_republication_and_workflow_transaction(self):
-        # Static contracts only; the administrator must execute Lesson 06 in SQL database.
+        # Static contracts only; live engine validation requires Lesson 06 in SQL database.
         sql = (ROOT / "fabric" / "sql" / "serving.sql").read_text(encoding="utf-8")
         publish, start = sql.split("CREATE OR ALTER PROCEDURE serving.usp_start_review", 1)
         self.assertIn("WHERE NOT EXISTS", publish)
@@ -530,10 +571,11 @@ class ExtendedModel(unittest.TestCase):
                                                (False, True, False), (False, True, True),
                                                (True, True, False), (True, True, True)):
             with self.subTest(reference=reference, extended=extended, existing=existing):
-                items = [{"type": "Lakehouse", "displayName": "lh_cos", "id": "test-lakehouse"},
-                         {"type": "Eventhouse", "displayName": "eh_cos", "id": "test-eventhouse"}]
+                items = [{"type": "Lakehouse", "displayName": "lh_cos", "id": "test-lakehouse"}]
                 if existing:
-                    items.append({"type": "Ontology", "displayName": "ont_cos", "id": "existing-core"})
+                    items += [{"type": "Ontology", "displayName": "ont_cos", "id": "existing-core"},
+                              {"type": "Eventhouse", "displayName": "eh_cos", "id": "existing-eventhouse"},
+                              {"type": "SQLDatabase", "displayName": "sqldb_cos", "id": "existing-sql"}]
                 fab = SimpleNamespace(
                     dry_run=False,
                     get_all=Mock(side_effect=[[{"displayName": "cos-p001", "id": "test-workspace"}], items]),
@@ -550,6 +592,14 @@ class ExtendedModel(unittest.TestCase):
                 self.assertEqual(len(uploads), 28 if extended else 11)
                 self.assertTrue(all("/Files/workshop/data/" in url for url in uploads))
                 fab.run_notebook.assert_called_once_with("test-workspace", "test-item", "run 01_prepare_data")
+                self.assertFalse(any("/eventhouses" in c.args[2] for c in fab.change.call_args_list))
+                self.assertFalse(any(c.args[3].get("type") == "Eventhouse" for c in fab.change.call_args_list))
+                self.assertFalse(any("sqldatabase" in c.args[2].lower() for c in fab.change.call_args_list))
+                self.assertFalse(any(c.args[3].get("type") == "SQLDatabase" for c in fab.change.call_args_list))
+                if existing:
+                    self.assertIn("eh_cos exists; retained", output.getvalue())
+                else:
+                    self.assertIn("leave eh_cos creation to participants in chapter 04", output.getvalue())
                 ontology_payloads = [c.args[3] for c in fab.change.call_args_list
                                      if c.args[3].get("type") == "Ontology"]
                 expected = (["ont_cos"] if reference and not existing else []) + (["ont_cos_extended"] if extended else [])
@@ -581,6 +631,7 @@ class ExtendedModel(unittest.TestCase):
                         provision["provision"](fab, "p001", args, {})
                     text = output.getvalue()
                     self.assertNotIn("ont_cos_base", text)
+                    self.assertIn("leave eh_cos creation to participants in chapter 04", text)
                     self.assertEqual("deploy ont_cos_reference" in text, reference)
                     self.assertEqual("leave ont_cos creation to participants" in text, not reference)
                     self.assertEqual("deploy ont_cos_extended" in text, extended)

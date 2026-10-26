@@ -68,7 +68,7 @@ Ontology Agent의 기본 반환 한도는 SQL/KQL/GQL 1,000행, DAX 200행입니
 
 ## 6. SQL Serving·Purview와 확인 범위
 
-SQL DB는 Admin/Member가 사전 준비합니다. Lakehouse의 읽기 전용 SQL analytics endpoint와 쓰기 가능한 `sqldb_cos`를 혼동하지 않습니다. 게시 SQL 수동 실행은 자동 동기화·CDC가 아니며 팀별 WHERE 필터는 RLS가 아닙니다.
+SQL DB와 Serving 스키마는 참가자가 06장에서 직접 만듭니다. **DB 생성에는 작업 영역 Member 또는 Admin이 필요**하므로 참가자별 실습 작업 영역의 Member 권한을 준비합니다. Contributor만으로 생성할 수 있다고 설명하지 않으며, 테넌트·Purview 관리자 권한을 부여하는 것으로 대체하지 않습니다. Lakehouse의 읽기 전용 SQL analytics endpoint와 쓰기 가능한 `sqldb_cos`를 혼동하지 않습니다. 게시 SQL 수동 실행은 자동 동기화·CDC가 아니며 팀별 WHERE 필터는 RLS가 아닙니다.
 
 Purview 기본 실습은 게시된 레이블 적용입니다. Pro/PPU·레이블 게시/사용 권한·편집 권한을 실제 계정으로 확인합니다. DLP·카탈로그는 별도 라이선스·관리 역할·대상 범위·비동기 정책 평가/스캔이 필요하므로 사전 구성된 경우에만 수행합니다. 레이블·Ontology 설명이 접근 권한을 대신하지 않습니다.
 
