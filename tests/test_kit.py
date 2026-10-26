@@ -936,11 +936,15 @@ class Docs(unittest.TestCase):
                             "**Add an ontology**", "**Ontology**", "선택한 뒤 활성화",
                             "**Ontology → ont_cos → Entity types:**",
                             "**Ontology data sources → lh_cos → Schemas → gold → Tables:**",
-                            "`formula_line`·`material_alternative`",
+                            "`formula_line`", "화면에 표시된 테이블",
                             "중복으로 추가하지 않습니다", "읽기 권한",
-                            "연결 화면만으로 질의 성공까지 확인한 것은 아닙니다",
                             "**SQL과 실제 Lakehouse 실행 원본**"):
             self.assertIn(requirement, setup)
+        self.assertNotIn("material_alternative", setup)
+        expected_result = setup.split("**확인할 결과:**", 1)[1].strip()
+        self.assertEqual(expected_result,
+                         "Sources에 `ont_cos`와 `lh_cos`가 연결됩니다. 다음 단계에서 지침을 입력하고 "
+                         "질문한 뒤, 실행 단계에 **SQL과 실제 Lakehouse 실행 원본**이 표시되는지도 확인합니다.")
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", setup)
         self.assertEqual(images, ["../assets/screenshots/03-create-data-agent.png",
                                   "../assets/screenshots/03-data-agent-empty.png",
@@ -953,10 +957,9 @@ class Docs(unittest.TestCase):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         for requirement in ("1–4번은 Lakehouse 기반 기본 실습", "5번은 Graph 기반 선택 실습",
                             "연결된 대상·경로를 찾으려면 Graph",
-                            "원본의 상세 조건과 계산을 검증하려면 Lakehouse",
-                            "Lakehouse 기반에서도 관계를 SQL 조인",
-                            "Graph가 계산을 전혀 못 한다는 뜻도 아닙니다"):
+                            "원본의 상세 조건과 계산을 검증하려면 Lakehouse"):
             self.assertIn(requirement, lesson)
+        self.assertNotIn("Graph가 계산을 전혀 못 한다는 뜻", lesson)
         setup = lesson.split("## 1. Data Agent 만들고 원본 연결", 1)[1].split("## 2.", 1)[0]
         self.assertIn("기본 `da_cos`에는 **Graph model을 추가하지 않습니다.**", setup)
         optional = lesson.split("## 5. 선택 실습", 1)[1].split("## 이 장의 완료 기준", 1)[0]

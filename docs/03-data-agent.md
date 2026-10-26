@@ -15,7 +15,7 @@
 | **기본: `da_cos`** | `ont_cos` 업무 문맥 + 연결된 `lh_cos`. Graph는 연결하지 않음 | 전체 목록·상태 확인, 날짜·여유일 계산, 경계값·What-if 판정, 대체 승인·CN 등록 조건 비교 |
 | **선택: `da_cos_graph`** | 02장에서 만든 Graph model만 연결 | 원료 → 처방 → 제품 → 생산 계획처럼 다단계 연결을 따라 관련 대상·경로 찾기 |
 
-**연결된 대상·경로를 찾으려면 Graph, 원본의 상세 조건과 계산을 검증하려면 Lakehouse**를 권장합니다. Lakehouse 기반에서도 관계를 SQL 조인으로 탐색할 수 있고, Graph가 계산을 전혀 못 한다는 뜻도 아닙니다. 이번 실습에서 역할을 나눠 비교하는 기준입니다.
+**연결된 대상·경로를 찾으려면 Graph, 원본의 상세 조건과 계산을 검증하려면 Lakehouse**를 권장합니다.
 
 ## 시작 전 확인
 
@@ -40,7 +40,7 @@
 
 4. 왼쪽 **Sources**에서 아래 두 영역을 펼쳐 확인합니다.
    - **Ontology → ont_cos → Entity types:** 앞에서 만든 핵심 엔터티 9개가 보입니다.
-   - **Ontology data sources → lh_cos → Schemas → gold → Tables:** 연결된 Lakehouse와 질문에 사용할 테이블을 확인합니다. 엔터티 원본뿐 아니라 관계 매핑 원본인 `formula_line`·`material_alternative`도 확인합니다.
+   - **Ontology data sources → lh_cos → Schemas → gold → Tables:** 연결된 Lakehouse와 `formula_line` 등 화면에 표시된 테이블을 확인합니다.
 
    ![Ontology의 엔터티 9개와 Ontology data sources의 lh_cos·gold 테이블이 연결된 화면](../assets/screenshots/03-ontology-connected.png)
 
@@ -48,7 +48,7 @@
 
 기본 `da_cos`에는 **Graph model을 추가하지 않습니다.** Graph 비교를 하려면 기본 실습을 마친 뒤 5번에서 별도 `da_cos_graph`를 만듭니다.
 
-**확인할 결과:** Sources에 `ont_cos`와 `lh_cos`가 연결됩니다. 다음 단계에서 지침을 입력하고 질문한 뒤, 실행 단계에 **SQL과 실제 Lakehouse 실행 원본**이 표시되는지도 확인합니다. 위 연결 화면만으로 질의 성공까지 확인한 것은 아닙니다. Graph를 만들지 않아도 기본 실습을 진행할 수 있습니다. Ontology 편집 후 문맥은 자동 반영에 최대 10분이 걸릴 수 있으므로 **Refresh**로 갱신합니다.
+**확인할 결과:** Sources에 `ont_cos`와 `lh_cos`가 연결됩니다. 다음 단계에서 지침을 입력하고 질문한 뒤, 실행 단계에 **SQL과 실제 Lakehouse 실행 원본**이 표시되는지도 확인합니다.
 
 ## 2. 에이전트 지침 입력
 
