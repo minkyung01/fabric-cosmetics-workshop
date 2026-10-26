@@ -116,7 +116,26 @@ reset_ops = False
 
 ### 5-3. 테이블 적재 셀 결과
 
-![gold 테이블을 생성하는 코드 셀](../assets/screenshots/00-prepare-data-load-cell.png)
+```python
+tables_to_load = select_tables(include_extended)
+print(f"데이터 프로필: {len(tables_to_load)}개 테이블")
+check_existing_data(reset_ops)
+
+spark.sql("CREATE SCHEMA IF NOT EXISTS gold")
+spark.sql("CREATE SCHEMA IF NOT EXISTS ops")
+
+for table, columns in tables_to_load.items():
+    reader = csv.DictReader(io.StringIO(SCENARIO_DATA[table]))
+    if reader.fieldnames != list(columns):
+        raise ValueError(f"{table}: 포함된 데이터의 열과 스키마가 일치하지 않습니다.")
+    records = [{column: row[column] or None for column in columns} for row in reader]
+    raw = spark.createDataFrame(records, schema=", ".join(f"{column} string" for column in columns))
+    df = raw.select([F.col(c).cast(t).alias(c) for c, t in columns.items()])
+    if table == "purchase_order":
+        df = df.withColumn("original_eta", F.col("eta"))
+    df.write.mode("overwrite").option("overwriteSchema", "true").format("delta").saveAsTable(f"gold.{table}")
+    print(f"gold.{table:<22} {df.count():>3} rows")
+```
 
 **예상 출력 — 테이블 적재:** `데이터 프로필: 11개 테이블`과 테이블별 행 수가 표시됩니다. 확장을 선택했다면 `28개 테이블`과 추가 테이블의 행 수가 나옵니다.
 
