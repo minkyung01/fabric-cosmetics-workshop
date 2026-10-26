@@ -384,15 +384,20 @@ class Docs(unittest.TestCase):
         ])
         self.assertIn("**+ New item**", lesson)
         self.assertIn("이름을 `sqldb_cos`로 입력하고 **Create**", lesson)
-        self.assertIn("Contributor만으로는 SQL DB를 생성할 수 없습니다", lesson)
-        self.assertIn("**Member 또는 Admin**", lesson)
+        self.assertIn("기본 권한은 **Contributor**", lesson)
+        self.assertNotIn("Contributor만으로는 SQL DB를 생성할 수 없습니다", lesson)
         self.assertIn("샘플 데이터는 넣지 않습니다", lesson)
         self.assertIn("이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고", lesson)
         self.assertIn("3단계에서 생성한 게시 SQL을 다시 실행하고 5단계 조회를 반복", lesson)
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
-        self.assertIn("--users users.csv --role Member", admin)
+        self.assertIn("--users users.csv --role Contributor", admin)
         self.assertIn("참가자용 `sqldb_cos`와 Serving 스키마는 사전 생성하지 않습니다", admin)
-        self.assertIn("기존 역할 할당은 이 옵션으로 자동 승격하지 않으므로", admin)
+        self.assertIn("기존 역할은 자동 승격·강등하지 않으므로", admin)
+        self.assertIn("공식 문서 간 안내가 상충합니다", admin)
+        self.assertIn("실제 테넌트·참가자와 같은 Contributor 계정으로 사전 리허설", admin)
+        self.assertIn("https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces", admin)
+        self.assertIn("https://learn.microsoft.com/en-us/rest/api/fabric/sqldatabase/items/create-sql-database", admin)
+        self.assertIn("https://learn.microsoft.com/en-us/fabric/database/sql/create", admin)
         self.assertNotIn("관리자가 **SQL database** 항목 `sqldb_cos`를 만들었습니다", lesson)
 
     def test_data_agent_questions_cover_six_types_with_deferred_answers(self):
@@ -425,12 +430,26 @@ class Docs(unittest.TestCase):
 
     def test_learner_creates_gold_tables_before_building_the_ontology(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("실행 전 Notebook 5개", readme)
-        self.assertIn("**`gold` 테이블은 00장**", readme)
+        self.assertIn("빈 작업 영역과 접근 권한만", readme)
+        self.assertIn("**00장에서 Lakehouse `lh_cos` 생성", readme)
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
-        self.assertIn("## 2. CSV 원본 확인", scenario)
-        self.assertIn("## 3. Notebook으로 gold 테이블 직접 만들기", scenario)
-        self.assertLess(scenario.index("## 2. CSV 원본 확인"), scenario.index("## 3. Notebook으로 gold 테이블 직접 만들기"))
+        self.assertEqual(re.findall(r"^## \d\. .+$", scenario, re.M), [
+            "## 1. 빈 작업 영역과 권한 확인", "## 2. 실습 파일 내려받기", "## 3. Lakehouse 직접 만들기",
+            "## 4. CSV 업로드와 원본 확인", "## 5. Notebook 5개 가져오기와 기본 Lakehouse 연결",
+            "## 6. Notebook으로 gold 테이블 직접 만들기",
+        ])
+        self.assertIn("Code → Download ZIP", scenario)
+        self.assertIn("Lakehouse schemas", scenario)
+        self.assertIn("Tables → dbo", scenario)
+        self.assertIn("Upload files", scenario)
+        self.assertIn("**같은 `Files/workshop/data` 폴더**", scenario)
+        self.assertIn("**각 Notebook을 하나씩 열어**", scenario)
+        self.assertIn("기본 Lakehouse로 고정(핀)", scenario)
+        self.assertIn("세션을 다시 시작", scenario)
+        self.assertIn("**지금은 `01_prepare_data`만 실행합니다.**", scenario)
+        names = runpy.run_path(str(ROOT / "admin" / "provision.py"))["NOTEBOOKS"]
+        for name in names:
+            self.assertIn(f"{name}.ipynb", scenario)
         self.assertIn("reset_ops = False", scenario)
         self.assertIn("Run all", scenario)
         self.assertIn("쓰기 전에 오류로 중지", scenario)
@@ -441,6 +460,15 @@ class Docs(unittest.TestCase):
         self.assertIn("`01_prepare_data`를 직접 실행해", ontology)
         extension = (ROOT / "docs" / "extensions" / "ontology.md").read_text(encoding="utf-8")
         self.assertIn("00장의 첫 적재에서 직접 만든", extension)
+
+    def test_admin_default_is_empty_workspace_not_prestaged_items(self):
+        admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("기본 실행은 작업 영역 생성·용량 지정·참가자 접근 권한만 준비", admin)
+        self.assertIn("참가자용 작업 영역은 빈 상태로 남깁니다", admin)
+        self.assertIn("기본 재실행은 CSV·Notebook·기존 항목·`gold`·`ops` 상태를 변경하지 않습니다", admin)
+        self.assertIn("**`--prefill-items`와 함께 사용해야 하며**", admin)
+        self.assertIn("별도 리허설 작업 영역", admin)
+        self.assertNotIn("--role Member", admin)
 
 
 class DataAgentQueries(unittest.TestCase):
@@ -815,7 +843,7 @@ class ExtendedModel(unittest.TestCase):
                     change=Mock(return_value=(200, {"id": "test-item"})),
                     run_notebook=Mock(),
                 )
-                args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=reference,
+                args = SimpleNamespace(prefix="cos-", capacity="test-capacity", prefill_items=True, reference_ontology=reference,
                                        extended_ontology=extended, update_notebooks=False, run_prepare=run_prepare)
                 output = io.StringIO()
                 with redirect_stdout(output):
@@ -860,7 +888,7 @@ class ExtendedModel(unittest.TestCase):
                         change=Mock(return_value=(200, {"id": "00000000-0000-0000-0000-000000000000"})),
                         call=Mock(), run_notebook=Mock(),
                     )
-                    args = SimpleNamespace(prefix="cos-", capacity="test-capacity", reference_ontology=reference,
+                    args = SimpleNamespace(prefix="cos-", capacity="test-capacity", prefill_items=True, reference_ontology=reference,
                                            extended_ontology=extended, run_prepare=run_prepare)
                     output = io.StringIO()
                     with redirect_stdout(output):
@@ -888,7 +916,7 @@ class ExtendedModel(unittest.TestCase):
                                              [{"type": "Notebook", "displayName": "01_prepare_data", "id": "old-notebook"}]]),
                     call=Mock(), change=Mock(), run_notebook=Mock(),
                 )
-                args = SimpleNamespace(prefix="cos-", extended_ontology=extended,
+                args = SimpleNamespace(prefix="cos-", prefill_items=True, extended_ontology=extended,
                                        run_prepare=run_prepare, update_notebooks=False)
                 with redirect_stdout(io.StringIO()), self.assertRaisesRegex(ValueError, "--update-notebooks"):
                     provision["provision"](fab, "p001", args, {})
@@ -896,16 +924,132 @@ class ExtendedModel(unittest.TestCase):
                 fab.change.assert_not_called()
                 fab.run_notebook.assert_not_called()
 
-    def test_provision_cli_defaults_to_learner_loading_and_preserves_skip_compatibility(self):
+    def test_provision_default_does_not_change_items_or_files(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        existing_items = [{"type": kind, "displayName": name, "id": f"existing-{kind}"} for kind, name in (
+            ("Lakehouse", "lh_cos"), ("Notebook", "01_prepare_data"), ("Ontology", "ont_cos"),
+            ("Eventhouse", "eh_cos"), ("SQLDatabase", "sqldb_cos"),
+        )]
+        for existing, items in ((False, []), (True, []), (True, existing_items)):
+            with self.subTest(existing=existing, items=bool(items)):
+                workspaces = [{"displayName": "cos-p001", "id": "test-workspace"}] if existing else []
+                fab = SimpleNamespace(
+                    dry_run=False, get_all=Mock(side_effect=[workspaces, items]),
+                    change=Mock(return_value=(201, {"id": "test-workspace"})),
+                    call=Mock(), run_notebook=Mock(),
+                )
+                args = SimpleNamespace(prefix="cos-", capacity="test-capacity", prefill_items=False)
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    provision["provision"](fab, "p001", args, {})
+                self.assertEqual([c.args[0] for c in fab.get_all.call_args_list],
+                                 ["/workspaces", "/workspaces/test-workspace/items"])
+                self.assertEqual(fab.change.call_count, 0 if existing else 1)
+                if not existing:
+                    call = fab.change.call_args
+                    self.assertEqual(call.args[2], "/workspaces")
+                    self.assertEqual(call.args[3]["capacityId"], "test-capacity")
+                fab.call.assert_not_called()
+                fab.run_notebook.assert_not_called()
+                self.assertIn("workspace-only: no items or source files changed", output.getvalue())
+                if items:
+                    self.assertIn("workspace contains 5 items; retained", output.getvalue())
+                    self.assertIn("Use a fresh workspace", output.getvalue())
+
+    def test_workspace_only_assigns_contributor_and_preserves_existing_roles(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        for role in (None, "Contributor", "Member", "Admin"):
+            with self.subTest(existing_role=role):
+                assignments = [] if role is None else [{"principal": {"id": "test-user"}, "role": role}]
+                fab = SimpleNamespace(
+                    dry_run=False,
+                    get_all=Mock(side_effect=[[{"displayName": "cos-p001", "id": "test-workspace"}], assignments, []]),
+                    change=Mock(), call=Mock(), run_notebook=Mock(),
+                )
+                args = SimpleNamespace(prefix="cos-", role="Contributor", prefill_items=False)
+                with patch.object(provision["subprocess"], "check_output", return_value=b"test-user\n"), \
+                        redirect_stdout(io.StringIO()):
+                    provision["provision"](fab, "p001", args, {"p001": "p001@example.com"})
+                if role is None:
+                    fab.change.assert_called_once_with(
+                        "assign Contributor to p001@example.com", "POST", "/workspaces/test-workspace/roleAssignments",
+                        {"principal": {"id": "test-user", "type": "User"}, "role": "Contributor"})
+                else:
+                    fab.change.assert_not_called()
+                fab.call.assert_not_called()
+                fab.run_notebook.assert_not_called()
+
+    def test_workspace_only_dry_run_plans_access_without_resolving_user_or_creating_items(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        fab = SimpleNamespace(
+            dry_run=True, get_all=Mock(return_value=[]),
+            change=Mock(return_value=(200, {"id": "00000000-0000-0000-0000-000000000000"})),
+            call=Mock(), run_notebook=Mock(),
+        )
+        args = SimpleNamespace(prefix="cos-", capacity="test-capacity", role="Contributor", prefill_items=False)
+        output = io.StringIO()
+        with patch.object(provision["subprocess"], "check_output") as resolve_user, redirect_stdout(output):
+            provision["provision"](fab, "p001", args, {"p001": "p001@example.com"})
+        fab.get_all.assert_called_once_with("/workspaces")
+        fab.change.assert_called_once()
+        self.assertIn("assign Contributor to p001@example.com", output.getvalue())
+        self.assertIn("workspace-only: leave workspace empty", output.getvalue())
+        self.assertNotIn("data upload", output.getvalue())
+        resolve_user.assert_not_called()
+        fab.call.assert_not_called()
+        fab.run_notebook.assert_not_called()
+
+    def test_workspace_only_dry_run_does_not_treat_existing_zero_prefix_id_as_new(self):
+        provision = runpy.run_path(str(ROOT / "admin" / "provision.py"))
+        ws = "00001234-0000-0000-0000-000000000000"
+        fab = SimpleNamespace(
+            dry_run=True,
+            get_all=Mock(side_effect=[[{"displayName": "cos-p001", "id": ws}],
+                                     [{"type": "Lakehouse", "displayName": "lh_cos", "id": "existing-lakehouse"}]]),
+            change=Mock(), call=Mock(), run_notebook=Mock(),
+        )
+        output = io.StringIO()
+        with redirect_stdout(output):
+            provision["provision"](fab, "p001", SimpleNamespace(prefix="cos-", prefill_items=False), {})
+        self.assertEqual(fab.get_all.call_args.args[0], f"/workspaces/{ws}/items")
+        self.assertIn("workspace contains 1 items; retained", output.getvalue())
+        self.assertNotIn("leave workspace empty", output.getvalue())
+        fab.change.assert_not_called()
+        fab.call.assert_not_called()
+        fab.run_notebook.assert_not_called()
+
+    def test_provision_cli_defaults_to_workspace_only_and_preserves_skip_compatibility(self):
         main = runpy.run_path(str(ROOT / "admin" / "provision.py"))["main"]
-        for flags, expected in (([], False), (["--run-prepare"], True), (["--skip-prepare"], False)):
+        for flags, prefill, run_prepare in (
+            ([], False, False), (["--skip-prepare"], False, False),
+            (["--prefill-items"], True, False), (["--prefill-items", "--skip-prepare"], True, False),
+            (["--prefill-items", "--run-prepare"], True, True),
+        ):
             with self.subTest(flags=flags):
                 provision, fabric = Mock(), Mock()
                 argv = ["provision.py", "--capacity", "test-capacity", "--participants", "p001", *flags]
                 with patch.dict(main.__globals__, {"provision": provision, "Fabric": fabric}), patch.object(sys, "argv", argv):
                     main()
-                self.assertIs(provision.call_args.args[2].run_prepare, expected)
+                self.assertIs(provision.call_args.args[2].prefill_items, prefill)
+                self.assertIs(provision.call_args.args[2].run_prepare, run_prepare)
+                self.assertEqual(provision.call_args.args[2].role, "Contributor")
                 self.assertEqual(provision.call_args.args[1], "p001")
+
+    def test_provision_cli_requires_opt_in_before_any_prefill_mutations(self):
+        main = runpy.run_path(str(ROOT / "admin" / "provision.py"))["main"]
+        for flag in ("--run-prepare", "--update-notebooks", "--reference-ontology", "--extended-ontology"):
+            with self.subTest(flag=flag):
+                fabric, provision = Mock(), Mock()
+                argv = ["provision.py", "--capacity", "test-capacity", "--participants", "p001", flag]
+                error_output = io.StringIO()
+                with patch.dict(main.__globals__, {"Fabric": fabric, "provision": provision}), \
+                        patch.object(sys, "argv", argv), redirect_stderr(error_output):
+                    with self.assertRaises(SystemExit) as error:
+                        main()
+                self.assertEqual(error.exception.code, 2)
+                self.assertIn("require --prefill-items", error_output.getvalue())
+                fabric.assert_not_called()
+                provision.assert_not_called()
 
     def test_provision_cli_rejects_conflicting_loading_flags(self):
         main = runpy.run_path(str(ROOT / "admin" / "provision.py"))["main"]

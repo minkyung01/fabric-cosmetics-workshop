@@ -19,7 +19,7 @@
 | 마이그레이션 | 기존 항목을 덮어쓰지 않고 새 항목의 **복사본** 생성 | 새 항목 ID와 원본·키·관계를 확인하고 downstream 에이전트·연결을 다시 지정 |
 | 새 모델 기능 | 네임스페이스·상속·규칙·메트릭·다중 바인딩 등은 별도 확인 필요 | 이 키트는 단일 테이블 바인딩·명시적 키·기본 속성만 사용. 새 기능 자동 배포를 주장하지 않음 |
 
-`admin/provision.py`의 **기본 실행은 Ontology를 만들지 않습니다.** `--reference-ontology`와 `--extended-ontology`를 선택했을 때만 저장소의 해당 정의를 REST API로 제출하며 **새 경험으로 자동 마이그레이션하지 않습니다.** 복구·확장 모델은 먼저 테스트 작업 영역에 배포해 열기·키·데이터 바인딩을 확인합니다. 기존 경험 의존 경로를 종료일 이후 그대로 재사용하지 않습니다.
+`admin/provision.py`의 **기본 실행은 작업 영역·접근 권한만 준비하며 Ontology를 만들지 않습니다.** 관리자 리허설·복구용 `--prefill-items`에 `--reference-ontology` 또는 `--extended-ontology`를 함께 명시했을 때만 저장소의 해당 정의를 REST API로 제출하며 **새 경험으로 자동 마이그레이션하지 않습니다.** 복구·확장 모델은 먼저 테스트 작업 영역에 배포해 열기·키·데이터 바인딩을 확인합니다. 기존 경험 의존 경로를 종료일 이후 그대로 재사용하지 않습니다.
 
 API 정의를 수용하지 않는 환경은 오류를 무시하거나 빈 모델을 완성으로 표시하지 않습니다. [핵심 모델 표](../docs/01-ontology.md)와 [확장 모델 표](../docs/extensions/ontology.md#추가-엔터티와-바인딩)를 기준으로 새 경험에서 엔터티와 Lakehouse 바인딩을 수동 생성하고, 관계 정의는 `tools/build_ontology.py`를 기준으로 연결합니다. 마이그레이션한 에이전트·규칙/Activator 알림은 연결·재생성 여부를 별도 점검합니다.
 
@@ -68,7 +68,7 @@ Ontology Agent의 기본 반환 한도는 SQL/KQL/GQL 1,000행, DAX 200행입니
 
 ## 6. SQL Serving·Purview와 확인 범위
 
-SQL DB와 Serving 스키마는 참가자가 06장에서 직접 만듭니다. **DB 생성에는 작업 영역 Member 또는 Admin이 필요**하므로 참가자별 실습 작업 영역의 Member 권한을 준비합니다. Contributor만으로 생성할 수 있다고 설명하지 않으며, 테넌트·Purview 관리자 권한을 부여하는 것으로 대체하지 않습니다. Lakehouse의 읽기 전용 SQL analytics endpoint와 쓰기 가능한 `sqldb_cos`를 혼동하지 않습니다. 게시 SQL 수동 실행은 자동 동기화·CDC가 아니며 팀별 WHERE 필터는 RLS가 아닙니다.
+SQL DB와 Serving 스키마는 참가자가 06장에서 직접 만듭니다. **기본 역할은 Contributor**입니다. 작업 영역 역할 표·SQL DB 생성 API는 Contributor를 허용하지만 포털 생성 가이드는 Admin/Member로 표기되어 있으므로, [공식 근거와 안내 차이](README.md#sql-serving-db-준비-06장)를 확인하고 실제 테넌트의 같은 권한 계정으로 DB 생성·SQL 실행을 리허설합니다. Member를 일괄 필수로 고정하거나 테넌트·Purview 관리자 권한을 부여하는 것으로 대체하지 않습니다. Lakehouse의 읽기 전용 SQL analytics endpoint와 쓰기 가능한 `sqldb_cos`를 혼동하지 않습니다. 게시 SQL 수동 실행은 자동 동기화·CDC가 아니며 팀별 WHERE 필터는 RLS가 아닙니다.
 
 Purview 기본 실습은 게시된 레이블 적용입니다. Pro/PPU·레이블 게시/사용 권한·편집 권한을 실제 계정으로 확인합니다. DLP·카탈로그는 별도 라이선스·관리 역할·대상 범위·비동기 정책 평가/스캔이 필요하므로 사전 구성된 경우에만 수행합니다. 레이블·Ontology 설명이 접근 권한을 대신하지 않습니다.
 

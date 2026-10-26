@@ -15,7 +15,7 @@
 ## 시작 전 확인
 
 - 05장에서 `nb_apply_review`가 성공했고 현재 이벤트의 요청 3건이 있습니다.
-- 내 실습 작업 영역의 **Member 또는 Admin** 권한이 필요합니다. **Contributor만으로는 SQL DB를 생성할 수 없습니다.** Member 권한은 본인 실습 작업 영역에만 부여하며 테넌트·Purview 관리자 권한은 필요하지 않습니다.
+- 내 실습 작업 영역의 기본 권한은 **Contributor**입니다. SQL DB 생성과 SQL 실행 가능 여부를 이 권한으로 사전 확인한 환경에서 진행합니다. 테넌트·Purview 관리자 권한은 필요하지 않습니다.
 - **SQL database** 항목 `sqldb_cos`와 Serving 스키마는 이 장에서 직접 만듭니다. **Lakehouse의 SQL analytics endpoint와 다릅니다.**
 - `04_publish_serving`의 기본 Lakehouse는 `lh_cos`입니다.
 
@@ -103,7 +103,7 @@ ORDER BY history_id;
 ## Troubleshooting
 
 - **읽기 전용/테이블 생성 불가:** SQL analytics endpoint가 아닌 SQL database를 열었는지 확인합니다.
-- **SQL database가 없거나 생성이 거부됨:** 현재 작업 영역·용량과 **Member 또는 Admin** 권한을 관리자와 확인합니다. Contributor 권한이나 Purview 관리자 권한으로 대체할 수 없습니다.
+- **SQL database가 없거나 생성이 거부됨:** 현재 작업 영역·용량·Contributor 역할과 SQL DB 생성 기능을 관리자와 확인합니다. 공식 문서의 권한 안내 차이는 [관리자 가이드](../admin/README.md#sql-serving-db-준비-06장)에 정리되어 있습니다. 오류를 확인하지 않은 채 Member나 테넌트·Purview 관리자 권한으로 임의 승격하지 않습니다.
 - **DDL·프로시저 실행 권한 오류:** SQL database 편집기를 사용 중인지, 본인 실습 DB의 생성·실행 권한이 있는지 확인합니다. 관리자에게 오류와 실행 대상을 전달하고, 스키마·게시를 완료하지 못한 상태를 성공으로 표시하지 않습니다.
 - **프로시저가 없음:** `serving.sql` 전체를 `GO` 경계까지 실행했는지 확인합니다.
 - **승인 조치가 없음/건수 불일치:** 같은 `event_id`로 05장을 완료했는지 확인합니다. 임의 샘플로 채워 성공한 것처럼 진행하지 않습니다.

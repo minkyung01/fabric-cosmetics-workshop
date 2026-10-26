@@ -1,6 +1,10 @@
 """Prepare participant workspaces for the cosmetics R&D workshop (admin only).
 
-For each participant pNNN this creates (or reuses) workspace cos-pNNN on the given capacity and:
+By default, this creates workspace cos-pNNN on the given capacity or reuses it unchanged,
+and assigns Contributor access when --users is provided. No workspace items are created or modified.
+Participants create the Lakehouse, upload CSVs, import notebooks and load data in chapter 00.
+
+Only --prefill-items enables the optional admin rehearsal/recovery setup:
   - a schema-enabled Lakehouse lh_cos, with data/*.csv uploaded to Files/workshop/data
   - the 5 notebooks bound to lh_cos; participants run 01_prepare_data in chapter 00
   - no gold-table loading by default (--run-prepare opts in for an admin rehearsal/recovery)
@@ -13,12 +17,12 @@ Existing items are reused; notebooks are only overwritten with --update-notebook
 Uses the Azure CLI login (az login [--tenant ...]); no secrets are stored.
 
 Examples
-    python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv --role Member
-    python admin/provision.py --capacity <capacity-id> --participants p001 --reference-ontology --run-prepare
+    python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv
+    python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --participants p001 --prefill-items --reference-ontology --run-prepare
     python admin/provision.py --capacity <capacity-id> --participants p001-p003 --dry-run
 
-SQL database sqldb_cos is created by participants in chapter 06 (workspace Member/Admin).
-Use --role Member for new participant assignments in the full workshop; existing assignments are unchanged.
+SQL database sqldb_cos is created by participants in chapter 06; rehearse with Contributor.
+Existing role assignments are unchanged. See admin/README.md for conflicting SQL portal permission guidance.
 Before deployment, check Ontology old/new experience compatibility in admin/preview-limitations.md.
 users.csv (optional): participant,upn   e.g.  p001,p001@example.com
 """
@@ -176,14 +180,20 @@ def provision(fab, pid, args, users):
     print(f"{pid}: {name}")
     workspaces = {w["displayName"]: w["id"] for w in fab.get_all("/workspaces")}
     ws = workspaces.get(name)
-    if not ws:
+    new_workspace = ws is None
+    if new_workspace:
         _, created = fab.change("create workspace", "POST", "/workspaces",
                                 {"displayName": name, "capacityId": args.capacity,
                                  "description": "Cosmetics R&D material-change workshop"})
         ws = created["id"]
     else:
         print("  workspace exists")
-    if fab.dry_run and ws.startswith("0000"):
+    if fab.dry_run and new_workspace:
+        if pid in users:
+            print(f"  [dry-run] assign {args.role} to {users[pid]}")
+        if not args.prefill_items:
+            print("  [dry-run] workspace-only: leave workspace empty; participants create items and load data in chapter 00")
+            return
         print(f"  [dry-run] {LAKEHOUSE}, data upload, notebooks")
         if args.run_prepare:
             print("  [dry-run] run 01_prepare_data (explicit admin rehearsal/recovery)")
@@ -206,8 +216,15 @@ def provision(fab, pid, args, users):
         if not any(r["principal"]["id"] == oid for r in roles):
             fab.change(f"assign {args.role} to {upn}", "POST", f"/workspaces/{ws}/roleAssignments",
                        {"principal": {"id": oid, "type": "User"}, "role": args.role})
+        else:
+            print(f"  access for {upn} exists; role retained (requested {args.role}; review existing assignments manually)")
 
     items = {(i["type"], i["displayName"]): i["id"] for i in fab.get_all(f"/workspaces/{ws}/items")}
+    if not args.prefill_items:
+        if items:
+            print(f"  workspace contains {len(items)} items; retained. Use a fresh workspace for the empty-workspace exercise.")
+        print("  workspace-only: no items or source files changed; participants create items and load data in chapter 00")
+        return
     if (args.extended_ontology or args.run_prepare) and ("Notebook", "01_prepare_data") in items and not args.update_notebooks:
         raise ValueError("Admin preparation/reference profiles require --update-notebooks when 01_prepare_data already exists")
     if not args.reference_ontology and ("Ontology", ONTOLOGY) in items:
@@ -279,9 +296,11 @@ def main():
     parser.add_argument("--participants", required=True, help="e.g. p001-p012 or p001,p005")
     parser.add_argument("--users", help="CSV with participant,upn to grant workspace access")
     parser.add_argument("--role", default="Contributor", choices=["Admin", "Member", "Contributor"],
-                        help="role for new participant assignments; use Member for SQL database creation in chapter 06")
+                        help="role for new participant assignments (default Contributor); existing assignments are unchanged")
     parser.add_argument("--prefix", default="cos-", help="workspace name prefix (default cos-)")
     parser.add_argument("--tenant", help="tenant for az get-access-token")
+    parser.add_argument("--prefill-items", action="store_true",
+                        help="opt in to staging Lakehouse, CSVs and notebooks for an admin rehearsal/recovery")
     parser.add_argument("--update-notebooks", action="store_true", help="overwrite existing notebooks")
     preparation = parser.add_mutually_exclusive_group()
     preparation.add_argument("--run-prepare", dest="run_prepare", action="store_true",
@@ -295,6 +314,9 @@ def main():
                         help="also upload 17 extension CSVs and deploy a separate 26-entity ont_cos_extended")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    if not args.prefill_items and (args.run_prepare or args.update_notebooks or args.reference_ontology or args.extended_ontology):
+        parser.error("--run-prepare, --update-notebooks and ontology deployment options require --prefill-items; "
+                     "the default prepares only the workspace and access")
     users = {}
     if args.users:
         with open(args.users, encoding="utf-8-sig") as f:

@@ -4,12 +4,12 @@
 
 관리자용 준비 문서입니다. 참가자는 **07장 Purview까지 기본 과정을 마친 뒤** [Ontology 엔터티 확장 선택 실습](../docs/extensions/ontology.md)을 진행합니다.
 
-참가자는 별도 완성 모델을 받는 대신 기존 `ont_cos`를 Agent와 확장합니다. 참고 범위는 **26개 엔터티·40개 관계**, 원본은 핵심 11개 + 추가 17개 = **28개 테이블**입니다. **추가 CSV는 기본 과정 전에 배치하고, 테이블은 참가자가 00장에서 직접 적재하며 모델 확장은 07장 이후로 미룹니다.**
+참가자는 별도 완성 모델을 받는 대신 기존 `ont_cos`를 Agent와 확장합니다. 참고 범위는 **26개 엔터티·40개 관계**, 원본은 핵심 11개 + 추가 17개 = **28개 테이블**입니다. **추가 CSV도 참가자가 00장에서 업로드·최초 적재하며, 모델 확장은 07장 이후로 미룹니다.** 관리자의 기본 준비는 빈 작업 영역과 접근 권한뿐입니다.
 
-## 권장 준비 — CSV 배치 후 참가자가 00장에서 적재
+## 권장 준비 — 빈 작업 영역에서 참가자가 00장 준비·적재
 
-1. 초기 환경 준비에서 `data/*.csv`와 `data/extended/*.csv`를 모두 같은 `Files/workshop/data`에 올립니다.
-2. **참가자가 00장을 시작하기 전에** 최신 `01_prepare_data`와 CSV 28개만 준비하고 테이블은 만들지 않습니다. 참가자가 00장의 첫 실행에서 `reset_ops = False`로 28개 `gold` 테이블을 생성합니다.
+1. **참가자가 00장을 시작하기 전에** 확장 선택 실습 제공 여부와 동일한 실습 파일 배포본을 안내합니다. 추가 CSV·Notebook을 작업 영역에 사전 배포하지 않습니다.
+2. 참가자가 00장에서 `lh_cos` 생성 → `data/*.csv`와 `data/extended/*.csv` 모두 같은 `Files/workshop/data`에 업로드 → Notebook 5개 가져오기·기본 연결을 직접 수행합니다. `01_prepare_data`의 첫 실행에서 `reset_ops = False`로 28개 `gold` 테이블을 생성합니다.
 3. `ont_cos`는 미생성 상태로 두고, 참가자가 01장에서 핵심 11개 테이블만으로 생성·보강하도록 합니다. 추가 테이블이 존재한다고 초기 모델에 모두 넣게 하지 않습니다.
 4. 참가자 계정으로 원본 읽기와 01장 Agent 생성, 07장 완료 후의 확장 흐름을 리허설합니다. API 완성 모델 배포는 이 경로의 선행 조건이 아닙니다.
 
@@ -22,13 +22,13 @@
 비교·복구용 별도 `ont_cos_extended`가 필요하다면 새/기존 Ontology 경험과 REST 정의의 호환성을 [사전 점검](preview-limitations.md#2-새-ontology-경험과-api-배포-정의의-호환성)한 뒤 아래 옵션을 사용합니다. **참가자 선택 실습의 기본 경로는 아닙니다.**
 
 ```powershell
-python admin/provision.py --capacity <capacity-id> --participants p001 --extended-ontology --run-prepare --dry-run
-python admin/provision.py --capacity <capacity-id> --participants p001 --extended-ontology --run-prepare
+python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --participants p001 --prefill-items --extended-ontology --run-prepare --dry-run
+python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --participants p001 --prefill-items --extended-ontology --run-prepare
 ```
 
 이 조합은 **관리자용 새 비교·복구 환경**에서 CSV 28개 적재와 별도 확장 완성 모델 배포까지 수행하며 기존 핵심 `ont_cos`는 보존합니다. 새 작업 영역에서는 핵심 `ont_cos`를 생성하지 않습니다. 참가자용 기본 준비에는 `--run-prepare`나 완성 모델 배포를 사용하지 않습니다.
 
-이미 준비한 작업 영역은 **`--update-notebooks`도 지정**해 최신 준비 Notebook을 가져와야 합니다. 기존 테이블이 있으면 기본 적재가 중지되므로 위 조합을 완료된 환경에 그대로 재실행하지 않습니다. 이미 원본 28개 테이블이 준비된 환경에서 완성 모델만 배포할 때는 적재 옵션을 생략합니다. `--skip-prepare`는 미실행 기본값과 같은 이전 명령 호환 옵션입니다. 기존 Ontology는 자동 덮어쓰기·마이그레이션하지 않습니다.
+이미 준비한 작업 영역은 **`--update-notebooks`도 지정**해 최신 준비 Notebook을 가져와야 합니다. 기존 테이블이 있으면 기본 적재가 중지되므로 위 조합을 완료된 환경에 그대로 재실행하지 않습니다. 이미 원본 28개 테이블이 준비된 환경에서 적재 없이 모델을 배포할 때는 `--run-prepare`만 생략하고 `--prefill-items`는 유지합니다. 이 경로는 CSV를 다시 업로드하고 Notebook도 갱신할 수 있으므로 모델만 변경하는 동작이 아닙니다. `--skip-prepare`는 미실행 기본값과 같은 이전 명령 호환 옵션입니다. 기존 Ontology는 자동 덮어쓰기·마이그레이션하지 않습니다.
 
 ## 수동 준비와 재사용
 
@@ -39,7 +39,7 @@ python admin/provision.py --capacity <capacity-id> --participants p001 --extende
 ## 준비 완료 확인
 
 - 기본 과정 시작 전 `ont_cos`는 미생성 상태이며, 01장에서는 핵심 모델만 만듭니다. 엔터티 확장은 07장 이후 선택 과정에만 있습니다.
-- 참가자용 준비는 CSV 28개와 실행 전 Notebook까지입니다. 별도 리허설에서 참가자의 00장 실행 후 Lakehouse SQL endpoint로 `gold` 28개를 조회할 수 있는지 확인합니다.
+- 참가자용 사전 준비는 빈 작업 영역·Contributor 접근 권한·배포본 안내입니다. 별도 리허설에서 참가자의 00장 생성·업로드·가져오기·적재 후 Lakehouse SQL endpoint로 `gold` 28개를 조회할 수 있는지 확인합니다.
 - `fabric/sql/extended-queries.sql`의 QX1–QX4 결과는 각각 **2/1/3/3행**이며 [실습의 대조 결과](../docs/extensions/ontology.md#실습-2-lakehouse-sql로-업무-경로-확인)와 일치합니다.
 - 핵심 영향 대상은 `PP-1101`, `PP-1102`, `ST-0711`로 유지됩니다. 추가 재고를 핵심 일정 영향 계산에 자동 합산하지 않습니다.
 - 기존 `ont_cos` 확장 전후의 핵심 정의와 같은 데이터 시점의 기존 질문을 비교했습니다. `ops` 승인 결과·SQL 업무 상태가 보존됩니다.

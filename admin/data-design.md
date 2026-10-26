@@ -6,7 +6,7 @@ Caldova 코스메틱 연구소의 **가상 데이터**입니다. Microsoft의 �
 
 ## 테이블
 
-CSV는 `data/`(UTF-8, BOM 없음)에 있습니다. 관리자는 Lakehouse의 Files에 원본만 배치하고, 참가자가 00장에서 `01_prepare_data`를 실행해 `gold.<table>`로 만듭니다.
+CSV는 `data/`(UTF-8, BOM 없음)에 있습니다. 관리자는 빈 작업 영역만 준비하고, 참가자가 00장에서 Lakehouse 생성·Files 원본 업로드·Notebook 가져오기와 기본 연결을 마친 뒤 `01_prepare_data`로 `gold.<table>`을 만듭니다.
 
 | 테이블 | 행 | 키 | 주요 열 |
 |---|---:|---|---|
@@ -22,7 +22,7 @@ CSV는 `data/`(UTF-8, BOM 없음)에 있습니다. 관리자는 Lakehouse의 Fil
 | `production_plan` | 4 | `plan_id` | `product_id`, `planned_date`, `qty_ea` |
 | `purchase_order` | 6 | `po_id` | `material_code`, `supplier_id`, `order_date`, `eta`, `status` |
 
-선택 확장 CSV는 `data/extended/`에 있습니다. 기본 과정 전에 핵심 11개와 추가 17개 CSV를 배치하면 **참가자가 00장에서 총 28개 테이블을 직접 생성**합니다. 기존 Ontology에 연결하는 [엔터티 확장 선택 실습](../docs/extensions/ontology.md)은 **07장 Purview 완료 이후**에만 진행합니다. 준비 절차는 [확장 환경 준비](extended-model.md)에 있습니다. 핵심 영향 계산에는 추가하지 않습니다.
+선택 확장 CSV는 `data/extended/`에 있습니다. 참가자가 00장에서 핵심 11개와 추가 17개 CSV를 같은 Files 폴더에 업로드하면 **첫 적재에서 총 28개 테이블을 직접 생성**합니다. 기존 Ontology에 연결하는 [엔터티 확장 선택 실습](../docs/extensions/ontology.md)은 **07장 Purview 완료 이후**에만 진행합니다. 준비 절차는 [확장 환경 준비](extended-model.md)에 있습니다. 핵심 영향 계산에는 추가하지 않습니다.
 
 | 테이블 | 행 | 키 | 주요 열 |
 |---|---:|---|---|
