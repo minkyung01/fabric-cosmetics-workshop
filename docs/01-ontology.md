@@ -19,6 +19,9 @@
 
 1. 내 작업 영역에서 **+ New item → Ontology (preview)** 항목을 선택합니다.
 2. 이름을 `ont_cos`로 정하고 작업 영역을 확인한 뒤 **Create**를 누릅니다.
+
+   ![Ontology 생성: 이름 ont_cos와 실습 작업 영역 확인](../assets/screenshots/01-create-ontology.png)
+
 3. 시작 화면의 **Start with Ontology agent**를 선택합니다. 안내 창이 있다면 닫습니다.
 4. 오른쪽 대화창의 모드를 **Plan**으로 둡니다.
 
@@ -37,6 +40,7 @@
     - 구매하는 원료와 INCI 성분은 어떻게 구분해야 할까?
     - RM-HA-120은 어느 공급사에서 공급하고, 발주별 입고 예정일은 언제인가?
     - 이 원료를 사용하는 처방 버전과 연결된 판매 제품은 무엇인가?
+    성분·원료·공급사·발주·처방 버전·제품을 각각 독립된 업무 대상으로 모델링해줘. 발주나 제품을 다른 대상의 속성으로만 합치거나 생략하지 마.
     배합 행은 우선 처방 버전과 원료를 잇는 매핑으로 사용하고, 배합 행 자체의 관리는 이번 범위에 넣지 마.
     생산 계획·개발 과제·안정성 시험·대체 원료 검토는 다음 단계에서 추가할 거야.
     지금은 처방의 status를 확인하되 is_active와 cn_registration을 활용한 판정은 다음 단계로 남겨줘.
@@ -46,10 +50,62 @@
     질문별 설계 근거, 검증 결과, 초안 미리 보기를 보여줘.
     ```
 
-2. 업무 범위를 묻는다면 **원료 공급과 처방·제품 사용처만 우선**, 생산·개발 일정과 대체 검토는 나중이라고 답합니다.
-3. 제안에서 **어느 질문을 어떤 원본과 경로로 지원하는지** 확인합니다. `Ingredient`와 `RawMaterial`처럼 같은 성분과 구매 단위를 구분하는지도 봅니다.
+2. 응답의 설계 근거와 **Preview ontology**를 아래 예상 설계·데이터 결과와 대조합니다.
 
-**확인할 결과:** 원료·성분·공급사·발주·처방 버전·제품을 연결하는 초안과 원본 검증 근거가 있습니다. `formula_line.version_id`와 `material_code`로 처방 버전과 원료를 잇고, `purchase_order.eta`로 발주별 예정일을 설명할 수 있어야 합니다. 아직 **제안**이지 저장된 모델은 아닙니다.
+   ![Ontology Agent의 조사·설계·검증 응답과 Preview ontology 버튼](../assets/screenshots/01-agent-preview-button.png)
+
+**업무 범위 질문을 받은 경우에만:** 원료 공급과 처방·제품 사용처만 우선 다루고, 생산·개발 일정과 대체 검토는 나중이라고 답합니다. 질문 없이 초안이 나오면 바로 검토합니다.
+
+**첫 초안의 참고 범위:** 엔터티 **6개**(`Ingredient`, `RawMaterial`, `Supplier`, `PurchaseOrder`, `FormulaVersion`, `Product`)와 이들을 잇는 관계 **5개**입니다. `formula_line`은 관계 매핑에 사용하므로 별도 엔터티로 만들지 않습니다. 생산·개발·시험을 보강한 뒤의 **9개 엔터티·10개 관계**와 구분합니다.
+
+### 2-1. 엔터티와 원본 바인딩 대조
+
+모든 원본은 내 작업 영역의 **`lh_cos` Lakehouse → `gold` 스키마**입니다. 미리 보기에서 각 타입의 키와 속성이 아래 테이블·열에 연결되는지 확인합니다. 아직 적용 전인 **제안**이며, 저장 후 실제 바인딩 확인은 3단계에서 합니다.
+
+| 엔터티 타입 | 원본 테이블 | 고유 키 | 확인할 주요 속성 |
+|---|---|---|---|
+| `Ingredient` | `gold.ingredient` | `ingredient_id` | `inci_name`, `korean_name` |
+| `RawMaterial` | `gold.raw_material` | `material_code` | `material_name`, `lead_time_days` |
+| `Supplier` | `gold.supplier` | `supplier_id` | `supplier_name` |
+| `PurchaseOrder` | `gold.purchase_order` | `po_id` | `eta`, `status` |
+| `FormulaVersion` | `gold.formula_version` | `version_id` | `formula_name`, `status` |
+| `Product` | `gold.product` | `product_id` | `product_name`, `market` |
+
+**예상 검증 결과:** 위 6개 키 열의 중복·결측은 각각 0건이며, 아래 관계의 참조 누락도 0건입니다. 처방 키는 여러 버전에서 반복되는 `formula_id`가 아니라 `version_id`여야 합니다.
+
+### 2-2. 질문별 관계 경로 대조
+
+아래 화살표는 **관계의 저장 방향**입니다. 질문은 원료에서 출발하더라도 연결을 반대 방향으로 따라 발주·처방·제품을 찾을 수 있습니다. 관계 이름이 다르면 같은 업무 의미·양끝 키·원본 매핑인지 확인합니다.
+
+| 첫 프롬프트의 질문 | 있어야 할 경로 | 대조할 원본 열 |
+|---|---|---|
+| 구매 원료와 INCI 성분은 어떻게 다른가? | `RawMaterial → Ingredient` | `raw_material.ingredient_id = ingredient.ingredient_id` |
+| 누가 공급하고 발주별 입고일은 언제인가? | `PurchaseOrder → RawMaterial → Supplier` | `purchase_order.material_code = raw_material.material_code`, `raw_material.supplier_id = supplier.supplier_id`. 입고일은 `purchase_order.eta` |
+| 어떤 처방 버전과 판매 제품에서 쓰는가? | `Product → FormulaVersion → RawMaterial` | `product.version_id = formula_version.version_id`. 처방과 원료는 `formula_line.version_id = formula_version.version_id`, `formula_line.material_code = raw_material.material_code`로 연결 |
+
+**확인할 결과:** 위 경로를 이루는 관계가 총 5개이며, 처방 버전이 원료·제품과 분리되어 있지 않습니다. `formula_line`은 두 키를 잇는 매핑 테이블입니다.
+
+### 2-3. RM-HA-120의 예상 데이터 결과
+
+Agent가 조사한 실제 행과 아래 값을 대조합니다. 표의 값만 답하고 원본·관계 바인딩을 빠뜨린 경우는 설계 완료가 아닙니다.
+
+| 확인할 대상 | 예상 값 |
+|---|---|
+| 원료 | `RM-HA-120` — 소듐하이알루로네이트 1% 용액(저분자) |
+| 성분 | `ING-HA` — INCI `Sodium Hyaluronate` |
+| 공급사 | `SUP-02` — Aqua Derm Chemicals |
+| 해당 원료 발주 | `PO-5501` — `eta = 2026-11-10`, `status = 확정` |
+
+처방 버전은 **4개**, 연결된 판매 제품은 **3개**입니다. 이 단계에서는 `status`를 비교하며 폐기·개발중 버전을 제외하지 않습니다.
+
+| 처방 버전 | status | 연결된 판매 제품 |
+|---|---|---|
+| `FV-CRM-01-02` | 폐기 | 없음 |
+| `FV-CRM-01-03` | 현행 | `P-101` · `P-102` |
+| `FV-TON-02-01` | 개발중 | 없음 |
+| `FV-AMP-03-02` | 현행 | `P-301` |
+
+판매 제품이 없는 처방도 남아 있어야 합니다. 제품이 있는 처방만 보여 주면 처방 4개를 모두 확인한 것이 아닙니다.
 
 ## 3. 초안 검토 → Act 적용 → 실제 데이터 확인
 
@@ -61,6 +117,35 @@
 | 원본 연결 | 속성이 `lh_cos.gold`의 실제 테이블·열에 연결되었는가? 이름만 있는 빈 타입은 아닌가? |
 | 관계 | 배합 매핑이 처방 버전과 원료의 키를 정확히 잇는가? 원료의 공급사와 발주의 원료도 추적되는가? |
 | 범위·검증 | 읽기 오류·참조 누락이 해결되었고 생산·개발 일정까지 불필요하게 확장하지 않았는가? |
+
+<details>
+<summary>엔터티 4개·관계 2개만 제안된 경우</summary>
+
+아래는 `PurchaseOrder`·`Product`와 처방 사용 관계 등이 빠진 **미완성 초안**입니다. **AI Proposal**에 있는 항목은 아직 저장된 모델이 아닙니다. 그대로 승인하지 말고 **Plan**에서 보완합니다.
+
+![미완성 초안 예시: AI Proposal에 엔터티 4개와 관계 2개, 저장된 Entity Types는 없음](../assets/screenshots/01-incomplete-proposal.png)
+
+```text
+현재 초안에는 Ingredient, RawMaterial, Supplier, FormulaVersion만 있고 관계는 2개야.
+첫 질문에 답할 수 있도록 현재 제안을 보완해줘.
+검증된 기존 제안은 재사용하고, PurchaseOrder와 Product를 독립 엔터티로 추가해줘.
+PurchaseOrder는 gold.purchase_order의 po_id를 키로 eta와 status를 바인딩해줘.
+Product는 gold.product의 product_id를 키로 product_name과 market을 바인딩해줘.
+아래 5개 관계가 모두 있는지 확인하고, 빠진 관계를 원본에 연결해줘.
+- has_ingredient: RawMaterial → Ingredient, gold.raw_material의 material_code → ingredient_id
+- supplied_by: RawMaterial → Supplier, gold.raw_material의 material_code → supplier_id
+- orders: PurchaseOrder → RawMaterial, gold.purchase_order의 po_id → material_code
+- uses_material: FormulaVersion → RawMaterial, gold.formula_line의 version_id → material_code
+- made_with: Product → FormulaVersion, gold.product의 product_id → version_id
+formula_line은 관계 매핑으로만 사용하고 별도 엔터티로 추가하지 마.
+6개 엔터티와 5개 관계의 키·속성·원본 바인딩과 참조 누락을 실제 데이터로 검증해줘.
+읽기나 검증에 실패하면 원본과 오류를 보고하고 중단해.
+보완된 전체 초안과 검증 결과를 보여주고 Preview ontology를 갱신해줘.
+```
+
+다시 미리 보기를 열어 발주·제품이 포함되고 처방 버전이 원료와 제품에 연결되는지 확인합니다. 6개 타입이 보여도 관계·바인딩이 빠졌다면 아직 완료가 아닙니다.
+
+</details>
 
 2. 위 표의 항목을 직접 확인하고 미해결 문제가 없으면 **Switch to 'Act' + approve**로 적용합니다. 버튼이 없는 UI에서는 직접 **Act**로 바꾸고 다음 요청을 보냅니다.
 

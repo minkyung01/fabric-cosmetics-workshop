@@ -455,6 +455,72 @@ class Docs(unittest.TestCase):
         scenario = (ROOT / "docs" / "00-scenario.md").read_text(encoding="utf-8")
         self.assertIn("| Ontology | `ont_cos` | **01장에서 직접 생성** |", scenario)
 
+    def test_initial_ontology_proposal_requires_purchase_product_and_connected_paths_before_approval(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        initial = lesson.split("## 2. 첫 업무 질문", 1)[1].split("\n## 3.", 1)[0]
+        self.assertIn("엔터티 **6개**", initial)
+        self.assertIn("관계 **5개**", initial)
+        self.assertIn("발주나 제품을 다른 대상의 속성으로만 합치거나 생략하지 마", initial)
+        for entity in ("Ingredient", "RawMaterial", "Supplier", "PurchaseOrder", "FormulaVersion", "Product"):
+            self.assertIn(f"`{entity}`", initial)
+        recovery = lesson.split("<summary>엔터티 4개·관계 2개만 제안된 경우</summary>", 1)[1].split("</details>", 1)[0]
+        self.assertIn("그대로 승인하지 말고 **Plan**에서 보완", recovery)
+        self.assertIn("아직 저장된 모델이 아닙니다", recovery)
+        self.assertIn("gold.purchase_order의 po_id", recovery)
+        self.assertIn("gold.product의 product_id", recovery)
+        for relationship in ("has_ingredient", "supplied_by", "orders", "uses_material", "made_with"):
+            self.assertRegex(recovery, rf"(?m)^- {relationship}:")
+        self.assertIn("6개 타입이 보여도 관계·바인딩이 빠졌다면 아직 완료가 아닙니다", recovery)
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", lesson)
+        self.assertEqual(images, ["../assets/screenshots/01-create-ontology.png",
+                                  "../assets/screenshots/01-agent-preview-button.png",
+                                  "../assets/screenshots/01-incomplete-proposal.png"])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+
+    def test_initial_ontology_answer_key_matches_sources_keys_and_material_usage(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        initial = lesson.split("## 2. 첫 업무 질문", 1)[1].split("\n## 3.", 1)[0]
+        self.assertIn("업무 범위 질문을 받은 경우에만", initial)
+        self.assertIn("질문 없이 초안이 나오면 바로 검토", initial)
+        self.assertNotRegex(initial, r"(?m)^\d+\. 업무 범위")
+        bindings = re.findall(r"^\| `(\w+)` \| `gold\.(\w+)` \| `(\w+)` \|", initial, re.M)
+        self.assertEqual(len(bindings), 6)
+        for entity, table, key in bindings:
+            with self.subTest(entity=entity):
+                values = [record[key] for record in rows(table)]
+                self.assertTrue(all(values))
+                self.assertEqual(len(values), len(set(values)))
+        for table, column, target, target_key in (
+            ("raw_material", "ingredient_id", "ingredient", "ingredient_id"),
+            ("raw_material", "supplier_id", "supplier", "supplier_id"),
+            ("purchase_order", "material_code", "raw_material", "material_code"),
+            ("formula_line", "version_id", "formula_version", "version_id"),
+            ("formula_line", "material_code", "raw_material", "material_code"),
+            ("product", "version_id", "formula_version", "version_id"),
+        ):
+            self.assertIn(f"{table}.{column} = {target}.{target_key}", initial)
+            targets = {record[target_key] for record in rows(target)}
+            self.assertTrue(all(record[column] in targets for record in rows(table)))
+        material = next(record for record in rows("raw_material") if record["material_code"] == "RM-HA-120")
+        supplier = next(record for record in rows("supplier") if record["supplier_id"] == material["supplier_id"])
+        ingredient = next(record for record in rows("ingredient") if record["ingredient_id"] == material["ingredient_id"])
+        for value in (material["material_name"], supplier["supplier_id"], supplier["supplier_name"],
+                      ingredient["ingredient_id"], ingredient["inci_name"]):
+            self.assertIn(value, initial)
+        order = next(record for record in rows("purchase_order") if record["material_code"] == "RM-HA-120")
+        self.assertIn(f'`{order["po_id"]}` — `eta = {order["eta"]}`, `status = {order["status"]}`', initial)
+        versions = {record["version_id"] for record in rows("formula_line") if record["material_code"] == "RM-HA-120"}
+        self.assertEqual(len(versions), 4)
+        for record in rows("formula_version"):
+            if record["version_id"] not in versions:
+                continue
+            products = [product["product_id"] for product in rows("product")
+                        if product["version_id"] == record["version_id"] and product["sales_status"] == "판매중"]
+            expected = " · ".join(f"`{product}`" for product in products) or "없음"
+            self.assertIn(f'| `{record["version_id"]}` | {record["status"]} | {expected} |', initial)
+        self.assertIn("폐기·개발중 버전을 제외하지 않습니다", initial)
+
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         index = readme.split("## 진행 순서\n", 1)[1].split("\n## ", 1)[0]
