@@ -607,21 +607,24 @@ class Docs(unittest.TestCase):
         self.assertIn("**같은 대화의 Plan**", review)
         prompt = re.findall(r"```text\n(.*?)```", review, re.S)[0]
         for requirement in ("lh_cos.gold에서 확인 가능한 원본 샘플", "RM-HA-120",
-                            "표 1. 원료·공급 요약", "확인할 대상 | 확인한 값",
-                            "원료: material_code와 원료명", "성분: ingredient_id와 INCI명",
-                            "공급사: supplier_id와 공급사명", "해당 원료 발주: po_id, eta, status",
-                            "표 2. 처방 버전별 사용처",
-                            "처방 버전(version_id) | status | 연결된 판매 제품(product_id)",
+                            "어떤 원료인지", "어떤 INCI 성분에 해당하는지",
+                            "어느 공급사가 공급하는지",
+                            "해당 원료의 발주와 입고 예정일, 발주 상태",
+                            "이 원료를 사용하는 처방 버전과 각 처방의 상태",
+                            "해당 처방과 연결된 판매 제품",
                             "샘플에 보이는 폐기·개발중 처방도 제외하지 마",
                             "'샘플에서 미확인'", "'없음'으로 바꾸거나",
                             "관계 설계만으로 값을 추측하지 마",
                             "전체 건수나 제품의 부재는 단정하지 마",
-                            "근거 원본 테이블과 샘플 확인 범위·한계만 최대 2문장",
-                            "서론 없이 표부터", "긴 해설은 출력하지 마",
+                            "근거 원본과 샘플 확인 범위·한계는 짧게",
+                            "한눈에 파악할 수 있게 짧게", "긴 해설은 출력하지 마",
                             "오류를 보고하고 중단",
                             "원본 데이터와 현재 Ontology는 변경하지 마"):
             self.assertIn(requirement, prompt)
         self.assertNotIn("각 연결을 지원하는 초안의 관계·양끝 키·매핑 원본도 별도로 설명", prompt)
+        self.assertNotRegex(prompt, r"material_code|ingredient_id|supplier_id|po_id|eta|status|version_id|product_id")
+        self.assertNotRegex(prompt, r"표 1|표 2|열:|행:|\|")
+        self.assertIn("사용할 원본 열과 정리 형식은 Agent가 판단", review)
         self.assertIn("관계·키·바인딩 상세는 3단계", review)
         self.assertIn("**Preview ontology**", review)
         self.assertIn("2-1·2-2 표와 대조", review)
