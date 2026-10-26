@@ -949,6 +949,28 @@ class Docs(unittest.TestCase):
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
+    def test_data_agent_separates_lakehouse_basics_and_optional_graph_comparison(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        for requirement in ("1–4번은 Lakehouse 기반 기본 실습", "5번은 Graph 기반 선택 실습",
+                            "연결된 대상·경로를 찾으려면 Graph",
+                            "원본의 상세 조건과 계산을 검증하려면 Lakehouse",
+                            "Lakehouse 기반에서도 관계를 SQL 조인",
+                            "Graph가 계산을 전혀 못 한다는 뜻도 아닙니다"):
+            self.assertIn(requirement, lesson)
+        setup = lesson.split("## 1. Data Agent 만들고 원본 연결", 1)[1].split("## 2.", 1)[0]
+        self.assertIn("기본 `da_cos`에는 **Graph model을 추가하지 않습니다.**", setup)
+        optional = lesson.split("## 5. 선택 실습", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        for requirement in ("별도 `da_cos_graph`", "기존 `da_cos`는 그대로 유지",
+                            "**Graph 원본만 연결**", "Ontology나 Lakehouse는 추가하지 않습니다",
+                            "Materialize·새로 고침 시점의 데이터",
+                            "12문항을 모두 반복하지 않고", "DA07·DA08",
+                            "RM-HA-120 자체는 제외", "**Clear chat**",
+                            "`RM-PHE-002`", "`P-101`·`P-102`·`P-301`",
+                            "**`da_cos`는 Lakehouse SQL**", "**`da_cos_graph`는 Graph GQL**",
+                            "Lakehouse를 추가하지 않습니다", "기본 실습은 완료"):
+            self.assertIn(requirement, optional)
+        self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
+
     def test_data_agent_questions_cover_six_types_with_deferred_answers(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \|$", lesson, re.M)
