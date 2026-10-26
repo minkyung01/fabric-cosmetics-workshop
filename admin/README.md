@@ -107,6 +107,17 @@ python admin/provision.py --capacity <capacity-id> --prefix cos-rehearsal- --par
 
 **01장 복구:** Agent 오류로 진행이 막혔다면 현재 정의·항목 ID와 작업 내용을 먼저 보존합니다. 호환성을 확인한 `fabric/ont_cos_reference`를 별도 복구 작업 영역에 배포하거나, 현재 항목에서 누락 부분을 수동 보완합니다. 복구 작업 영역도 Lakehouse 등 필요한 원본이 있어야 하며 API 배포 시 `{{WORKSPACE_ID}}`, `{{LAKEHOUSE_ID}}`를 해당 원본 ID로 치환합니다. 다른 Ontology 항목을 사용하면 이후 Graph·Data Agent 연결을 다시 확인합니다. `--reference-ontology`로 기존 `ont_cos`를 교체할 수는 없으며, 복구 모델 사용을 Agent 생성 완료로 표시하지 않습니다.
 
+## Spark 세션 시작 점검
+
+`Connecting`이 3분 지속됐다는 사실만으로 실패라고 판단하지 않습니다. [공식 Spark compute 문서](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-compute)에 따르면 추가 라이브러리·사용자 지정 Spark 속성 없이 가용한 Starter pool을 쓰면 보통 5–10초지만, 온디맨드 클러스터 준비는 2–5분이 걸릴 수 있습니다. Starter pool 용량은 보장되지 않으며 환경 라이브러리 준비 시간은 별도로 추가될 수 있습니다.
+
+1. **Workspace settings → Data Engineering/Science → Spark settings → Pool**에서 기본 풀과 노드 크기를 확인합니다. Starter pool은 Medium 노드만 지원하며 사용자 지정 풀·컴퓨트 설정은 시작 시간을 늘릴 수 있습니다.
+2. Notebook의 **Environment**에서 실제 기본 환경·추가 라이브러리·Spark 속성을 확인합니다. 화면에 `Workspace default`가 표시된다고 가벼운 기본 환경이나 Starter pool을 보장하지는 않습니다.
+3. **Tenant Private Links·Managed VNets**가 적용된 작업 영역은 Starter pool을 지원하지 않습니다. 이 경우 온디맨드 시작 대기를 일정에 반영하며, 속도를 위해 조직의 보안 설정을 해제하지 않습니다.
+4. 장시간 같은 상태이거나 여러 참가자가 함께 지연되면 세션 정보·세션 ID·시작 시각·오류, 용량의 사용량·스로틀링과 서비스 상태를 확인합니다. 데이터 생성이 시작됐는지 확인하지 않고 준비 Notebook을 재실행하지 않습니다.
+
+리허설에서는 **세션 준비 시간과 코드 실행 시간을 구분**해 기록합니다. 참가자는 Lakehouse 연결을 저장한 뒤 `01_prepare_data`에서 **Connect**로 세션을 먼저 시작하고, 연결 완료 후 **Run all**을 누릅니다. 나머지 Notebook은 해당 장에서 실행합니다. Connect만으로 데이터 생성 코드는 실행되지 않습니다.
+
 ## SQL Serving DB 준비 (06장)
 
 1. 참가자별 **실습 작업 영역의 Contributor**를 기본으로 SQL database 생성 가능 여부를 확인합니다. 참가자용 `sqldb_cos`와 Serving 스키마는 사전 생성하지 않습니다.

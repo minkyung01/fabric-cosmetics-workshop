@@ -56,13 +56,17 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
 ![준비된 Notebook 5개](../assets/screenshots/00-prepared-notebooks.png)
 
-| Notebook 이름 | 실행 시점 |
-|---|---|
-| `01_prepare_data` | 이 장에서 더미데이터 생성 |
-| `02_answers` | 직접 질의한 뒤 결과 대조 |
-| `03_supply_change` | 04장 공급 지연 반영 |
-| `nb_apply_review` | 05장 승인 후 자동 실행 |
-| `04_publish_serving` | 06장 게시 SQL 생성 |
+**00장에서는 `01_prepare_data`만 실행합니다.** 나머지 Notebook은 해당 장의 안내에 따라 실행합니다. **파일 번호 순서대로 한꺼번에 실행하지 않습니다.**
+
+| Notebook 이름 | 실행 시점 | 예상 코드 실행 시간 | 예상 출력 |
+|---|---|---|---|
+| `01_prepare_data` | 00장: 초기 실습 데이터 생성 | 핵심 11개 약 2–4분 / 확장 28개 약 5–10분 | 테이블별 행 수, 발주 확인 표 1행 |
+| `02_answers` | 01–03장: 직접 질의한 뒤 결과 대조 | 약 1–3분 | Q1–Q5·DA 보조 조회 표, 지연 반영 전에는 Q6 안내 문구 |
+| `03_supply_change` | 04장 공급 지연 반영 | 약 2–4분 | 영향 분석 4행 중 영향 3건, `open` 이벤트 |
+| `nb_apply_review` | 05장 승인 후 자동 실행 | 약 1–3분 | 검토 요청 3행, 조치 이력 1행, `review_requested` 상태 |
+| `04_publish_serving` | 06장 게시 SQL 생성 | 약 1–2분 | 승인된 요청 3행과 게시 SQL |
+
+**시간 기준:** 세션 연결 완료 후 코드 실행 기준이며, 환경에 따라 달라집니다. 제공된 실행 화면에서 `01_prepare_data`의 핵심 11개 적재 셀은 약 **2분 16초**였습니다. 전체 실행 시간 범위와 확장 28개·나머지 Notebook의 시간은 실측 전 리허설용 예상값입니다.
 
 ## 3. Lakehouse 직접 만들기
 
@@ -80,12 +84,18 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 준비된 **Notebook 5개 각각**에 다음 절차를 반복합니다.
 
 1. 작업 영역에서 Notebook을 엽니다.
-2. **Add lakehouse → Existing lakehouse**에서 내 작업 영역의 `lh_cos`를 선택합니다.
-3. `lh_cos`를 **기본 Lakehouse로 고정**(핀)하고 저장합니다. 이미 실행 중인 Spark 세션이 있다면 세션을 다시 시작합니다.
+2. 왼쪽 **Data items → Add data items → From OneLake catalog**를 선택합니다.
+3. 내 작업 영역의 **Lakehouse** `lh_cos`를 선택하고 **Add**를 누릅니다. 같은 이름의 SQL analytics endpoint가 함께 보이면 항목 유형을 확인해 Lakehouse를 선택합니다.
 
-**지금은 `01_prepare_data`만 실행합니다.**
+   ![같은 이름의 두 항목 중 Lakehouse 선택](../assets/screenshots/00-select-lakehouse.png)
+
+4. `lh_cos`를 **기본 Lakehouse로 고정**(핀)하고 저장합니다. 이미 실행 중인 Spark 세션이 있다면 세션을 다시 시작합니다.
+
+연결 설정을 저장하는 것과 **Connect**로 Spark 세션을 시작하는 것은 다릅니다. 다른 Notebook은 Lakehouse만 연결해 둡니다.
 
 ## 5. Notebook으로 gold 테이블 직접 만들기
+
+**예상 코드 실행 시간:** 핵심 11개 약 2–4분, 확장 28개 약 5–10분(세션 준비 제외, 참고용 예상).
 
 1. `01_prepare_data`를 열고 기본 Lakehouse가 내 작업 영역의 `lh_cos`인지 확인합니다.
 2. 매개변수 셀은 다음 기본값을 유지합니다.
@@ -97,10 +107,19 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 
    **07장 이후 엔터티 확장도 할 경우에만 첫 실행 전에 `include_extended = True`로 바꿉니다.** 28개 테이블을 준비하되, 01장에서는 핵심 11개만 사용합니다.
 
-3. **Run all** 실행 후 데이터 프로필(11개/28개 테이블)과 `gold.<table>`별 행 수를 확인합니다.
-4. `lh_cos`의 **Tables → gold**에서 테이블을 확인하고 **purchase_order**를 엽니다. `ops` 스키마에는 아직 결과 테이블이 없습니다.
+3. 상단 **Connect**를 눌러 Spark 세션을 먼저 시작하고, 연결이 완료될 때까지 기다립니다.
+4. 연결 완료 후 **Run all**을 눌러 코드를 실행합니다. 출력된 데이터 프로필(11개/28개 테이블)과 `gold.<table>`별 행 수를 확인합니다.
+5. `lh_cos`의 **Tables → gold**에서 테이블을 확인하고 **purchase_order**를 엽니다. `ops` 스키마에는 아직 결과 테이블이 없습니다.
 
-**예상 결과:** `purchase_order` 6행, `PO-5501`(RM-HA-120)의 `eta = 2026-11-10`, `status = 확정`입니다. `original_eta`에도 같은 초기 날짜가 보존되며 아직 지연은 반영하지 않았습니다.
+**세션 시작 대기:** 첫 실행의 `Connecting`은 Spark 세션 준비 단계입니다. 온디맨드 클러스터 준비에는 2–5분이 걸릴 수 있고 환경 라이브러리 설정에 따라 더 길어질 수 있습니다. 대기 중 **Connect**나 **Run all**을 반복하지 않습니다.
+
+**예상 출력 — 테이블 적재:** `데이터 프로필: 11개 테이블`과 테이블별 행 수가 표시됩니다. 확장을 선택했다면 `28개 테이블`과 추가 테이블의 행 수가 나옵니다.
+
+![핵심 11개 테이블 적재 결과: 테이블별 행 수와 purchase_order 6행](../assets/screenshots/00-prepare-data-output.png)
+
+**예상 출력 — 발주 확인:** 마지막 조회 표에 `PO-5501`, `RM-HA-120`, `eta = 2026-11-10`, `status = 확정`의 **1행**이 나옵니다. Lakehouse의 `purchase_order` 전체는 6행이며, `original_eta`에도 같은 초기 날짜가 보존됩니다. 아직 지연은 반영하지 않았습니다.
+
+![마지막 셀의 발주 확인 결과: PO-5501, RM-HA-120, eta 2026-11-10, status 확정의 1행](../assets/screenshots/00-prepare-data-purchase-order.png)
 
 **재실행 주의:** `reset_ops = False`는 기존 실습 테이블이 있으면 **쓰기 전에 오류로 중지**합니다. `True`는 `gold`를 초기 데이터로 덮어쓰고 `ops` 결과를 삭제하므로, 초기화에 동의한 경우에만 사용합니다. 07장 이후 모델 확장을 위해 다시 실행하지 않습니다.
 
@@ -121,6 +140,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 - **기존 실습 테이블 오류:** 일부 테이블만 생성된 실패 이력도 포함합니다. 현재 테이블·승인 결과를 관리자와 확인하고, 초기화가 필요한 경우에만 동의 후 `reset_ops = True`로 실행합니다.
 - **Action에 매개변수가 보이지 않음:** `nb_apply_review`의 첫 셀을 매개변수 셀로 지정하고 저장했는지 확인합니다.
 - **Notebook에서 테이블을 찾지 못함:** 기본 Lakehouse가 내 `lh_cos`인지 확인합니다.
+- **`Connecting`이 오래 유지됨:** 왼쪽 아래 세션 상태를 눌러 세션 정보를 확인합니다. 상태가 계속 바뀌지 않거나 오류가 표시되면 세션 ID·경과 시간·오류를 관리자에게 전달해 Spark 풀·환경·용량 상태를 확인합니다. 원인 확인 전 Notebook 5개의 세션을 모두 시작하거나 초기화하지 않습니다.
 - Notebook은 성공했지만 SQL analytics endpoint에 테이블이 아직 안 보이면 탐색기를 새로 고치고 동기화 상태를 확인합니다. 동기화 대기를 이유로 적재 Notebook을 재실행하지 않습니다.
 - `PO-5501`이 이미 `지연`이면 기존 진행 상태입니다. 임의로 초기화하지 말고 관리자와 재사용·복구 범위를 확인합니다.
 
@@ -130,6 +150,7 @@ Caldova 코스메틱 연구소의 원료 담당자는 2026년 11월 2일 월요�
 - [Lakehouse schemas와 생성 설정](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-schemas)
 - [Notebook 생성·기본 Lakehouse 연결](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook)
 - [Notebook 실행·매개변수 셀](https://learn.microsoft.com/en-us/fabric/data-engineering/author-execute-notebook)
+- [Spark 풀과 세션 시작 시간](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-compute)
 - [Operations agent 개요](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent)
 
 ## 다음 단계

@@ -125,16 +125,19 @@ MaterialSupplyEvent
 
 ## 6. 공급 지연 발생시키기
 
-1. `03_supply_change`를 열어 매개 변수를 확인합니다: `material_code = "RM-HA-120"`, `delay_days = 35`, `run_tag = "r1"`.
-2. **Run all**을 누릅니다.
+**예상 코드 실행 시간:** 약 2–4분(세션 준비 제외, 실측 전 리허설용 예상). 실행 후 Teams 알림 대기는 별도입니다.
 
-**예상 결과:**
+1. `03_supply_change`를 열어 매개 변수를 확인합니다: `material_code = "RM-HA-120"`, `delay_days = 35`, `run_tag = "r1"`.
+2. 세션이 연결되어 있지 않다면 **Connect**로 시작하고, 연결 완료 후 **Run all**을 누릅니다.
+
+**예상 출력**(기본 매개 변수·첫 이벤트 기준):
 
 - `PO-5501 RM-HA-120 2026-11-10 → 2026-12-15 (지연 35일)`
 - `ops.material_impact` 4행 중 `impacted = true` 3행 — `PP-1101`(-27일), `PP-1102`(-20일), `ST-0711`(-32일). `PP-1103`은 여유 29일.
-- `SUP-20261102-RM-HA-120-r1: 영향 3건`, Eventhouse에 `open` 행 1개
+- `SUP-20261102-RM-HA-120-r1: 영향 3건`
+- `SUP-20261102-RM-HA-120-r1: MaterialSupplyEvent에 open 추가`와 이벤트 조회 표 1행
 
-KQL에서 확인합니다.
+`eh_cos`에서도 KQL로 확인합니다. 아직 승인하지 않았으므로 첫 이벤트의 `event_status = open`, `impacted_count = 3`입니다.
 
 ``` kql
 MaterialSupplyEvent

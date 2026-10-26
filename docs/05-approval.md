@@ -26,7 +26,18 @@
 
 작업 영역의 **Monitor**에서 `nb_apply_review` 실행을 찾습니다.
 
-**확인할 결과:** 상태가 **Succeeded**입니다(세션 시작 포함 2–4분).
+**예상 코드 실행 시간:** 약 1–3분(세션 준비 제외, 실측 전 리허설용 예상). 승인 액션은 세션을 자동으로 준비하므로 제출 후 완료까지는 더 걸릴 수 있습니다. 직접 **Connect**나 **Run all**을 누르지 않고 Monitor에서 확인합니다.
+
+**확인할 결과:** 상태가 **Succeeded**입니다.
+
+**Notebook 예상 출력**(현재 이벤트의 첫 승인 기준):
+
+| 단계 | 출력과 확인할 결과 |
+|---|---|
+| 이벤트 상태 확인 | `SUP-20261102-RM-HA-120-r1: 최신 상태 open` |
+| 검토 요청 등록 | `PP-1101`·`PP-1102`·`ST-0711`의 표 3행, 상태 `요청됨` |
+| 조치 기록 | `SUP-20261102-RM-HA-120-r1: review_requested 기록 (3건)` |
+| 이력 조회 | 조치 이력 표 1행, 이벤트 상태 이력 표 `open` → `review_requested` 2행 |
 
 ## 3. 기록 확인
 
@@ -82,7 +93,7 @@ MaterialSupplyEvent
 - **Proceed** 후 실패하면 **Monitor**에서 오류를 봅니다. `event_id 파라미터가 비어 있습니다`이면 Action 매개 변수 연결을, Eventhouse 오류이면 `eventhouse_name`을 확인합니다.
 - `ops.material_impact`에 영향 대상이 없다는 오류는 `03_supply_change`를 실행하지 않았거나 `run_tag`가 다른 경우입니다.
 - 권한 오류는 승인 작업이 에이전트 작성자 권한으로 실행되기 때문입니다. 작성자가 `lh_cos`·`eh_cos`에 쓰기 권한이 있는지 확인합니다.
-- Teams 승인이 어려운 환경이면 `nb_apply_review`의 매개 변수 셀에 `event_id`를 넣고 직접 **Run all**해서 같은 결과를 확인합니다.
+- Teams 승인이 어려운 환경이면 담당자 승인 후 `nb_apply_review`의 매개 변수 셀에 `event_id`를 넣고, **Connect**로 세션을 시작해 연결 완료 후 **Run all**합니다. 이 경로는 Teams 승인 액션 실행과 구분해 기록합니다.
 
 ## 공식 문서
 
