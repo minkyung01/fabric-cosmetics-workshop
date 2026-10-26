@@ -320,6 +320,147 @@ class Docs(unittest.TestCase):
         self.assertIn("기존 역할 할당은 이 옵션으로 자동 승격하지 않으므로", admin)
         self.assertNotIn("관리자가 **SQL database** 항목 `sqldb_cos`를 만들었습니다", lesson)
 
+    def test_data_agent_questions_cover_six_types_with_deferred_answers(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \|$", lesson, re.M)
+        ids = [f"DA{i:02}" for i in range(1, 13)]
+        self.assertEqual([q[0] for q in questions], ids)
+        self.assertEqual([q[1] for q in questions],
+                         [kind for kind in ("대조", "규칙", "용어", "관계", "What-if", "여러 데이터 통합") for _ in range(2)])
+        for _, _, prompt in questions:
+            self.assertNotRegex(prompt, r"DA\d{2}")
+        answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
+        self.assertEqual(re.findall(r"^\| (DA\d{2}) \|", answers, re.M), ids)
+        self.assertLess(lesson.index("| DA12 | 여러 데이터 통합 |"), lesson.index("<details>"))
+        self.assertIn("핵심 11개 테이블·9개 엔터티", lesson)
+        self.assertIn("Clear chat", lesson)
+        self.assertIn("최초 답", lesson)
+        self.assertIn("0일은 일정 기준 영향 없음", lesson)
+        self.assertIn("농도·제형 환산", lesson)
+        self.assertNotIn("질문 5개", lesson)
+
+    def test_purview_optional_activities_have_names_distinct_from_ontology_expansion(self):
+        lesson = (ROOT / "docs" / "07-purview.md").read_text(encoding="utf-8")
+        self.assertIn("## 3. 선택: DLP 정책 팁 확인", lesson)
+        self.assertIn("## 4. 선택: 카탈로그 자산 검색", lesson)
+        self.assertIn("둘 다 해야 기본 실습이 완료되는 것은 아닙니다", lesson)
+        self.assertIn("Ontology 엔터티 확장 실습과는 별개", lesson)
+        for md in [ROOT / "README.md", *ALL_DOCS, ROOT / "admin" / "README.md"]:
+            self.assertNotRegex(md.read_text(encoding="utf-8"), r"확장 [AB]\b|준비된 환경의 확장", md.name)
+
+
+class DataAgentQueries(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.answers, cls.queries = {}, []
+        with sqlite3.connect(":memory:") as db:
+            db.row_factory = sqlite3.Row
+            db.execute("ATTACH DATABASE ':memory:' AS gold")
+            sql_types = {"double": "REAL", "bigint": "INTEGER", "boolean": "INTEGER"}
+            for table, schema in Data().tables().items():
+                columns = ", ".join(f'"{c}" {sql_types.get(t, "TEXT")}' for c, t in schema.items())
+                db.execute(f'CREATE TABLE gold."{table}" ({columns})')
+                values = [[None if not row[c] else (int(row[c] == "true") if t == "boolean" else row[c])
+                           for c, t in schema.items()] for row in rows(table)]
+                db.executemany(f'INSERT INTO gold."{table}" VALUES ({",".join("?" for _ in schema)})', values)
+            db.create_function("to_date", 1, lambda value: date.fromisoformat(value).isoformat())
+            db.create_function("date_sub", 2,
+                               lambda value, days: (date.fromisoformat(value) - timedelta(days=days)).isoformat())
+            db.create_function("date_add", 2,
+                               lambda value, days: (date.fromisoformat(value) + timedelta(days=days)).isoformat())
+            db.create_function("datediff", 2,
+                               lambda first, second: (date.fromisoformat(first) - date.fromisoformat(second)).days)
+
+            def capture(title, sql):
+                cls.queries.append(sql)
+                cls.answers[title.split()[0]] = [dict(row) for row in db.execute(sql)]
+
+            source = (ROOT / "notebooks" / "src" / "02_answers.py").read_text(encoding="utf-8")
+            # Execute the real query expressions with SQLite date equivalents, not the Fabric display wrapper.
+            nodes = [n for n in ast.parse(source).body if not (isinstance(n, ast.FunctionDef) and n.name == "q")]
+            namespace = {"q": capture, "spark": SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda _: False))}
+            with redirect_stdout(io.StringIO()):
+                exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"), namespace)
+            cls.recorded_eta = db.execute(
+                "SELECT eta FROM gold.purchase_order WHERE po_id = 'PO-5501'").fetchone()[0]
+
+    def test_comparison_retains_excluded_versions_and_candidates(self):
+        versions = self.answers["Q1"]
+        self.assertEqual(len(versions), 4)
+        self.assertEqual({r["version_id"] for r in versions if r["is_active"]},
+                         {"FV-CRM-01-03", "FV-TON-02-01", "FV-AMP-03-02"})
+        alternatives = {r["alt_material_code"]: r for r in self.answers["Q3"]}
+        self.assertEqual(set(alternatives), {"RM-HA-210", "RM-HA-305"})
+        self.assertEqual((alternatives["RM-HA-210"]["approval_status"], alternatives["RM-HA-210"]["cn_registration"]),
+                         ("승인", "필요"))
+        self.assertEqual((alternatives["RM-HA-305"]["approval_status"], alternatives["RM-HA-305"]["cn_registration"]),
+                         ("검토중", "완료"))
+
+    def test_boundary_and_three_candidate_conditions(self):
+        boundary = self.answers["DA03"]
+        self.assertEqual([(r["eta"], r["need_date"], r["slack_days"], r["is_impacted"]) for r in boundary],
+                         [("2026-11-13", "2026-11-13", 0, 0), ("2026-11-14", "2026-11-13", -1, 1)])
+        candidates = self.answers["DA04"]
+        self.assertEqual([r["alt_material_code"] for r in candidates], ["RM-HA-210", "RM-HA-305"])
+        self.assertTrue(all(r["need_date"] == "2026-11-25" for r in candidates))
+        self.assertEqual([(r["assumed_eta"], r["slack_days"], r["approval_ok"], r["schedule_ok"], r["cn_ok"], r["all_ok"])
+                          for r in candidates],
+                         [("2026-11-12", 13, 1, 1, 0, 0), ("2026-12-14", -19, 0, 0, 1, 0)])
+
+    def test_terms_distinguish_one_ingredient_and_three_materials(self):
+        materials = self.answers["DA05"]
+        self.assertEqual({r["ingredient_id"] for r in materials}, {"ING-HA"})
+        self.assertEqual({r["material_code"]: r["supplier_id"] for r in materials},
+                         {"RM-HA-120": "SUP-02", "RM-HA-210": "SUP-01", "RM-HA-305": "SUP-04"})
+        self.assertEqual({r["inci_name"] for r in materials}, {"Sodium Hyaluronate"})
+        toner = next(r for r in self.answers["Q1"] if r["version_id"] == "FV-TON-02-01")
+        self.assertEqual((toner["status"], toner["is_active"]), ("개발중", 1))
+
+    def test_relationship_paths_and_supplier_fanout(self):
+        paths = {r["target_id"]: r for r in self.answers["DA07"]}
+        self.assertEqual(set(paths), {"PP-1102", "ST-0711"})
+        self.assertEqual((paths["PP-1102"]["product_id"], paths["PP-1102"]["version_id"]), ("P-102", "FV-CRM-01-03"))
+        self.assertEqual((paths["ST-0711"]["project_id"], paths["ST-0711"]["version_id"]), ("DP-2026-07", "FV-TON-02-01"))
+        self.assertTrue(all(r["material_code"] == "RM-HA-120" for r in paths.values()))
+        supplier = self.answers["DA08"]
+        self.assertEqual([r["product_id"] for r in supplier], ["P-101", "P-102", "P-301"])
+        self.assertEqual({r["version_id"] for r in supplier}, {"FV-CRM-01-03", "FV-AMP-03-02"})
+        self.assertTrue(all((r["supplier_id"], r["material_code"], r["po_id"], r["recorded_eta"]) ==
+                            ("SUP-02", "RM-PHE-002", "PO-5505", "2026-11-10") for r in supplier))
+
+    def test_what_if_changes_only_the_specified_date_or_qc(self):
+        dates = {r["target_id"]: (r["before_slack"], r["after_slack"], r["after_impact"])
+                 for r in self.answers["DA09"]}
+        self.assertEqual(dates, {"PP-1101": (8, -27, 1), "PP-1102": (15, -20, 1),
+                                "PP-1103": (64, 29, 0), "ST-0711": (3, -32, 1)})
+        qc = {r["target_id"]: r for r in self.answers["DA10"]}
+        self.assertTrue(all(r["eta"] == "2026-11-20" for r in qc.values()))
+        self.assertEqual({k: (r["slack_qc7"], r["slack_qc14"]) for k, r in qc.items()},
+                         {"PP-1101": (-2, -9), "PP-1102": (5, -2), "PP-1103": (54, 47), "ST-0711": (-7, -14)})
+        self.assertEqual({k for k, r in qc.items() if not r["impact_qc7"] and r["impact_qc14"]}, {"PP-1102"})
+        for row in qc.values():
+            self.assertEqual((date.fromisoformat(row["need_qc7"]) - date.fromisoformat(row["need_qc14"])).days, 7)
+
+    def test_integration_preserves_market_unknowns_and_records_review_limits(self):
+        integrated = {r["target_id"]: r for r in self.answers["DA11"]}
+        self.assertEqual(set(integrated), {"PP-1101", "PP-1102", "ST-0711"})
+        self.assertEqual({k: (r["owner_id"], r["market"], r["slack_days"]) for k, r in integrated.items()},
+                         {"PP-1101": ("P-101", "KR", -27), "PP-1102": ("P-102", "CN", -20),
+                          "ST-0711": ("DP-2026-07", None, -32)})
+        self.assertEqual({k: r["planned_qty_ea"] for k, r in integrated.items()},
+                         {"PP-1101": 30000, "PP-1102": 20000, "ST-0711": None})
+        self.assertTrue(all((r["po_id"], r["supplier_id"], r["alt_material_code"]) ==
+                            ("PO-5501", "SUP-02", "RM-HA-210") for r in integrated.values()))
+        self.assertTrue(all(r["recorded_eta"] == "2026-11-10" and r["assumed_eta"] == "2026-12-15"
+                            for r in integrated.values()))
+        self.assertEqual(integrated["PP-1102"]["review_note"], "CN 등록 검토 필요")
+        self.assertTrue(all(r["condition_note"] == "파우더 용해 공정 추가 필요" for r in integrated.values()))
+
+    def test_reference_queries_are_read_only_and_do_not_need_ops(self):
+        self.assertEqual(self.recorded_eta, "2026-11-10")
+        self.assertTrue(all(re.match(r"\s*(SELECT|WITH)\b", query) for query in self.queries))
+        self.assertEqual(len(self.queries), 13)
+
 
 class Serving(unittest.TestCase):
     def setUp(self):

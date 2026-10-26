@@ -18,7 +18,7 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 | Ontology | 기본 준비에서는 **생성하지 않음**. 참가자가 01장에서 핵심 `ont_cos` 생성·보강. 07장 이후 선택 실습은 같은 항목을 확장하며 별도 완성 모델은 비교·복구용 |
 | Microsoft Teams | 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
 | SQL database | 사전 생성하지 않음. 참가자가 06장에서 본인 실습 작업 영역에 `sqldb_cos`와 Serving 스키마 직접 생성 |
-| Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. DLP·카탈로그 확장은 아래 별도 조건 확인 |
+| Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. 선택 활동인 DLP 정책 팁 확인·카탈로그 자산 검색은 아래 별도 조건 확인 |
 
 ## 1. Fabric 테넌트 설정
 
@@ -99,12 +99,12 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 | 범위 | 준비 사항 | 사전 확인 |
 |---|---|---|
 | 레이블 적용 | Fabric 정보 보호 설정, 참가자의 Pro/PPU·항목 편집 권한, 레이블 사용 가능한 그룹에 게시. Purview 정보 보호 라이선스는 조직 계약에 맞게 확인 | 실제 참가자 계정으로 `lh_cos`의 레이블 메뉴·저장·재열기 확인 |
-| DLP 확장 | 정책 작성자에 지원 라이선스(M365 E5 / E5 Compliance / E5 Information Protection & Governance / Purview capacities 중 해당 조건)와 공식 문서의 관리 역할 필요. Fabric/Premium 용량 작업 영역만 대상으로 구성 | 신규 테넌트 온보딩에 몇 시간이 걸릴 수 있음. 수업 전에 조건 매치·정책 팁까지 확인 |
-| 카탈로그 확장 | 별도의 Purview 계정·Fabric 연결·스캔·메타데이터 읽기 권한 및 해당 비용 확인 | 검색 가능한 자산을 미리 확보. 레이블 적용에는 카탈로그 스캔 불필요 |
+| 선택: DLP 정책 팁 확인 | 정책 작성자에 지원 라이선스(M365 E5 / E5 Compliance / E5 Information Protection & Governance / Purview capacities 중 해당 조건)와 공식 문서의 관리 역할 필요. Fabric/Premium 용량 작업 영역만 대상으로 구성 | 신규 테넌트 온보딩에 몇 시간이 걸릴 수 있음. 수업 전에 조건 매치·정책 팁까지 확인 |
+| 선택: 카탈로그 자산 검색 | 별도의 Purview 계정·Fabric 연결·스캔·메타데이터 읽기 권한 및 해당 비용 확인 | 검색 가능한 자산을 미리 확보. 레이블 적용에는 카탈로그 스캔 불필요 |
 
 실습 레이블 예시는 `Caldova-R&D-Confidential`입니다. 기존 조직 레이블이 맞으면 재사용하며 참가자에게 임의의 운영 레이블을 만들게 하지 않습니다. 새 레이블 게시·테넌트 설정·정책 전파를 수업 중 대기하는 구성은 피합니다.
 
-**DLP 확장 구성:**
+**DLP 정책 팁 확인을 위한 정책 구성:**
 
 1. Purview → **Data loss prevention → Policies → Create policy → Custom**을 선택합니다.
 2. 위치를 **Fabric and Power BI workspaces**로 하고 **실습 작업 영역만 명시적으로 포함**합니다. 전체 테넌트를 기본 범위로 둔 채 저장하지 않습니다.
@@ -113,7 +113,7 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 5. 소유자용 DLP 상세·응답 화면은 지원되는 Admin/Member 계정으로 확인합니다. 06장 DB 생성을 위한 실습 작업 영역의 Member 권한과 Purview의 별도 관리 역할·라이선스를 구분합니다. 모든 참가자에게 Purview 관리자나 작업 영역 Admin을 주지 않습니다.
 6. 실습에는 실제 개인정보나 배합 비밀을 넣지 않습니다. 배합비 자체가 민감 정보 유형 탐지에 걸린다고 가정하지 않고 레이블 조건을 사용합니다.
 
-정책 적용·평가가 늦거나 라이선스가 없다면 기본 실습만 진행합니다. 미수행 확장을 수행 완료로 표시하지 않습니다. 실제 데이터 권한과 레이블 분류를 구분하며 모든 내보내기·복사본이 자동 보호된다고 설명하지 않습니다.
+정책 적용·평가가 늦거나 라이선스가 없다면 기본 실습만 진행합니다. 미수행 선택 활동을 수행 완료로 표시하지 않습니다. 실제 데이터 권한과 레이블 분류를 구분하며 모든 내보내기·복사본이 자동 보호된다고 설명하지 않습니다.
 
 공식 근거: [레이블 적용·Pro/PPU 요구](https://learn.microsoft.com/en-us/fabric/fundamentals/apply-sensitivity-labels), [DLP 구성·역할·라이선스](https://learn.microsoft.com/en-us/fabric/governance/data-loss-prevention-configure), [DLP 지원 범위·평가·온보딩 제한](https://learn.microsoft.com/en-us/purview/dlp-powerbi-get-started).
 
@@ -147,13 +147,13 @@ Notebook·Ontology·아키텍처 산출물의 최신 여부, 문서 링크·Less
 | 01 보강 | 생산·개발 일정과 대체 검토 질문으로 빈틈 진단 → Plan 변경안 → Act 적용. 핵심 참고 9개/10개 경로와 `is_active`, `cn_registration` 바인딩·Plan 질의 확인 |
 | 02 | Graph Q1 4행 → `is_active` 필터 3행, 생산 계획 `PP-1101`·`PP-1102`·`PP-1103`, `ST-0711` |
 | 02 | `02_answers` Q5 지연 전 여유 8·15·64·3일 |
-| 03 | Graph 없이도 `da_cos`가 Ontology 문맥으로 Lakehouse SQL 실행, 질문 1–3이 정답과 일치 |
+| 03 | Graph 없이 `da_cos`가 Ontology 문맥으로 Lakehouse SQL 실행. 6개 유형·12문항의 답과 근거를 `02_answers`와 대조. 0일 경계·대체 후보의 세 조건·QC 변경·판단 한계 확인 |
 | 04 생성 | 참가자 계정으로 Eventhouse·기본 KQL Database를 모두 `eh_cos` 이름으로 생성. `MaterialSupplyEvent` 13개 열·초기 0행, Notebook 쓰기 확인 |
 | 04 | `03_supply_change`: `ops.material_impact` 4행 중 영향 3행(-27·-20·-32일), 이벤트 `SUP-20261102-RM-HA-120-r1` open 1행, Teams 메시지 5–10분 |
 | 05 | `nb_apply_review` Succeeded, `ops.review_request` 3행, `ops.action_log` 1행, `open → review_requested` |
 | 06 | 참가자 계정으로 `sqldb_cos`·Serving 스키마 직접 생성. 요청 3행, 팀별 조회 2/1행, 검토 착수 후 이력 1행. 중복 착수는 오류, 재게시 0행 추가·검토중 상태 유지 |
 | 07 기본 | 참가자 계정으로 `lh_cos` 레이블 적용·재열기 |
-| 07 확장 | 구성한 범위에 한해 DLP 정책 팁 또는 카탈로그 검색을 확인 |
+| 07 선택 활동 | 구성한 범위에 한해 DLP 정책 팁 확인 또는 카탈로그 자산 검색 수행. 이후 Ontology 엔터티 확장과 구분 |
 | 07장 이후 선택 확장 | 기존 `ont_cos`를 Agent와 보강(참고 26개/40개). QX1–QX4 결과 2/1/3/3행, 기존 질문 재검증, 기본 영향·승인·SQL 상태 보존 |
 
 ## 4. 다시 시연하기
