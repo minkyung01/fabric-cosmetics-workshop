@@ -437,7 +437,7 @@ class Docs(unittest.TestCase):
         self.assertNotIn("관리자가 배포한 기본 Ontology", lesson)
         prompts = re.findall(r"```text\n(.*?)```", lesson, re.S)
         core = set(Data().tables())
-        self.assertFalse(set(re.findall(r"\b\w+\b", prompts[0])) & core)
+        self.assertEqual(set(re.findall(r"\b\w+\b", prompts[0])) & core, {"formula_line"})
         review = lesson.split("## 2. 첫 업무 질문", 1)[1].split("\n## 3.", 1)[0]
         initial = set(re.findall(r"\b\w+\b", review)) & core
         self.assertEqual(initial, {"ingredient", "raw_material", "supplier", "purchase_order",
@@ -476,21 +476,31 @@ class Docs(unittest.TestCase):
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", lesson)
         self.assertEqual(images, ["../assets/screenshots/01-create-ontology.png",
                                   "../assets/screenshots/01-agent-preview-button.png",
+                                  "../assets/screenshots/01-formula-line-proposal.png",
+                                  "../assets/screenshots/01-formula-line-relationship.png",
                                   "../assets/screenshots/01-incomplete-proposal.png"])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
-    def test_initial_ontology_prompt_defers_design_instructions_until_review(self):
+    def test_initial_ontology_prompt_specifies_usage_mapping_without_prescribing_full_model(self):
         lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
         prompt = re.findall(r"```text\n(.*?)```", lesson, re.S)[0]
         for requirement in ("lh_cos Lakehouse의 gold", "INCI 성분", "RM-HA-120",
                             "처방 버전과 연결된 판매 제품", "생산·개발 일정의 영향 계산과 대체 원료 검토는 제외",
                             "키의 유일성·결측", "오류를 보고", "초안 미리 보기"):
             self.assertIn(requirement, prompt)
-        self.assertNotRegex(prompt, r"Ingredient|RawMaterial|PurchaseOrder|FormulaVersion|Product|Supplier")
-        self.assertNotRegex(prompt, r"material_code|version_id|po_id|uses_material|is_active|cn_registration")
-        self.assertNotIn("독립", prompt)
-        self.assertNotIn("매핑", prompt)
+        self.assertNotRegex(prompt, r"Ingredient|PurchaseOrder|Product|Supplier|po_id|is_active|cn_registration")
+        for requirement in ("배합 행·배합비 관리는 이번 범위에서 제외",
+                            "FormulaLine을 거치지 않는 FormulaVersion → RawMaterial의 uses_material",
+                            "gold.formula_line 테이블의 version_id와 material_code",
+                            "각각 FormulaVersion.version_id와 RawMaterial.material_code에 연결",
+                            "처방 버전 4개와 연결된 판매 제품 3개",
+                            "제품이 없는 처방도 제외하지 말고",
+                            "결과가 다르면 차이와 원인을 보고",
+                            "관련 없는 엔터티·관계·키·속성·바인딩은 보존",
+                            "원본 데이터와 다른 Fabric 항목은 변경하지 마",
+                            "오류를 보고하고 중단"):
+            self.assertIn(requirement, prompt)
         self.assertIn("처음 제안된 설계와 근거를 기록한 뒤", lesson)
         self.assertIn("초안 검토용 정답지", lesson)
         self.assertIn("문제가 없다면 보완 요청 없이 적용 단계로 진행", lesson)
@@ -505,13 +515,42 @@ class Docs(unittest.TestCase):
         self.assertLess(lesson.index("### 2-3. RM-HA-120의 예상 데이터 결과"),
                         lesson.index("현재 초안에는 Ingredient"))
         admin = (ROOT / "admin" / "preview-limitations.md").read_text(encoding="utf-8")
-        self.assertIn("엔터티 목록·키·관계 매핑은 미리 지정하지 않습니다", admin)
+        self.assertIn("전체 엔터티 목록은 미리 지정하지 않되", admin)
+        self.assertIn("이 관계의 방향·키 매핑", admin)
+
+    def test_formula_line_entity_is_a_valid_alternative_with_scoped_simplification(self):
+        lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
+        example = lesson.split("<summary>FormulaLine이 별도 엔터티로 제안된 경우</summary>", 1)[1].split("</details>", 1)[0]
+        self.assertIn("독립 엔터티로 표현하는 것도 타당", example)
+        self.assertIn("누락 오류를 고치는 것이 아니라", example)
+        self.assertIn("같은 대화의 **Plan**", example)
+        self.assertIn("FormulaLine → FormulaVersion", example)
+        self.assertIn("FormulaLine → RawMaterial", example)
+        self.assertIn("방향을 맞추기 위해 뒤집을 필요는 없습니다", example)
+        self.assertIn("FormulaLine.version_id = FormulaVersion.version_id", example)
+        self.assertIn("**Property 1**이 `Select a property`", example)
+        self.assertIn("꺼진 것 자체는 이 직접 속성 매칭 모델의 오류 근거가 아닙니다", example)
+        self.assertIn("FormulaVersion → RawMaterial의 uses_material", example)
+        self.assertIn("gold.formula_line", example)
+        self.assertIn("version_id를 FormulaVersion.version_id", example)
+        self.assertIn("material_code를 RawMaterial.material_code", example)
+        self.assertIn("검증이 끝나기 전에는 FormulaLine과 기존 연결을 제거하지 마", example)
+        self.assertIn("나머지 엔터티·키·속성·바인딩·관계는 보존", example)
+        self.assertIn("원본 데이터는 변경하지 마", example)
+        self.assertIn("처방 버전 4개와 연결된 판매 제품 3개", example)
+        self.assertIn("제품이 없는 처방도 제외하지 마", example)
+        self.assertIn("오류를 보고하고 중단", example)
+        self.assertIn("Preview ontology", example)
+        records = rows("formula_line")
+        self.assertTrue(all(record["line_id"] and record["pct_wt"] for record in records))
+        self.assertEqual(len({record["line_id"] for record in records}), len(records))
 
     def test_initial_ontology_answer_key_matches_sources_keys_and_material_usage(self):
         lesson = (ROOT / "docs" / "01-ontology.md").read_text(encoding="utf-8")
         initial = lesson.split("## 2. 첫 업무 질문", 1)[1].split("\n## 3.", 1)[0]
-        self.assertIn("업무 범위 질문을 받은 경우에만", initial)
-        self.assertIn("질문 없이 초안이 나오면 바로 검토", initial)
+        self.assertNotIn("업무 범위 질문을 받은 경우에만", initial)
+        self.assertNotIn("질문 없이 초안이 나오면 바로 검토", initial)
+        self.assertIn("**제안하는 Ontology 초안**, **제안하는 관계**, **검증 결과**를 펼쳐", initial)
         self.assertNotRegex(initial, r"(?m)^\d+\. 업무 범위")
         bindings = re.findall(r"^\| `(\w+)` \| `gold\.(\w+)` \| `(\w+)` \|", initial, re.M)
         self.assertEqual(len(bindings), 6)
