@@ -739,6 +739,33 @@ class Docs(unittest.TestCase):
         self.assertNotIn("영향 3건", notice)
         self.assertNotIn("이미 04장을 진행한 환경", notice)
 
+    def test_graph_projection_distinguishes_reference_proposal_and_instance_queries(self):
+        lesson = (ROOT / "docs" / "02-graph.md").read_text(encoding="utf-8")
+        for requirement in ("엔터티 9개·관계 10개", "**읽기 전용 초안 미리 보기**",
+                            "적용 완료 화면이 아니므로", "**Entity Types에 저장된 모델**",
+                            "**9 entities**", "타입과 관계의 수",
+                            "총개수만 맞추려고 삭제하지 말고",
+                            "**Projection summary**", "**Graph model**이지 KQL Database가 아닙니다",
+                            "**Eligible은 투영 가능하다는 뜻**",
+                            "**투영할 타입과 관계 구조**",
+                            "**Explore graph 버튼을 전제로 하지 않습니다.**",
+                            "Q1의 GQL을 실행해 결과로 확인",
+                            "질의를 실제 스키마에 맞춥니다",
+                            "Ontology 화면의 표시 이름만 보고 추정하지 않습니다",
+                            "`[:made_with]`", "`product_usesFormulaVersion`",
+                            "모델을 다시 만들 필요는 없습니다"):
+            self.assertIn(requirement, lesson)
+        self.assertNotIn("MaterialAlternative", lesson)
+        self.assertNotIn("**Home**에서 **Explore graph**를 누릅니다", lesson)
+        self.assertIn("(rm:RawMaterial)-[:alternative_to]->(alt:RawMaterial)-[:supplied_by]->(s:Supplier)", lesson)
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", lesson)
+        self.assertEqual(images, ["../assets/screenshots/02-ontology-reference-proposal.png",
+                                  "../assets/screenshots/02-graph-choose-projection.png",
+                                  "../assets/screenshots/02-graph-projection-summary.png",
+                                  "../assets/screenshots/02-graph-created-items.png"])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+
     def test_optional_entity_expansion_follows_purview_and_preserves_completed_work(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         index = readme.split("## 진행 순서\n", 1)[1].split("\n## ", 1)[0]

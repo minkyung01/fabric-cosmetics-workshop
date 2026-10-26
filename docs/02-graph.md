@@ -11,23 +11,58 @@ Ontology는 원본에 바인딩된 업무 모델이며 **Graph가 필수는 아�
 
 ## 1. Graph 만들기
 
-1. `ont_cos`의 리본에서 **Manage graph**를 누릅니다. "Preparing graph..." 후 **Choose what to project**에서 엔터티와 관계의 **Status**가 모두 **Eligible**인지 확인합니다.
-2. 핵심 모델의 엔터티 9개·관계 10개를 선택하고 **Continue** → **Materialize**를 누릅니다. 위쪽 탭에 `ont_cos_graph_`로 시작하는 Graph model이 열립니다. 완료 상태를 확인한 뒤 진행합니다. 데이터 크기뿐 아니라 용량·반영 대기에도 영향을 받습니다.
+이 장의 예시는 **엔터티 9개·관계 10개**와 원료끼리 직접 연결하는 **`alternative_to` 관계**를 사용합니다.
 
-**확인할 결과:** 엔터티 9개·관계 10개가 Eligible이고, 작업 영역에 `ont_cos_graph_…` 항목이 생깁니다. 이 항목은 Ontology가 관리하므로 직접 고치지 않습니다.
+![참고 모델의 AI Proposal 미리 보기: 엔터티 9개·관계 10개와 alternative_to 자기 관계](../assets/screenshots/02-ontology-reference-proposal.png)
+
+위 화면은 상단에 **proposed ontology** 안내가 있고 왼쪽에 **AI Proposal**이 표시된 **읽기 전용 초안 미리 보기**입니다. 적용 완료 화면이 아니므로, 01장의 검토·Act 적용을 마쳐 **Entity Types에 저장된 모델**을 확인한 뒤 아래로 진행합니다. 그림의 9개·10개는 타입과 관계의 수이지, 실제 원료·처방 데이터 행 수가 아닙니다.
+
+1. `ont_cos`의 리본에서 **Manage graph**를 누릅니다. "Preparing graph..." 후 **Choose what to project** 화면이 열립니다. 처음의 **Graph not materialized**는 아직 Graph를 생성하지 않았다는 상태입니다.
+2. 이번 실습에서 사용할 엔터티와 관계를 선택합니다. 각 행의 **Status**가 **Eligible**인지 확인하고, 엔터티 행 왼쪽의 펼치기 버튼으로 관계도 확인합니다.
+
+   ![Choose what to project: 참고 모델의 엔터티 9개가 선택되어 있고 모두 Eligible인 화면](../assets/screenshots/02-graph-choose-projection.png)
+
+   위 화면의 **9 entities**와 엔터티별 **Eligible**을 확인합니다. 관계도 참고 모델의 10개가 선택되어 있고 투영 가능한지 확인합니다. 추가 엔터티·관계가 있다면 총개수만 맞추려고 삭제하지 말고, 실습에 필요한 경로를 선택합니다.
+
+3. **Continue**를 눌러 **Projection summary**에서 선택한 대상과 연결을 확인한 뒤 **Materialize**를 누릅니다.
+
+   ![Projection summary: 엔터티 9개와 produces·for_project·tests_version 등 참고 관계를 확인한 뒤 Materialize 실행](../assets/screenshots/02-graph-projection-summary.png)
+
+   오른쪽 **Preview**의 `produces`·`for_project`·`tests_version` 등 이름·방향을 확인합니다. RawMaterial의 자기 연결은 대체 원료 관계인 `alternative_to`입니다. 이 미리 보기도 실제 데이터 행이 아닌 **투영할 타입과 관계 구조**를 보여 줍니다.
+
+4. 생성·반영이 완료될 때까지 기다립니다. 데이터 크기뿐 아니라 용량·반영 대기에도 영향을 받습니다. 작업 영역에서 이름이 `ont_cos_graph_`로 시작하고 항목 유형이 **Graph model**인 항목을 확인합니다.
+
+   ![작업 영역에 Ontology와 함께 생성된 Eventhouse, KQL Database, Graph model 항목](../assets/screenshots/02-graph-created-items.png)
+
+   위 예시에는 `ont_cos_eh_…` **Eventhouse**와 같은 이름의 **KQL Database**도 보입니다. 이름 뒤의 자동 생성 접미사는 환경마다 다릅니다. 이 장에서 GQL 질의를 실행할 대상은 **Graph model**이지 KQL Database가 아닙니다. Ontology가 생성·관리하는 항목의 이름·원본·스키마를 직접 고치거나 삭제하지 않습니다.
+
+**확인할 결과:** 필요한 엔터티·관계가 Eligible이고, Materialize 완료 후 작업 영역에서 Graph model을 열 수 있습니다. **Eligible은 투영 가능하다는 뜻**이며, 실제 데이터와 연결 결과가 맞는지는 아래 탐색·질의로 확인합니다.
 
 확장 모델을 사용해도 모든 엔터티를 투영할 필요는 없습니다. 우선 핵심 경로만 선택합니다. **Ontology 바인딩 가능 여부와 Graph 투영 적격성은 별개**이며 현재 Graph 투영에는 키·매핑, 엔터티/관계별 단일 기반 테이블, 지원되는 Lakehouse/미러링 Delta 원본이 필요합니다. 다중 바인딩이나 의미 체계 모델을 쓴다고 모두 투영 가능한 것은 아닙니다.
 
-## 2. 탐색 화면에서 경로 펼치기
+## 2. Graph model 열고 구조와 데이터 구분하기
 
-1. `ont_cos`의 **Home**에서 **Explore graph**를 누릅니다.
-2. `RawMaterial` 노드 중 `RM-HA-120`을 찾아 연결된 노드를 펼칩니다. `FormulaVersion` 노드에서 다시 `Product`·`DevProject`·`StabilityTest`로 펼칩니다.
+1. 작업 영역에서 생성된 `ont_cos_graph_…` **Graph model**을 엽니다. 이 가이드는 `ont_cos` Home의 **Explore graph 버튼을 전제로 하지 않습니다.** 해당 버튼이 보이지 않아도 여기서 진행합니다.
+2. Graph model의 스키마에서 `RawMaterial`·`FormulaVersion`과 `uses_material` 연결을 확인합니다. `Product`·`DevProject`·`StabilityTest`로 이어지는 관계도 살펴봅니다. 스키마의 노드는 **타입**이므로 RawMaterial 하나가 보인다고 원료 데이터가 1행이라는 뜻은 아닙니다.
+3. 실제 `RM-HA-120`의 사용처는 다음 절 **Q1의 GQL을 실행해 결과로 확인**합니다. 뒤의 Q3·Q4로 제품·생산 계획·개발 과제·시험까지 경로를 확장합니다.
 
-**확인할 결과:** `RM-HA-120`에서 처방 버전 4개가 보이고, 그중 `FV-CRM-01-02`(폐기)에는 제품이 연결되어 있지 않습니다. 같은 성분의 `RM-HA-210`은 `alternative_to`로만 연결됩니다.
+**확인할 결과:** 모델의 연결 구조를 살펴보는 것과 실제 원료·처방 행을 조회하는 것을 구분합니다. Q1의 기대값은 처방 버전 4개이며, 대체 원료는 Q6의 `alternative_to` 경로로 별도 조회합니다. 같은 성분이거나 대체 후보라는 이유만으로 현재 처방의 사용 원료라고 판단하지 않습니다.
 
 ## 3. GQL로 질의하기
 
 Graph model `ont_cos_graph_…`을 열고 질의 편집기(**Code editor** 또는 **Query**)에서 아래 질의를 하나씩 실행합니다. 각 질의 뒤의 **예상 결과**와 비교합니다.
+
+### 실행 전: 내 Graph의 이름과 경로에 맞추기
+
+**아래 GQL은 참고 모델 기준입니다. 내 모델의 이름이나 구조가 다르면 질의도 수정해야 합니다.** 01장에서 참고 이름으로 이미 맞췄다면 그대로 사용하되, Graph에 네임스페이스 접두사가 붙었는지 확인합니다. 기존 모델을 유지한다면 질의를 실제 스키마에 맞춥니다.
+
+| 다른 부분 | GQL에서 바꿀 곳 | 확인 방법 |
+| --- | --- | --- |
+| 엔터티·관계 이름 | `(변수:레이블)`의 레이블과 `[:관계]` | Graph model의 스키마(노드·에지 목록)에 표시된 실제 식별자를 사용합니다. Ontology 화면의 표시 이름만 보고 추정하지 않습니다. |
+| 연결 방향 | `->` 또는 `<-` | 원래 원료·대체 원료 등 양끝의 업무 역할과 실제 출발·도착 타입을 확인합니다. |
+| 속성 이름 | `WHERE`·`RETURN`의 속성 | `material_code`·`version_id`·`is_active` 등이 실제로 투영됐는지 확인합니다. |
+
+예를 들어 Product → FormulaVersion 관계의 실제 이름이 `product_usesFormulaVersion`이면, Q3의 `[:made_with]`를 그 이름으로 바꿉니다. `produces`·`tests_version`·`for_project`·`supplied_by`도 실제 이름과 대조합니다. **이름만 다르고 원본 매핑과 방향이 같다면 모델을 다시 만들 필요는 없습니다.** 결과가 0행이거나 오류가 나면 먼저 스키마와 질의를 대조하며, 방향을 무조건 없애거나 데이터를 초기화하지 않습니다.
 
 **Q1. 이 원료를 쓰는 처방 버전은?**
 
@@ -84,7 +119,7 @@ WHERE rm.material_code = 'RM-HA-120'
 RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registration, s.supplier_name
 ```
 
-**예상 결과:** 2행 — `RM-HA-210`(리드타임 10일, CN `필요`, 한빛바이오), `RM-HA-305`(42일, `완료`, Nordic Actives). 승인 상태(`승인`·`검토중`)는 관계에 속성이 없어 Graph에 나오지 않습니다. `02_answers` Q3에서 확인합니다.
+**예상 결과:** 2행 — `RM-HA-210`(리드타임 10일, CN `필요`, 한빛바이오), `RM-HA-305`(42일, `완료`, Nordic Actives). 승인 상태(`승인`·`검토중`)는 참고 관계에 속성이 없어 이 질의에 나오지 않습니다. `02_answers` Q3에서 확인합니다.
 
 ## 4. 정답 Notebook과 비교
 
