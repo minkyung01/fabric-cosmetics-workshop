@@ -158,12 +158,17 @@ MaterialSupplyEvent
    | `material_code` | 같은 이벤트의 MaterialSupplyEvent.material_code를 전달한다. |
    | `eventhouse_name` | MaterialSupplyEvent가 저장된 Eventhouse 이름. 항상 eh_cos를 전달한다. |
 
-   ![Action details에서 nb_apply_review 선택 후 매개 변수별 필수 Description을 입력할 위치](../assets/screenshots/04-action-parameters.png)
+   ![Action details에서 nb_apply_review와 세 매개 변수의 Description 입력을 완료한 화면](../assets/screenshots/04-action-parameters.png)
 
-   - 세 행의 Description을 모두 입력한 뒤 **Next**를 누릅니다. **Review and create** 단계에서 내용을 확인하고 액션을 생성합니다.
+   - 세 행의 Description을 모두 입력한 뒤 **Next**를 누릅니다. **Review and create** 단계에서 내용을 확인하고 **Create**를 누릅니다.
+
+   ![Review and create에서 RequestMaterialReview의 설명·매개 변수·nb_apply_review를 확인하고 Create](../assets/screenshots/04-action-review.png)
+
 5. 저장 아이콘을 누릅니다.
 
-**확인할 결과:** Knowledge에 `eh_cos`, Actions에 `RequestMaterialReview`가 보입니다.
+**확인할 결과:** Knowledge에 `eh_cos`, Actions에 `RequestMaterialReview`와 **Action connected** 상태가 보입니다.
+
+![Knowledge의 eh_cos와 Action connected 상태의 RequestMaterialReview가 연결된 Playbook 생성 전 화면](../assets/screenshots/04-agent-setup-connected.png)
 
 ## 5. Playbook 생성과 검토
 

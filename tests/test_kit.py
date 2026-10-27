@@ -981,7 +981,9 @@ class Docs(unittest.TestCase):
         self.assertIn("**Location**에 내 작업 영역 `cos-pNNN`", creation)
         for section, expected in ((review, ["../assets/screenshots/04-review-notebook.png"]),
                                   (creation, ["../assets/screenshots/04-create-operations-agent.png",
-                                              "../assets/screenshots/04-action-parameters.png"])):
+                                              "../assets/screenshots/04-action-parameters.png",
+                                              "../assets/screenshots/04-action-review.png",
+                                              "../assets/screenshots/04-agent-setup-connected.png"])):
             images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", section)
             self.assertEqual(images, expected)
             for image in images:
@@ -995,6 +997,7 @@ class Docs(unittest.TestCase):
         self.assertIn("**Description은 직접 입력**", creation)
         self.assertIn("**Next**", creation)
         self.assertIn("**Review and create** 단계", creation)
+        self.assertIn("**Action connected**", creation)
 
     def test_sql_database_is_created_by_participants_before_schema_and_publishing(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
