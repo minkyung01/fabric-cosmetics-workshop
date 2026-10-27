@@ -1034,7 +1034,7 @@ class Docs(unittest.TestCase):
         self.assertIn("Notebook에 준비된 SQL 실행 결과와 비교", lesson)
         self.assertIn("같은 번호·질문·순서", lesson)
         self.assertIn("DA01도 전용 셀", lesson)
-        self.assertIn("../notebooks/02_answers.ipynb", lesson)
+        self.assertNotIn("최신 `02_answers.ipynb`", lesson)
         for doc in (ROOT / "README.md", ROOT / "admin" / "README.md", ROOT / "docs" / "03-data-agent.md"):
             self.assertNotIn("12문항", doc.read_text(encoding="utf-8"), doc.name)
             self.assertNotIn("중요도순", doc.read_text(encoding="utf-8"), doc.name)
