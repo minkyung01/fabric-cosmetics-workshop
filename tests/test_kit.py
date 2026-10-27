@@ -942,6 +942,53 @@ class Docs(unittest.TestCase):
         self.assertIn("이미 `eh_cos`가 있다면 중복 생성하거나 삭제하지 말고", lesson)
         self.assertIn("MaterialSupplyEvent\n| count", lesson)
 
+    def test_operations_guide_explains_teams_app_setup_and_shows_eventhouse_creation(self):
+        lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        setup = lesson.split("### Teams 알림 앱 준비", 1)[1].split("## 1.", 1)[0]
+        for requirement in ("**Teams 안에 앱을 추가**", "자동으로 설치되어 있거나",
+                            "조직 계정", "**앱(Apps) 메뉴**", "`Fabric Operations Agent`",
+                            "**추가(Add) 버튼**", "Teams 관리자"):
+            self.assertIn(requirement, setup)
+        creation = lesson.split("## 1. Eventhouse 만들기", 1)[1].split("## 2.", 1)[0]
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", creation)
+        self.assertEqual(images, ["../assets/screenshots/04-create-eventhouse.png",
+                                  "../assets/screenshots/04-eventhouse-overview.png",
+                                  "../assets/screenshots/04-kql-database-empty.png"])
+        events = lesson.split("## 2. 이벤트 테이블 만들기", 1)[1].split("## 3.", 1)[0]
+        event_images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", events)
+        self.assertEqual(event_images, ["../assets/screenshots/04-event-table-created.png",
+                                        "../assets/screenshots/04-event-count-zero.png"])
+        for image in images + event_images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        for requirement in ("`eh_cos_queryset`", "**KQL Queryset**", "**Run**",
+                            "테이블 정의 결과", "`Count = 0`", "집계 결과가 한 행"):
+            self.assertIn(requirement, events)
+
+    def test_operations_guide_shows_review_notebook_and_agent_creation(self):
+        lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        review = lesson.split("## 3. 승인 후 실행할 Notebook 살펴보기", 1)[1].split("## 4.", 1)[0]
+        creation = lesson.split("## 4. Operations Agent 만들기", 1)[1].split("## 5.", 1)[0]
+        self.assertIn("**지금 실행하지 않습니다.**", review)
+        self.assertIn("승인 후 액션에서 전달", review)
+        self.assertIn("**Location**에 내 작업 영역 `cos-pNNN`", creation)
+        for section, expected in ((review, ["../assets/screenshots/04-review-notebook.png"]),
+                                  (creation, ["../assets/screenshots/04-create-operations-agent.png",
+                                              "../assets/screenshots/04-action-parameters.png"])):
+            images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", section)
+            self.assertEqual(images, expected)
+            for image in images:
+                self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        parameters = dict(re.findall(r"^\s*\| `(event_id|material_code|eventhouse_name)` \| ([^|\n]+) \|",
+                                     creation, re.M))
+        self.assertEqual(set(parameters), {"event_id", "material_code", "eventhouse_name"})
+        self.assertIn("MaterialSupplyEvent.event_id", parameters["event_id"])
+        self.assertIn("MaterialSupplyEvent.material_code", parameters["material_code"])
+        self.assertIn("항상 eh_cos를 전달", parameters["eventhouse_name"])
+        self.assertIn("**Description은 직접 입력**", creation)
+        self.assertIn("Description은 실제 이벤트 ID를 입력하는 칸이 아닙니다", creation)
+        self.assertIn("**Next**", creation)
+        self.assertIn("**Review and create** 단계", creation)
+
     def test_sql_database_is_created_by_participants_before_schema_and_publishing(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         prepared = next(line for line in readme.splitlines() if line.startswith("| 준비된 항목 |"))

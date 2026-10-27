@@ -24,14 +24,31 @@ flowchart LR
 - Teams에 **Fabric Operations Agent** 앱이 설치되어 있어야 메시지를 받을 수 있습니다.
 - 규칙 질의는 **5분 주기**로 실행됩니다. 알림까지 수 분이 걸리는 것이 정상입니다.
 
+### Teams 알림 앱 준비
+
+별도 프로그램을 설치하는 것이 아니라, **Teams 안에 앱을 추가**합니다. 자동으로 설치되어 있거나 이미 추가했다면 다시 설치하지 않습니다.
+
+1. Fabric에 사용하는 조직 계정으로 Teams에 로그인합니다.
+2. Teams의 **앱(Apps) 메뉴**에서 `Fabric Operations Agent`를 검색합니다.
+3. **Fabric Operations Agent** 앱을 선택하고 **추가(Add) 버튼**을 누릅니다.
+
+앱이 검색되지 않거나 추가가 차단되면 Teams 관리자에게 앱 사용 허용을 요청합니다. 설치한 뒤에는 이 장에서 에이전트를 시작하고 공급 지연 이벤트를 발생시켜 메시지 수신을 확인합니다.
+
 ## 1. Eventhouse 만들기
 
 1. 내 작업 영역 `cos-pNNN`에서 **+ New item**을 누릅니다.
 2. 검색 칸에 `Eventhouse`를 입력하고 **Eventhouse**를 선택합니다.
 3. 이름을 `eh_cos`로 입력하고 **Create**를 누릅니다.
+
+   ![New Eventhouse 창에서 이름을 eh_cos로 입력하고 Create](../assets/screenshots/04-create-eventhouse.png)
+
 4. Eventhouse의 **System overview**가 열리면 왼쪽 **KQL Databases**에서 `eh_cos`를 선택합니다.
 
+   ![Eventhouse의 System overview에서 왼쪽 KQL databases 아래 eh_cos 선택](../assets/screenshots/04-eventhouse-overview.png)
+
 **확인할 결과:** Eventhouse와 **같은 이름의 기본 KQL Database가 자동 생성**됩니다. `eh_cos` KQL Database가 열리고 처음 만든 데이터베이스에는 아직 테이블이 없습니다. 별도의 KQL Database를 추가로 만들 필요는 없습니다.
+
+![eh_cos KQL Database에 No tables와 This database is empty가 표시된 초기 화면](../assets/screenshots/04-kql-database-empty.png)
 
 **이름 확인:** 뒤의 Notebook은 같은 작업 영역에서 Eventhouse를 찾고, `eventhouse_name`을 KQL Database 이름으로도 사용합니다. **Eventhouse와 기본 KQL Database 이름을 모두 `eh_cos`로 유지**합니다.
 
@@ -39,7 +56,7 @@ flowchart LR
 
 ## 2. 이벤트 테이블 만들기
 
-`eh_cos` KQL Database에서 **Explore your data**(또는 KQL queryset)를 열고, 실행할 데이터베이스가 `eh_cos`인지 확인한 뒤 아래 명령을 실행합니다.
+`eh_cos` KQL Database의 왼쪽 목록에서 `eh_cos_queryset`을 엽니다. 없다면 상단의 **KQL Queryset**으로 편집기를 엽니다. 실행할 데이터베이스가 `eh_cos`인지 확인한 뒤 아래 명령을 붙여 넣고 **Run**을 누릅니다.
 
 ``` kql
 .create-merge table MaterialSupplyEvent (
@@ -59,6 +76,10 @@ flowchart LR
 )
 ```
 
+**확인할 결과:** 왼쪽 **Tables** 아래에 `MaterialSupplyEvent`가 보입니다. 생성 명령의 `1 records`는 **테이블 정의 결과 1행**이며, 이벤트가 1건 들어왔다는 뜻이 아닙니다.
+
+![create-merge 명령 실행 후 Tables에 MaterialSupplyEvent가 나타나고 테이블 정의 결과가 반환된 화면](../assets/screenshots/04-event-table-created.png)
+
 이벤트는 상태가 바뀔 때마다 **새 행으로 추가**됩니다. `open`(검토 필요) → `review_requested`(검토 요청 등록됨) 순서입니다.
 
 아래 질의로 행 수를 확인합니다.
@@ -70,9 +91,17 @@ MaterialSupplyEvent
 
 **예상 결과:** 처음 만든 `MaterialSupplyEvent` 테이블의 행은 0개입니다. 기존 테이블을 재사용했다면 이전 행은 그대로 남으며, 임의로 지우지 않습니다.
 
+![MaterialSupplyEvent의 count 질의 결과 Count가 0인 화면](../assets/screenshots/04-event-count-zero.png)
+
+새 테이블에서는 결과 표의 `Count = 0`을 확인합니다. 화면의 `1 records`는 집계 결과가 한 행이라는 뜻이며, 이벤트 건수는 `Count` 열의 값으로 판단합니다.
+
 ## 3. 승인 후 실행할 Notebook 살펴보기
 
 `nb_apply_review`를 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). 코드를 읽되 **지금 실행하지 않습니다.** 세션을 직접 시작하지 않아도 됩니다.
+
+`event_id`와 `material_code`는 승인 후 액션에서 전달하므로, 이 단계에서는 빈 값으로 둡니다. `eventhouse_name`은 기본값 `eh_cos`를 유지합니다.
+
+![nb_apply_review에 lh_cos가 연결되고 event_id·material_code가 빈 값인 매개 변수 셀을 확인하는 화면](../assets/screenshots/04-review-notebook.png)
 
 - 매개 변수 셀: `event_id`, `material_code`, `eventhouse_name`
 - 최신 상태가 `open`일 때만 동작합니다. 같은 이벤트를 두 번 승인해도 중복 기록하지 않습니다.
@@ -81,7 +110,10 @@ MaterialSupplyEvent
 
 ## 4. Operations Agent 만들기
 
-1. 작업 영역에서 **+ New item** → **Operations agent**를 고르고 이름을 `oa_cos`로 만듭니다.
+1. 작업 영역에서 **+ New item** → **Operations agent**를 고릅니다. **Name**에 `oa_cos`, **Location**에 내 작업 영역 `cos-pNNN`이 선택되어 있는지 확인하고 **Create**를 누릅니다.
+
+   ![New Operations agent 창에서 Name은 oa_cos, Location은 내 작업 영역으로 선택하고 Create](../assets/screenshots/04-create-operations-agent.png)
+
 2. **Agent instructions**에 아래 지침을 붙여 넣습니다. 열은 `Table.column` 형식으로 적어야 규칙이 정확히 만들어집니다.
 
 ``` text
@@ -108,8 +140,17 @@ MaterialSupplyEvent
 4. **Actions** → **Add action** → **Fabric item** → **Browse**에서 `nb_apply_review`를 고릅니다.
    - **Action name:** `RequestMaterialReview`
    - **Action description:** `공급 지연 이벤트의 영향 대상에 원료 변경 검토 요청을 등록하고 조치 이력을 남긴다.`
-   - 매개 변수(`event_id`, `material_code`, `eventhouse_name`)는 Notebook 매개 변수 셀에서 자동으로 채워집니다. `eventhouse_name`은 기본값 `eh_cos`를 그대로 둡니다.
-   - **Review and create**를 누릅니다.
+   - **Parameters**의 **Name·Type**은 Notebook 매개 변수 셀에서 불러오지만, 필수 항목인 **Description은 직접 입력**해야 합니다. 에이전트가 실행 시 어떤 값을 전달할지 알 수 있도록 아래 설명을 각 행에 입력합니다. Description은 실제 이벤트 ID를 입력하는 칸이 아닙니다.
+
+   | 매개 변수 | Description에 입력할 내용 |
+   | --- | --- |
+   | `event_id` | 검토 요청을 등록할 공급 지연 이벤트의 ID. 감지한 이벤트의 MaterialSupplyEvent.event_id 값을 그대로 전달한다. |
+   | `material_code` | 검토 대상 원료 코드. 위 event_id에 해당하는 이벤트의 MaterialSupplyEvent.material_code 값을 그대로 전달한다. |
+   | `eventhouse_name` | MaterialSupplyEvent 테이블이 있는 Eventhouse와 KQL Database의 이름. 이 실습에서는 항상 eh_cos를 전달한다. |
+
+   ![Action details에서 nb_apply_review 선택 후 매개 변수별 필수 Description을 입력할 위치](../assets/screenshots/04-action-parameters.png)
+
+   - 세 행의 Description을 모두 입력한 뒤 **Next**를 누릅니다. **Review and create** 단계에서 내용을 확인하고 액션을 생성합니다.
 5. 저장 아이콘을 누릅니다.
 
 **확인할 결과:** Knowledge에 `eh_cos`, Actions에 `RequestMaterialReview`가 보입니다.
