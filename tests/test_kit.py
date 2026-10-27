@@ -1416,6 +1416,21 @@ class DataAgentQueries(unittest.TestCase):
                             for r in comparison.values()))
         self.assertIn("최종 발주일", self.questions["DA07"])
 
+    def test_documented_material_condition_flags_match_query_output(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        flags = lesson.split("**DA03의 조건 판정 열 읽기**", 1)[1].split("<details>", 1)[0]
+        for row in self.answers["DA03"]:
+            cells = [f'`{row["material_code"]}`'] + [
+                f'`{str(bool(row[column])).lower()}`'
+                for column in ("schedule_ok", "cn_ok", "schedule_cn_ok")
+            ]
+            self.assertIn("| " + " | ".join(cells) + " |", flags)
+        self.assertIn("schedule_cn_ok = schedule_ok AND cn_ok", flags)
+        self.assertIn("모든 판정 열이 `false`여야 하는 것이 아닙니다", flags)
+        self.assertIn("all_ok = approval_ok AND schedule_ok AND cn_ok", flags)
+        self.assertIn("승인 상태를 조회하지 않고", flags)
+        self.assertIn("판정 범위를 구분", flags)
+
     def test_all_agent_queries_work_without_alternative_mapping_table(self):
         exposed_tables = {"dev_project", "formula_line", "formula_version", "ingredient", "product",
                           "production_plan", "purchase_order", "raw_material", "stability_test", "supplier"}
