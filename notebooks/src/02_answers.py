@@ -119,13 +119,13 @@ else:
     print("ops.material_impact가 아직 없습니다. 4장에서 03_supply_change를 실행한 뒤 다시 확인하세요.")
 
 # %% [markdown]
-# ## 03장 Data Agent — DA01–DA07 질문과 확인 결과
+# ## 03장 Data Agent — DA01–DA06 질문과 확인 결과
 #
 # 가이드와 같은 질문·번호·순서로 확인합니다. 각 문항의 질문을 Data Agent에 보내고,
 # 바로 아래 코드 셀을 실행해 대상 ID·날짜·판정을 비교합니다. 실행 출력에도 질문이 표시됩니다.
 # 앞의 Q1–Q6은 01–02장 비교용이며, 이 절에서는 다른 Q번호를 찾아갈 필요가 없습니다.
 # 모든 DA 질의는 읽기 전용이며 `03_supply_change`나 `ops` 테이블 없이 실행합니다.
-# DA01–DA07은 현재 Data Agent에 노출된 10개 테이블만 사용하며 `material_alternative`를 조회하지 않습니다.
+# DA01–DA06은 현재 Data Agent에 노출된 10개 테이블만 사용하며 `material_alternative`를 조회하지 않습니다.
 # 정답 비교는 기본 매개변수 `material_code=RM-HA-120`, `qc_lead_days=7`로 진행합니다.
 
 # %% [markdown]
@@ -162,35 +162,7 @@ ORDER BY eta""",
   question="ST-0711에서 QC 7일을 적용할 때 RM-HA-120이 2026-11-13에 입고되는 경우와 11-14에 입고되는 경우를 판정해줘. 필요일과 여유일을 계산하고, 여유일이 0이면 영향 대상인지 설명해줘.")
 
 # %% [markdown]
-# ### DA03. 생산과 시험의 두 업무 경로
-#
-# > RM-HA-120에서 PP-1102까지와 ST-0711·DP-2026-07까지의 연결 경로를 보여줘. 중간 처방 버전·제품 ID와 관계 이름을 표시하고, 탐색 방향과 Ontology에 저장된 관계 방향을 구분해줘.
-#
-# 확인: PP-1102 → P-102 → FV-CRM-01-03 → RM-HA-120,
-# ST-0711 → FV-TON-02-01 → RM-HA-120 및 ST-0711 → DP-2026-07.
-# 저장된 관계는 각각 produces → made_with → uses_material, tests_version → uses_material,
-# for_project입니다. 실제 모델의 관계 이름·저장 방향은 01장의 정의와 비교합니다.
-
-# %%
-q("DA03 업무 경로", f"""
-SELECT pp.plan_id AS target_id, p.product_id, fv.version_id, fl.material_code,
-       CAST(NULL AS STRING) AS project_id
-FROM gold.production_plan pp JOIN gold.product p ON p.product_id = pp.product_id
-JOIN gold.formula_version fv ON fv.version_id = p.version_id AND fv.is_active
-JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
-WHERE pp.plan_id = 'PP-1102'
-UNION ALL
-SELECT st.test_id, NULL, fv.version_id, fl.material_code, dp.project_id
-FROM gold.stability_test st
-JOIN gold.formula_version fv ON fv.version_id = st.version_id AND fv.is_active
-JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
-JOIN gold.dev_project dp ON dp.project_id = st.project_id
-WHERE st.test_id = 'ST-0711' AND st.status = '예정'
-ORDER BY target_id""",
-  question="RM-HA-120에서 PP-1102까지와 ST-0711·DP-2026-07까지의 연결 경로를 보여줘. 중간 처방 버전·제품 ID와 관계 이름을 표시하고, 탐색 방향과 Ontology에 저장된 관계 방향을 구분해줘.")
-
-# %% [markdown]
-# ### DA04. 같은 공급사 → 다른 원료 → 활성 처방 → 제품
+# ### DA03. 같은 공급사 → 다른 원료 → 활성 처방 → 제품
 #
 # > RM-HA-120의 공급사가 공급하는 다른 원료를 찾고, 그 원료를 쓰는 활성 처방과 제품까지 연결해줘. 같은 공급사라는 이유만으로 그 원료도 지연됐다고 판단해도 되는지 실제 발주 ETA와 구분해줘.
 #
@@ -198,7 +170,7 @@ ORDER BY target_id""",
 # PO-5505의 ETA는 2026-11-10입니다. 연결 관계가 추가 지연의 증거는 아닙니다.
 
 # %%
-q("DA04 공급사 경로", f"""
+q("DA03 공급사 경로", f"""
 SELECT s.supplier_id, s.supplier_name, other.material_code, fv.version_id, p.product_id,
        po.po_id, po.eta AS recorded_eta
 FROM gold.raw_material origin JOIN gold.supplier s ON s.supplier_id = origin.supplier_id
@@ -211,7 +183,7 @@ WHERE origin.material_code = '{m}' ORDER BY p.product_id""",
   question="RM-HA-120의 공급사가 공급하는 다른 원료를 찾고, 그 원료를 쓰는 활성 처방과 제품까지 연결해줘. 같은 공급사라는 이유만으로 그 원료도 지연됐다고 판단해도 되는지 실제 발주 ETA와 구분해줘.")
 
 # %% [markdown]
-# ### DA05. 입고일만 바꾸기 — 원본 갱신 없이 비교
+# ### DA04. 입고일만 바꾸기 — 원본 갱신 없이 비교
 #
 # > RM-HA-120의 입고일을 2026-11-10과 2026-12-15로 각각 가정해 비교해줘. QC는 7일로 고정하고 활성 처방에 연결된 생산 계획·예정 시험별 필요일·여유일·영향 여부와 새로 영향을 받는 대상을 보여줘.
 #
@@ -219,7 +191,7 @@ WHERE origin.material_code = '{m}' ORDER BY p.product_id""",
 # newly_impacted가 true인 PP-1101·PP-1102·ST-0711이 새 영향 대상입니다.
 
 # %%
-q("DA05 입고일 비교", f"""
+q("DA04 입고일 비교", f"""
 WITH baseline AS ({schedule_sql('2026-11-10', 7)}),
 delayed AS ({schedule_sql('2026-12-15', 7)})
 SELECT b.target_id, b.owner_id, b.version_id, b.market, b.need_date,
@@ -230,7 +202,7 @@ FROM baseline b JOIN delayed d ON d.target_id = b.target_id ORDER BY b.target_id
   question="RM-HA-120의 입고일을 2026-11-10과 2026-12-15로 각각 가정해 비교해줘. QC는 7일로 고정하고 활성 처방에 연결된 생산 계획·예정 시험별 필요일·여유일·영향 여부와 새로 영향을 받는 대상을 보여줘.")
 
 # %% [markdown]
-# ### DA06. 여러 데이터를 연결한 검토표
+# ### DA05. 여러 데이터를 연결한 검토표
 #
 # > RM-HA-120이 2026-12-15에 입고된다고 가정하고 QC 7일을 적용해, 영향받는 생산 계획과 예정 시험을 하나의 검토표로 만들어줘. 제품/과제·시장·처방 버전·원 발주/공급사·필요일·여유일을 연결하고, 일정 조정이나 추가 검토가 필요한 대상을 정리해줘. 시험의 시장은 추정하지 마.
 #
@@ -238,7 +210,7 @@ FROM baseline b JOIN delayed d ON d.target_id = b.target_id ORDER BY b.target_id
 # 생산 계획과 시험 일정·원료 확보를 검토하며, 이 표에서 대체 후보나 승인 상태를 조회하지 않습니다.
 
 # %%
-q("DA06 통합 검토표", f"""
+q("DA05 통합 검토표", f"""
 WITH targets AS ({schedule_sql('2026-12-15', 7)})
 SELECT d.target_id, d.owner_id, d.market, d.version_id,
        COALESCE(p.product_name, dp.project_name) AS owner_name, pp.qty_ea AS planned_qty_ea,
@@ -257,7 +229,7 @@ WHERE d.is_impacted ORDER BY d.target_id""",
   question="RM-HA-120이 2026-12-15에 입고된다고 가정하고 QC 7일을 적용해, 영향받는 생산 계획과 예정 시험을 하나의 검토표로 만들어줘. 제품/과제·시장·처방 버전·원 발주/공급사·필요일·여유일을 연결하고, 일정 조정이나 추가 검토가 필요한 대상을 정리해줘. 시험의 시장은 추정하지 마.")
 
 # %% [markdown]
-# ### DA07. 계획 수량과 판단 한계
+# ### DA06. 계획 수량과 판단 한계
 #
 # > RM-HA-120 입고일을 2026-12-15, QC를 7일로 가정할게. RM-HA-210으로 대체하면 영향받는 생산 계획 물량을 전부 생산하고 ST-0711도 일정대로 진행할 수 있나? 계획 수량과 실제 생산 가능 수량을 구분하고, 총 추가 비용까지 확정할 수 있는지 확인되는 사실과 부족한 근거를 농도·제형 환산·공정 검증 관점에서 설명해줘.
 #
@@ -268,7 +240,7 @@ WHERE d.is_impacted ORDER BY d.target_id""",
 # 데이터가 없는 값을 0으로 채우거나, 1% 용액과 파우더 단가를 그대로 빼서 총 비용을 계산하지 않습니다.
 
 # %%
-q("DA07 계획·원료 근거", f"""
+q("DA06 계획·원료 근거", f"""
 WITH targets AS ({schedule_sql('2026-12-15', 7)})
 SELECT d.target_id, d.target_type, d.owner_id, d.market, d.version_id, d.need_date, d.slack_days,
        pp.qty_ea AS planned_qty_ea,

@@ -109,24 +109,7 @@ SELECT * FROM one_day_late WHERE target_id = 'ST-0711'
 ORDER BY eta""",
   question="ST-0711에서 QC 7일을 적용할 때 RM-HA-120이 2026-11-13에 입고되는 경우와 11-14에 입고되는 경우를 판정해줘. 필요일과 여유일을 계산하고, 여유일이 0이면 영향 대상인지 설명해줘.")
 
-q("DA03 업무 경로", f"""
-SELECT pp.plan_id AS target_id, p.product_id, fv.version_id, fl.material_code,
-       CAST(NULL AS STRING) AS project_id
-FROM gold.production_plan pp JOIN gold.product p ON p.product_id = pp.product_id
-JOIN gold.formula_version fv ON fv.version_id = p.version_id AND fv.is_active
-JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
-WHERE pp.plan_id = 'PP-1102'
-UNION ALL
-SELECT st.test_id, NULL, fv.version_id, fl.material_code, dp.project_id
-FROM gold.stability_test st
-JOIN gold.formula_version fv ON fv.version_id = st.version_id AND fv.is_active
-JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
-JOIN gold.dev_project dp ON dp.project_id = st.project_id
-WHERE st.test_id = 'ST-0711' AND st.status = '예정'
-ORDER BY target_id""",
-  question="RM-HA-120에서 PP-1102까지와 ST-0711·DP-2026-07까지의 연결 경로를 보여줘. 중간 처방 버전·제품 ID와 관계 이름을 표시하고, 탐색 방향과 Ontology에 저장된 관계 방향을 구분해줘.")
-
-q("DA04 공급사 경로", f"""
+q("DA03 공급사 경로", f"""
 SELECT s.supplier_id, s.supplier_name, other.material_code, fv.version_id, p.product_id,
        po.po_id, po.eta AS recorded_eta
 FROM gold.raw_material origin JOIN gold.supplier s ON s.supplier_id = origin.supplier_id
@@ -138,7 +121,7 @@ LEFT JOIN gold.purchase_order po ON po.material_code = other.material_code AND p
 WHERE origin.material_code = '{m}' ORDER BY p.product_id""",
   question="RM-HA-120의 공급사가 공급하는 다른 원료를 찾고, 그 원료를 쓰는 활성 처방과 제품까지 연결해줘. 같은 공급사라는 이유만으로 그 원료도 지연됐다고 판단해도 되는지 실제 발주 ETA와 구분해줘.")
 
-q("DA05 입고일 비교", f"""
+q("DA04 입고일 비교", f"""
 WITH baseline AS ({schedule_sql('2026-11-10', 7)}),
 delayed AS ({schedule_sql('2026-12-15', 7)})
 SELECT b.target_id, b.owner_id, b.version_id, b.market, b.need_date,
@@ -148,7 +131,7 @@ SELECT b.target_id, b.owner_id, b.version_id, b.market, b.need_date,
 FROM baseline b JOIN delayed d ON d.target_id = b.target_id ORDER BY b.target_id""",
   question="RM-HA-120의 입고일을 2026-11-10과 2026-12-15로 각각 가정해 비교해줘. QC는 7일로 고정하고 활성 처방에 연결된 생산 계획·예정 시험별 필요일·여유일·영향 여부와 새로 영향을 받는 대상을 보여줘.")
 
-q("DA06 통합 검토표", f"""
+q("DA05 통합 검토표", f"""
 WITH targets AS ({schedule_sql('2026-12-15', 7)})
 SELECT d.target_id, d.owner_id, d.market, d.version_id,
        COALESCE(p.product_name, dp.project_name) AS owner_name, pp.qty_ea AS planned_qty_ea,
@@ -166,7 +149,7 @@ LEFT JOIN gold.dev_project dp ON dp.project_id = d.owner_id AND d.target_type = 
 WHERE d.is_impacted ORDER BY d.target_id""",
   question="RM-HA-120이 2026-12-15에 입고된다고 가정하고 QC 7일을 적용해, 영향받는 생산 계획과 예정 시험을 하나의 검토표로 만들어줘. 제품/과제·시장·처방 버전·원 발주/공급사·필요일·여유일을 연결하고, 일정 조정이나 추가 검토가 필요한 대상을 정리해줘. 시험의 시장은 추정하지 마.")
 
-q("DA07 계획·원료 근거", f"""
+q("DA06 계획·원료 근거", f"""
 WITH targets AS ({schedule_sql('2026-12-15', 7)})
 SELECT d.target_id, d.target_type, d.owner_id, d.market, d.version_id, d.need_date, d.slack_days,
        pp.qty_ea AS planned_qty_ea,

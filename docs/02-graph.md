@@ -207,7 +207,7 @@ RETURN alt.material_code, alt.material_name, alt.lead_time_days, alt.cn_registra
 
 ![Notebook Q6 실행 결과: 지연 반영 전 ops.material_impact가 아직 없다는 정상 안내](../assets/screenshots/02-answers-q6-before-supply-change.png)
 
-뒤에 나오는 DA01–DA07의 질문과 확인 결과는 03장에서 사용합니다.
+뒤에 나오는 DA01–DA06의 질문과 확인 결과는 03장에서 사용합니다.
 
 > **토론 포인트:** Graph는 "무엇이 연결되어 있는가"를 빠르게 보여 줍니다. 그러나 "며칠 늦으면 문제인가" 같은 날짜 계산과 판정은 **명시적인 질의·Notebook**으로 하는 편이 정확하고 검증하기 쉽습니다. 4장의 `03_supply_change`가 그 역할을 합니다.
 
