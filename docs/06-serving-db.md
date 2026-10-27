@@ -84,7 +84,7 @@
 
 ## 4. 담당 팀별 조회
 
-**실행 위치:** 4–6단계는 모두 `sqldb_cos`의 **SQL database 쿼리 편집기**에서 진행합니다. Notebook이나 `eh_cos`의 KQL 쿼리 창에서 실행하지 않습니다.
+**실행 위치:** 4–5단계는 모두 `sqldb_cos`의 **SQL database 쿼리 편집기**에서 진행합니다. Notebook이나 `eh_cos`의 KQL 쿼리 창에서 실행하지 않습니다.
 
 1. 작업 영역에서 `sqldb_cos`를 열고 상단 **New Query**를 누릅니다.
 2. 아래 SQL을 붙여 넣고 **Run**을 누릅니다. 아래쪽 **Results** 탭에서 조회 결과를 확인합니다.
@@ -97,11 +97,13 @@ WHERE event_id = N'SUP-20261102-RM-HA-120-r1'
 ORDER BY target_id;
 ```
 
-**예상 결과:** `PP-1101`, `PP-1102` 2행. 팀을 `처방개발`로 바꾸면 `ST-0711` 1행입니다. 여기의 `WHERE`는 조회 조건이지 팀별 접근 통제(RLS)가 아닙니다.
+**예상 결과:** `PP-1101`, `PP-1102` 2행. 팀을 `처방개발`로 바꾸면 `ST-0711` 1행입니다.
+
+![구매·생산계획 담당 요청 PP-1101과 PP-1102의 조회 결과 2행](../assets/screenshots/06-team-review-requests.png)
 
 ## 5. 검토 착수와 이력 확인
 
-같은 `sqldb_cos`에서 **New Query**를 누르고 아래 SQL 블록 전체(`EXEC` 1개와 `SELECT` 2개)를 붙여 넣은 뒤 **Run**을 누릅니다. **Results** 탭에서 요청 상태와 상태 변경 이력을 각각 확인합니다.
+같은 `sqldb_cos`에서 **New Query**를 누르고 아래 SQL 블록 전체(`EXEC` 1개와 `SELECT` 2개)를 붙여 넣은 뒤 **Run**을 누릅니다. **Results** 탭의 결과 선택 메뉴에서 첫 번째와 두 번째 결과를 전환해 요청 상태와 상태 변경 이력을 각각 확인합니다.
 
 ```sql
 EXEC serving.usp_start_review
@@ -119,22 +121,17 @@ ORDER BY history_id;
 
 **예상 결과:** `PP-1101`만 `검토중`, 나머지는 `요청됨`. 이력은 `요청됨 → 검토중` 1행이고 `changed_by`는 SQL 실행 사용자입니다. 같은 착수 명령을 재실행하면 이미 상태가 바뀌었다는 오류가 발생하며 이력은 늘어나지 않습니다.
 
+![첫 번째 조회 결과에서 PP-1101은 검토중이고 PP-1102와 ST-0711은 요청됨인 상태](../assets/screenshots/06-review-start-status.png)
+
+![두 번째 조회 결과에서 요청됨에서 검토중으로 변경된 이력 1행과 SQL 실행 사용자 및 변경 시간](../assets/screenshots/06-review-workflow-history.png)
+
 이 단계는 **검토를 시작했다는 상태 변경**일 뿐, 대체 원료 승인이나 처방·발주 변경이 아닙니다.
-
-## 6. 재게시해도 업무 상태가 유지되는지 확인
-
-같은 `sqldb_cos`의 SQL 쿼리 편집기에서 다음 순서로 진행합니다.
-
-1. 3단계의 게시 명령(`EXEC serving.usp_publish_reviews ...;`)이 들어 있는 쿼리 탭을 열고 **Run**을 누릅니다.
-2. **New Query**를 눌러 5단계의 **SELECT 조회 두 개만** 복사해 실행합니다. 검토 착수 명령인 `EXEC serving.usp_start_review`는 다시 실행하지 않습니다.
-
-**예상 결과:** `inserted_count = 0`, 요청 3행, 이력 1행이며 `PP-1101`은 계속 `검토중`입니다. Lakehouse 원본은 승인 당시 `요청됨` 스냅샷을 유지합니다. 새 이벤트로 다시 진행할 때는 새 `run_tag`와 해당 `event_id`를 모든 질의에 사용합니다.
 
 ## 이 장의 완료 기준
 
 - `sqldb_cos`와 Serving 스키마를 직접 만들고 SQL DB와 Lakehouse SQL 분석 엔드포인트의 역할 차이를 설명할 수 있습니다. 기존 항목을 재사용했다면 해당 범위를 구분합니다.
 - 승인된 요청 3건을 게시하고 구매·생산계획 2건 / 처방개발 1건을 조회했습니다.
-- 검토 착수·이력·중복 착수 오류·재게시 시 상태 보존을 확인했습니다.
+- 검토 착수 후 요청 상태와 변경 이력을 확인했습니다.
 
 ## Troubleshooting
 

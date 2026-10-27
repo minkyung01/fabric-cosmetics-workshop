@@ -1222,7 +1222,7 @@ class Docs(unittest.TestCase):
         headings = re.findall(r"^## \d\. .+$", lesson, re.M)
         self.assertEqual(headings, [
             "## 1. SQL database 만들기", "## 2. Serving 스키마 만들기", "## 3. 승인 결과 게시",
-            "## 4. 담당 팀별 조회", "## 5. 검토 착수와 이력 확인", "## 6. 재게시해도 업무 상태가 유지되는지 확인",
+            "## 4. 담당 팀별 조회", "## 5. 검토 착수와 이력 확인",
         ])
         self.assertIn("**+ New item**", lesson)
         self.assertIn("이름을 `sqldb_cos`로 입력하고 **Create**", lesson)
@@ -1231,12 +1231,14 @@ class Docs(unittest.TestCase):
         self.assertNotIn("샘플 데이터는 넣지 않습니다", lesson)
         for screenshot in ("06-create-sql-database.png", "06-sql-database-home.png",
                            "06-publish-approved-requests.png", "06-publish-generated-sql.png",
-                           "06-publish-sql-result.png"):
+                           "06-publish-sql-result.png", "06-team-review-requests.png",
+                           "06-review-start-status.png", "06-review-workflow-history.png"):
             self.assertIn(f"../assets/screenshots/{screenshot}", lesson)
             self.assertTrue((ROOT / "assets" / "screenshots" / screenshot).is_file())
         self.assertIn("이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고", lesson)
-        self.assertIn("3단계의 게시 명령(`EXEC serving.usp_publish_reviews ...;`)", lesson)
-        self.assertIn("5단계의 **SELECT 조회 두 개만**", lesson)
+        self.assertNotIn("재게시해도 업무 상태가 유지되는지 확인", lesson)
+        self.assertNotIn("재게시 시 상태 보존을 확인했습니다", lesson)
+        self.assertNotIn("여기의 `WHERE`는 조회 조건이지 팀별 접근 통제(RLS)가 아닙니다", lesson)
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
         self.assertIn("--users users.csv --role Contributor", admin)
         self.assertIn("참가자용 `sqldb_cos`와 Serving 스키마는 사전 생성하지 않습니다", admin)
@@ -1250,14 +1252,15 @@ class Docs(unittest.TestCase):
 
     def test_serving_workflow_identifies_sql_database_query_location(self):
         lesson = (ROOT / "docs" / "06-serving-db.md").read_text(encoding="utf-8")
-        for heading in ("4. 담당 팀별 조회", "5. 검토 착수와 이력 확인",
-                        "6. 재게시해도 업무 상태가 유지되는지 확인"):
+        for heading in ("4. 담당 팀별 조회", "5. 검토 착수와 이력 확인"):
             section = lesson.split(f"## {heading}", 1)[1].split("\n## ", 1)[0]
             for instruction in ("sqldb_cos", "**New Query**", "**Run**"):
                 self.assertIn(instruction, section)
         self.assertIn("Notebook이나 `eh_cos`의 KQL 쿼리 창에서 실행하지 않습니다", lesson)
         self.assertIn("`EXEC` 1개와 `SELECT` 2개", lesson)
-        self.assertIn("`EXEC serving.usp_start_review`는 다시 실행하지 않습니다", lesson)
+        self.assertIn("4–5단계는 모두 `sqldb_cos`", lesson)
+        self.assertNotIn("4–6단계", lesson)
+        self.assertIn("결과 선택 메뉴에서 첫 번째와 두 번째 결과를 전환", lesson)
 
     def test_data_agent_setup_focuses_on_ontology_and_connected_lakehouse(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")

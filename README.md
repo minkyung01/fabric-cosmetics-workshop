@@ -17,7 +17,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | **Data Agent / Ontology Agent** | 공통 업무 맥락으로 **질의를 생성하고 근거를 확인** | Data Agent 생성·지침 입력을 체험하고, 현재 Preview의 메타데이터 연계 제약으로 업무 질문은 Ontology Agent의 Plan 모드에서 검증. 선택적으로 별도 Graph 에이전트와 비교 |
 | **Operations Agent** | 계산된 공급 위험을 **주기적으로 감시하고 행동을 제안** | Eventhouse·이벤트 테이블을 직접 만들고 지연 이벤트·Playbook·Teams 메시지를 연결. 영향 계산은 Notebook이 맡고, 에이전트는 근거와 승인할 작업을 전달 |
 | **Notebook** | 사람의 승인과 기록 작업을 연결 | 찾아낸 영향 대상의 검토 요청·조치 이력과 이벤트 상태 기록. 실제 구매·처방 변경은 하지 않음 |
-| **SQL database in Fabric** | 분석 결과를 **업무용 Serving DB**로 제공 | DB·Serving 스키마를 직접 만들고 승인된 요청 게시 → 담당 팀별 조회 → 검토 착수 → 상태 변경 이력을 T-SQL로 처리. 재게시해도 업무 상태 유지 |
+| **SQL database in Fabric** | 분석 결과를 **업무용 Serving DB**로 제공 | DB·Serving 스키마를 직접 만들고 승인된 요청 게시 → 담당 팀별 조회 → 검토 착수 → 상태 변경 이력을 T-SQL로 처리 |
 | **Microsoft Purview** | 민감 데이터의 분류와 정책을 업무 흐름에 연결 | 참가자가 게시된 민감도 레이블을 직접 적용·확인. 사전 구성된 환경에서 DLP 정책 팁 확인·카탈로그 자산 검색을 선택 수행 |
 
 ## 아키텍처
