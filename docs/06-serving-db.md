@@ -45,7 +45,7 @@
 
 2. 실행이 끝나면 왼쪽 **Explorer**에서 `sqldb_cos` 옆 **… → Refresh**를 누릅니다.
 
-   ![Explorer에서 sqldb_cos 옆 메뉴를 열어 Refresh를 선택하는 화면](../assets/screenshots/06-serving-explorer-refresh.png)
+   ![Explorer에서 sqldb_cos 옆 메뉴를 열어 Refresh를 선택하는 화면](../assets/screenshots/06-serving-refresh-menu.png)
 
 3. `sqldb_cos` → `serving`을 펼친 뒤 **Tables**와 **Stored Procedures**에서 다음 객체를 확인합니다.
 
@@ -56,8 +56,6 @@
 | `serving.usp_publish_reviews` | 승인 결과를 신규 요청만 추가하는 방식으로 게시 |
 | `serving.usp_start_review` | 요청 상태를 확인하고 상태 변경·이력을 한 트랜잭션으로 기록 |
 
-![serving 스키마의 테이블 2개와 프로시저 2개, 쿼리 실행 Succeeded 상태가 표시된 화면](../assets/screenshots/06-serving-schema-created.png)
-
 **확인할 결과:** 테이블 2개·프로시저 2개가 있고 첫 실행에서는 테이블이 비어 있습니다. 스키마 스크립트 재실행은 기존 데이터를 지우지 않습니다.
 
 ## 3. 승인 결과 게시
@@ -66,15 +64,13 @@
 
 1. `04_publish_serving`을 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). `event_id`가 05장에서 승인한 이벤트인지 확인합니다. 세션이 연결되어 있지 않다면 **Connect**로 시작하고, 연결 완료 후 **Run all**을 누릅니다.
 
-   ![04_publish_serving의 승인 결과 확인 출력에서 검토 요청 3행과 요청됨 상태를 확인한 표](../assets/screenshots/06-publish-approved-requests.png)
-
 2. 출력의 `EXEC serving.usp_publish_reviews ...;` 명령 전체를 복사합니다. 승인 조치·요청 수가 다르거나 승인 전이면 Notebook이 오류로 멈춥니다.
-
-   ![Notebook이 생성한 EXEC serving.usp_publish_reviews 명령과 sqldb_cos에서 실행하라는 안내](../assets/screenshots/06-publish-generated-sql.png)
 
 3. 작업 영역에서 `sqldb_cos`를 열고 상단 **New Query**를 누릅니다. 복사한 게시 명령 전체를 쿼리 편집기에 붙여 넣고 **Run**을 누릅니다.
 
 **Notebook 예상 출력:** 승인된 요청 표 3행(`PP-1101`·`PP-1102`·`ST-0711`, 상태 `요청됨`)과 `@expected_count = 3`을 포함한 `EXEC serving.usp_publish_reviews` 명령입니다. 마지막에는 `위 EXEC 명령을 sqldb_cos에서 실행`하라는 안내가 나옵니다.
+
+![Notebook이 생성한 EXEC serving.usp_publish_reviews 명령과 sqldb_cos에서 실행하라는 안내](../assets/screenshots/06-publish-generated-sql.png)
 
 **SQL 실행 후 예상 결과:** `inserted_count = 3`, `source_count = 3`. Notebook을 실행한 것만으로 DB에 게시되는 것은 아닙니다.
 
@@ -84,7 +80,7 @@
 
 ## 4. 담당 팀별 조회
 
-**실행 위치:** 4–5단계는 모두 `sqldb_cos`의 **SQL database 쿼리 편집기**에서 진행합니다. Notebook이나 `eh_cos`의 KQL 쿼리 창에서 실행하지 않습니다.
+**실행 위치:** 4–5단계는 모두 `sqldb_cos`의 **SQL database 쿼리 편집기**에서 진행합니다.
 
 1. 작업 영역에서 `sqldb_cos`를 열고 상단 **New Query**를 누릅니다.
 2. 아래 SQL을 붙여 넣고 **Run**을 누릅니다. 아래쪽 **Results** 탭에서 조회 결과를 확인합니다.
@@ -97,7 +93,7 @@ WHERE event_id = N'SUP-20261102-RM-HA-120-r1'
 ORDER BY target_id;
 ```
 
-**예상 결과:** `PP-1101`, `PP-1102` 2행. 팀을 `처방개발`로 바꾸면 `ST-0711` 1행입니다.
+**예상 결과:** `PP-1101`, `PP-1102` 2행.
 
 ![구매·생산계획 담당 요청 PP-1101과 PP-1102의 조회 결과 2행](../assets/screenshots/06-team-review-requests.png)
 
@@ -130,7 +126,7 @@ ORDER BY history_id;
 ## 이 장의 완료 기준
 
 - `sqldb_cos`와 Serving 스키마를 직접 만들고 SQL DB와 Lakehouse SQL 분석 엔드포인트의 역할 차이를 설명할 수 있습니다. 기존 항목을 재사용했다면 해당 범위를 구분합니다.
-- 승인된 요청 3건을 게시하고 구매·생산계획 2건 / 처방개발 1건을 조회했습니다.
+- 승인된 요청 3건을 게시하고 구매·생산계획 담당 요청 2건을 조회했습니다.
 - 검토 착수 후 요청 상태와 변경 이력을 확인했습니다.
 
 ## Troubleshooting

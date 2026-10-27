@@ -1230,13 +1230,17 @@ class Docs(unittest.TestCase):
         self.assertNotIn("Contributor만으로는 SQL DB를 생성할 수 없습니다", lesson)
         self.assertNotIn("샘플 데이터는 넣지 않습니다", lesson)
         for screenshot in ("06-create-sql-database.png", "06-sql-database-home.png",
-                           "06-publish-approved-requests.png", "06-publish-generated-sql.png",
+                           "06-serving-refresh-menu.png", "06-publish-generated-sql.png",
                            "06-publish-sql-result.png", "06-team-review-requests.png",
                            "06-review-start-status.png", "06-review-workflow-history.png"):
             self.assertIn(f"../assets/screenshots/{screenshot}", lesson)
             self.assertTrue((ROOT / "assets" / "screenshots" / screenshot).is_file())
         self.assertIn("이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고", lesson)
         self.assertNotIn("재게시해도 업무 상태가 유지되는지 확인", lesson)
+        for removed_screenshot in ("06-serving-explorer-refresh.png",
+                                   "06-serving-schema-created.png",
+                                   "06-publish-approved-requests.png"):
+            self.assertNotIn(removed_screenshot, lesson)
         self.assertNotIn("재게시 시 상태 보존을 확인했습니다", lesson)
         self.assertNotIn("여기의 `WHERE`는 조회 조건이지 팀별 접근 통제(RLS)가 아닙니다", lesson)
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
@@ -1256,7 +1260,8 @@ class Docs(unittest.TestCase):
             section = lesson.split(f"## {heading}", 1)[1].split("\n## ", 1)[0]
             for instruction in ("sqldb_cos", "**New Query**", "**Run**"):
                 self.assertIn(instruction, section)
-        self.assertIn("Notebook이나 `eh_cos`의 KQL 쿼리 창에서 실행하지 않습니다", lesson)
+        self.assertNotIn("Notebook이나 `eh_cos`의 KQL 쿼리 창에서 실행하지 않습니다", lesson)
+        self.assertNotIn("팀을 `처방개발`로 바꾸면 `ST-0711` 1행입니다", lesson)
         self.assertIn("`EXEC` 1개와 `SELECT` 2개", lesson)
         self.assertIn("4–5단계는 모두 `sqldb_cos`", lesson)
         self.assertNotIn("4–6단계", lesson)
