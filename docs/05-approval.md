@@ -26,7 +26,7 @@
 
    ![Teams에서 Confirm을 선택한 후 You selected Confirm으로 승인 응답이 표시된 화면](../assets/screenshots/05-confirm-selected.png)
 
-**확인할 결과:** **Action submitted** 메시지가 옵니다. 제출 완료이며, 실행 성공은 다음 단계에서 확인합니다.
+**확인할 결과:** **Action submitted** 메시지가 옵니다. 액션이 제출되면 **Action으로 등록한 Fabric 항목이 자동 실행**됩니다. 이 실습에서는 `nb_apply_review` Notebook이 전달된 매개 변수로 실행되며, 별도로 실행 버튼을 누르지 않습니다. 제출 완료이며, 실행 성공은 다음 단계에서 확인합니다.
 
 ![RequestMaterialReview가 제공된 매개 변수로 제출되었다는 Action submitted 메시지](../assets/screenshots/05-action-submitted.png)
 
