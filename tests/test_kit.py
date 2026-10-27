@@ -1023,6 +1023,51 @@ class Docs(unittest.TestCase):
         self.assertIn("DA04의 다른 원료 사용처 확인 부분 재사용", admin)
         self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
 
+    def test_graph_agent_screenshots_and_direct_material_path_are_documented(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        optional = lesson.split("## 5. 선택 실습", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", optional)
+        self.assertEqual(images, [
+            "../assets/screenshots/03-graph-agent-select-source.png",
+            "../assets/screenshots/03-graph-agent-instructions.png",
+            "../assets/screenshots/03-graph-agent-result-summary.png",
+            "../assets/screenshots/03-graph-agent-result-p101.png",
+            "../assets/screenshots/03-graph-agent-result-p301.png",
+            "../assets/screenshots/03-graph-agent-result-p102.png",
+            "../assets/screenshots/03-ontology-agent-query-execution.png",
+            "../assets/screenshots/03-graph-agent-generated-gql.png",
+        ])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        queries = re.findall(r"```gql\n(.*?)```", optional, re.S)
+        self.assertEqual(len(queries), 1)
+        query = " ".join(queries[0].split())
+        self.assertIn("(origin:RawMaterial)-[:supplied_by]->(s:Supplier)", query)
+        self.assertIn("<-[:supplied_by]-(other:RawMaterial) <-[:uses_material]-(fv:FormulaVersion)", query)
+        self.assertIn("<-[:made_with]-(p:`Product`)", query)
+        self.assertIn("other.material_code <> origin.material_code", query)
+        self.assertIn("fv.is_active = true", query)
+        self.assertIn("RETURN DISTINCT", query)
+        self.assertNotIn("has_ingredient", query)
+        self.assertIn("RawMaterialOther → Ingredient ← RawMaterialForFormula", optional)
+        self.assertIn("문자열 상수", optional)
+        self.assertIn("실제 실행 단계", optional)
+        self.assertIn("조회 결과 화면 예시</summary>", optional)
+        self.assertIn("GQL 화면과 확인할 점</summary>", optional)
+
+    def test_ontology_agent_execution_example_distinguishes_source_and_result_grain(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        example = lesson.split("<summary>Ontology Agent의 조회 실행 단계 예시와 비교 기준</summary>", 1)[1]
+        example = example.split("</details>", 1)[0]
+        for requirement in ("실제 발주 ETA까지 확인한", "5-2의 공통 질문은 사용처만 비교",
+                            "Executing unified query on the child Eventhouse",
+                            "evaluate sql_request(...)", "실행 계층과 업무 데이터 원본 구분",
+                            "전체 질의의 연결 정보", "`lh_cos` 바인딩",
+                            "원료·처방·제품 조합은 3행", "제품별 행을 제거하지 않습니다",
+                            "`2026-11-10`", "`PO-5505`", "지연이 다른 원료에도 발생했다고 추정하지",
+                            "질의는 중간이 생략", "**전체 실행 질의와 결과**"):
+            self.assertIn(requirement, example)
+
     def test_preview_lab_uses_ontology_agent_plan_after_data_agent_setup(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         intro = lesson.split("## 실습 구성과 사용 권장 기준", 1)[0]
@@ -1052,10 +1097,11 @@ class Docs(unittest.TestCase):
         completion = lesson.split("## 이 장의 완료 기준", 1)[1].split("## ", 1)[0]
         self.assertIn("Agent instructions 입력을 체험", completion)
         self.assertIn("Ontology Agent의 **Plan 모드**", completion)
-        self.assertEqual(len(re.findall(r"!\[[^]]*\]\([^)]+\)", lesson)), 5)
+        basic_lab = lesson.split("## 5. 선택 실습", 1)[0]
+        self.assertEqual(len(re.findall(r"!\[[^]]*\]\([^)]+\)", basic_lab)), 5)
         self.assertIn("https://learn.microsoft.com/en-us/fabric/iq/ontology/how-to-use-ontology-agent", lesson)
 
-    def test_data_agent_selects_seven_questions_with_inline_answers_and_detailed_criteria(self):
+    def test_data_agent_selects_seven_questions_with_inline_answers_and_verification_outputs(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \| ([^|\n]+) \|$", lesson, re.M)
         ids = [f"DA{i:02}" for i in range(1, 8)]
@@ -1071,8 +1117,17 @@ class Docs(unittest.TestCase):
         self.assertIn("3-2의 질문 7개를 기준으로 같은 ID·질문·순서", lesson)
         self.assertIn("| ID | 유형 | 질문 | 기대 답변 |", lesson)
         self.assertIn("**질문 열만 복사**", lesson)
-        answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
-        self.assertEqual(re.findall(r"^\| (DA\d{2}) \|", answers, re.M), ids)
+        verification = lesson.split("## 4. 답과 근거 검증하기", 1)[1].split("## 5.", 1)[0]
+        self.assertEqual(re.findall(r"^\| (DA\d{2}) [^|]+\| \d+행", verification, re.M), ids)
+        toggles = re.findall(r"<details>\s*<summary>([^<]+)</summary>(.*?)</details>", verification, re.S)
+        self.assertEqual(len(toggles), 1)
+        self.assertEqual(toggles[0][0], "DA03의 조건 판정 열 읽기")
+        self.assertIn("schedule_cn_ok = schedule_ok AND cn_ok", toggles[0][1])
+        self.assertEqual(verification.count("<details>"), 1)
+        self.assertEqual(verification.count("</details>"), 1)
+        self.assertNotIn("<details open", verification)
+        self.assertNotIn("상세 확인:", lesson)
+        self.assertNotIn("정답·필수 근거", lesson)
         self.assertIn("핵심 7문항을 DA01–DA07 순서대로", lesson)
         self.assertIn("Notebook에 준비된 SQL 실행 결과와 비교", lesson)
         self.assertIn("같은 번호·질문·순서", lesson)
@@ -1427,7 +1482,7 @@ class DataAgentQueries(unittest.TestCase):
 
     def test_documented_material_condition_flags_match_query_output(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
-        flags = lesson.split("**DA03의 조건 판정 열 읽기**", 1)[1].split("<details>", 1)[0]
+        flags = lesson.split("<summary>DA03의 조건 판정 열 읽기</summary>", 1)[1].split("</details>", 1)[0]
         for row in self.answers["DA03"]:
             cells = [f'`{row["material_code"]}`'] + [
                 f'`{str(bool(row[column])).lower()}`'
@@ -1469,6 +1524,11 @@ class DataAgentQueries(unittest.TestCase):
         self.assertEqual({r["version_id"] for r in supplier}, {"FV-CRM-01-03", "FV-AMP-03-02"})
         self.assertTrue(all((r["supplier_id"], r["material_code"], r["po_id"], r["recorded_eta"]) ==
                             ("SUP-02", "RM-PHE-002", "PO-5505", "2026-11-10") for r in supplier))
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        optional = lesson.split("## 5. 선택 실습", 1)[1]
+        for row in supplier:
+            self.assertIn(f'| `{row["material_code"]}` | `{row["version_id"]}` | `{row["product_id"]}` |',
+                          optional)
         self.assertEqual({(row["material_code"], row["version_id"]) for row in self.answers["Q4"]},
                          {("RM-PHE-002", "FV-CRM-01-03"), ("RM-PHE-002", "FV-AMP-03-02")})
 

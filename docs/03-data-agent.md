@@ -213,6 +213,8 @@ Ontology Agent의 답이 맞는지 확인하려고 **`02_answers` Notebook에 �
 
 **예상 출력:** **3-2의 질문 7개를 기준으로 같은 ID·질문·순서**로 확인합니다. 아래 출력명은 각 질문의 업무 내용을 요약한 것이며, Notebook에도 같은 출력명과 질문이 표시됩니다. 지연 반영 전 Q6의 `ops.material_impact가 아직 없습니다` 안내는 정상이며, 뒤의 DA 확인 결과와는 별개입니다.
 
+날짜의 연도는 별도 표시가 없으면 2026년입니다. 순서·표현이 달라도 **ID·조건·날짜·판정·근거**가 맞아야 합니다.
+
 | 출력 | 행 수와 확인할 값 |
 |---|---|
 | DA01 전체·활성 처방 | 4행, 원료 사용 처방 전체 4개 중 포함 3개·제외 1개. `version_id`·`status`·`is_active`·포함/제외 이유 확인. 폐기·false인 `FV-CRM-01-02`만 제외 |
@@ -223,9 +225,10 @@ Ontology Agent의 답이 맞는지 확인하려고 **`02_answers` Notebook에 �
 | DA06 통합 검토표 | 3행, `PP-1101`/`P-101`/KR·여유 -27일, `PP-1102`/`P-102`/CN·-20일, `ST-0711`/`DP-2026-07`/시장 미연결·-32일. 처방 버전·원 발주 `PO-5501`·공급사 `SUP-02`·필요일·일정 및 원료 확보 검토 사항 확인 |
 | DA07 발주 검토 기한 | 3행, 리드타임 10일. `ST-0711` → `PP-1101` → `PP-1102` 순서. 최종 발주일 11-03/11-08/11-15, 남은 일수 1/6/13. CN 제품 `P-102`는 CN 등록 검토가 필요하며, 일정 계산은 실제 대체 사용 승인이 아님 |
 
-**DA03의 조건 판정 열 읽기**
+<details>
+<summary>DA03의 조건 판정 열 읽기</summary>
 
-`schedule_ok`는 **필요일 이내 입고**, `cn_ok`는 **CN 등록 완료**를 각각 판정합니다. 두 조건을 함께 보는 `schedule_cn_ok = schedule_ok AND cn_ok`는 **두 열이 모두 `true`일 때만 `true`**입니다.
+`schedule_ok`는 **필요일 이내 입고**, `cn_ok`는 **CN 등록 완료**를 각각 판정합니다. 두 조건을 함께 보는 `schedule_cn_ok = schedule_ok AND cn_ok`는 두 열이 모두 `true`일 때만 `true`입니다.
 
 | 원료 | `schedule_ok` | `cn_ok` | `schedule_cn_ok` |
 |---|---|---|---|
@@ -235,21 +238,6 @@ Ontology Agent의 답이 맞는지 확인하려고 **`02_answers` Notebook에 �
 따라서 **개별 조건에 `true`가 있어도 종합 판정은 `false`일 수 있습니다.** 두 원료는 각각 일정 또는 CN 등록 조건에서 탈락하므로, 두 조건을 동시에 충족하는 원료가 없습니다. 모든 판정 열이 `false`여야 하는 것이 아닙니다.
 
 **승인 열도 함께 표시되는 출력:** `approval_ok`는 승인 상태가 '승인'인지 확인하며, `all_ok = approval_ok AND schedule_ok AND cn_ok`는 **승인·일정·CN 등록의 세 조건**을 모두 확인합니다. 이 경우 `RM-HA-210`의 `approval_ok`는 `true`, `RM-HA-305`는 `false`이고, 두 원료의 `all_ok`는 모두 `false`입니다. 기본 DA03 참조 질의는 승인 상태를 조회하지 않고 일정·CN 등록만 비교하므로, `schedule_cn_ok`와 승인까지 포함한 `all_ok`의 판정 범위를 구분합니다. 어느 경우에도 조건 판정만으로 실제 대체 사용을 확정하지 않습니다.
-
-<details>
-<summary>상세 확인: 핵심 7문항의 판정 기준과 Notebook 근거</summary>
-
-날짜의 연도는 별도 표시가 없으면 2026년입니다. 순서·표현이 달라도 **ID·조건·날짜·판정·근거**가 맞아야 합니다.
-
-| ID | 정답·필수 근거 | Notebook 근거 |
-|---|---|---|
-| DA01 | 전체 4개 → 활성 3개. `FV-CRM-01-02`는 폐기·false로 제외하고 `FV-CRM-01-03`, `FV-TON-02-01`, `FV-AMP-03-02` 포함. 개발중을 제외하면 틀림 | DA01 전체·활성 처방 |
-| DA02 | 시험 배치일 11-20 − QC 7일 = 필요일 **11-13**. 11-13 입고는 여유 **0일·일정 지연 없음**이지만 **추가 여유 없음·주의**, 11-14는 **-1일·일정 1일 지연**. `is_impacted`는 여유일 `< 0`인 일정 지연만 판정하며, 0일을 안전한 상태로 해석하면 틀림 | DA02 경계 판정 |
-| DA03 | `PP-1102` 계획일 12-02 − QC 7일 = 필요일 11-25. `RM-HA-210` 리드타임 10일 → 11-12 입고·여유 13일, CN 등록 필요(`schedule_ok = true`·`cn_ok = false`). `RM-HA-305` 리드타임 42일 → 12-14 입고·여유 -19일, CN 등록 완료(`schedule_ok = false`·`cn_ok = true`). 두 행 모두 `schedule_cn_ok = false`지만 개별 조건은 일부 충족. 기본 참조 질의는 승인 상태를 조회하지 않으며, 승인 포함 출력의 `all_ok`와 구분 | DA03 일정·CN 비교 |
-| DA04 | `SUP-02`의 다른 원료 `RM-PHE-002` → 활성 `FV-CRM-01-03`/`FV-AMP-03-02` → 제품 `P-101`/`P-102`/`P-301`. 해당 발주 `PO-5505`의 ETA는 11-10. 다른 원료의 사용처와 실제 발주를 확인하는 문항이며, 같은 공급사라는 사실만으로 지연을 확정하지 않음 | DA04 다른 원료 사용처·발주 ETA |
-| DA05 | 필요일: `PP-1101` 11-18, `PP-1102` 11-25, `PP-1103` 2027-01-13, `ST-0711` 11-13. 같은 순서로 여유일 **8/15/64/3 → -27/-20/29/-32**. 새 영향 3건은 `PP-1101`/`PP-1102`/`ST-0711`; `PP-1103` 영향 없음, 원료를 쓰지 않는 `PP-1104` 제외 | DA05 입고일 비교 |
-| DA06 | 영향 3행. `PP-1101`/`P-101`/KR, `PP-1102`/`P-102`/CN, `ST-0711`/`DP-2026-07`/시장 미연결. 원 발주 `PO-5501`·공급사 `SUP-02`, 여유 -27/-20/-32. 생산·시험 일정과 원료 확보를 검토하며 대체 후보·승인 정보는 조회하지 않음. 원본 ETA와 가정 ETA를 구분 | DA06 통합 검토표 |
-| DA07 | 최종 발주일 = 원료 필요일 − RM-HA-210 리드타임 10일. `ST-0711` 11-03(기준일 대비 1일), `PP-1101` 11-08(6일), `PP-1102` 11-15(13일). 일정상 검토 순서는 시험 → KR 생산 → CN 생산. CN 제품은 등록 검토가 별도 필요하며, 추가 공정·검증에 필요한 시간은 이 역산에 포함하지 않음 | DA07 발주 검토 기한 |
 
 </details>
 
@@ -265,6 +253,9 @@ Ontology Agent의 답이 맞는지 확인하려고 **`02_answers` Notebook에 �
 
 1. 작업 영역에서 **+ New item → Data agent**로 별도 `da_cos_graph`를 만듭니다. 기존 `da_cos`는 그대로 유지합니다.
 2. **Add a data source** 또는 **Add sources**에서 02장의 `ont_cos_graph_…`을 선택합니다. 항목 유형이 **Graph model**인지 확인합니다. 이 에이전트에는 **Graph 원본만 연결**하고, Ontology나 Lakehouse는 추가하지 않습니다.
+
+   ![Add a data source에서 Lakehouse·KQL Database가 아닌 Graph model 항목을 선택하고 Add](../assets/screenshots/03-graph-agent-select-source.png)
+
 3. Graph가 최신 원본을 반영했는지 확인합니다. **Graph는 Materialize·새로 고침 시점의 데이터**이므로, 원본 변경 후에는 02장의 갱신 절차를 먼저 확인합니다.
 4. `da_cos_graph`의 **Agent instructions**에는 아래 지침을 입력합니다. 기본 `da_cos`의 SQL·계산용 지침을 그대로 복사하지 않습니다.
 
@@ -272,11 +263,17 @@ Ontology Agent의 답이 맞는지 확인하려고 **`02_answers` Notebook에 �
 연결된 Graph model만 사용해 원료의 사용처와 업무 연결 경로를 조회합니다.
 답은 한국어로 하고, 실제 Graph 스키마에 맞는 GQL을 사용합니다.
 활성 처방을 묻는 질문에는 is_active = true를 적용합니다.
+원료의 실제 사용처는 해당 RawMaterial과 FormulaVersion 사이의 uses_material 직접 관계로 확인합니다.
+같은 Ingredient를 가진 다른 원료의 사용처로 확장하지 않습니다.
 대상의 ID와 중간 노드·관계, 실제 저장된 관계 방향을 보여줍니다.
 사용한 Graph 원본과 실행한 GQL을 확인할 수 있게 합니다.
 원본·Ontology·Graph 정의는 변경하지 않습니다.
 투영되지 않은 속성이나 확인할 수 없는 값은 추정하지 않습니다.
 ```
+
+![Graph model만 연결한 da_cos_graph의 Agent instructions 입력 위치](../assets/screenshots/03-graph-agent-instructions.png)
+
+화면은 설정 위치 예시이며, 입력할 지침은 위 블록을 기준으로 합니다.
 
 ### 5-2. 같은 관계 질문을 두 에이전트에 보내기
 
@@ -296,7 +293,79 @@ RM-HA-120 자체는 제외하고, 그 원료를 쓰는 활성 처방과 연결�
 | --- | --- | --- |
 | 같은 공급사의 다른 원료 | `SUP-02`의 `RM-PHE-002` → 활성 처방 `FV-CRM-01-03`·`FV-AMP-03-02` → 제품 `P-101`·`P-102`·`P-301` | DA04 다른 원료 사용처·발주 ETA |
 
+**예상 결과는 원료 1개·활성 처방 2개·제품 조합 3개**입니다. 순서는 달라도 아래 세 조합이 맞아야 합니다.
+
+| 원료 | 활성 처방 버전 | 제품 |
+|---|---|---|
+| `RM-PHE-002` | `FV-CRM-01-03` | `P-101` |
+| `RM-PHE-002` | `FV-CRM-01-03` | `P-102` |
+| `RM-PHE-002` | `FV-AMP-03-02` | `P-301` |
+
+<details>
+<summary>조회 결과 화면 예시</summary>
+
+아래는 동일 공급사의 다른 원료와 세 제품 조합을 확인한 응답 예시입니다. 화면의 긴 경로 설명을 그대로 정답으로 간주하지 말고, 다음 절에서 원료 사용 관계도 확인합니다.
+
+![같은 공급사의 다른 원료 RM-PHE-002와 세 제품 조합을 설명하는 응답](../assets/screenshots/03-graph-agent-result-summary.png)
+
+![RM-PHE-002·FV-CRM-01-03·P-101 조합과 에이전트가 표시한 경로](../assets/screenshots/03-graph-agent-result-p101.png)
+
+![RM-PHE-002·FV-AMP-03-02·P-301 조합과 에이전트가 표시한 경로](../assets/screenshots/03-graph-agent-result-p301.png)
+
+![RM-PHE-002·FV-CRM-01-03·P-102 조합과 에이전트가 표시한 경로](../assets/screenshots/03-graph-agent-result-p102.png)
+
+</details>
+
 두 에이전트가 같은 원료·처방·제품을 찾았는지 보고, 실제 질의 원본과 언어를 확인합니다. **`da_cos_graph`는 Graph GQL**을 사용하며, Ontology Agent는 사용 가능한 원본에 따라 SQL 또는 GQL 등을 선택할 수 있습니다. `da_cos` 직접 비교를 진행했다면 **`da_cos`는 Lakehouse SQL**을 실행했는지도 확인합니다.
+
+<details>
+<summary>Ontology Agent의 조회 실행 단계 예시와 비교 기준</summary>
+
+아래는 DA04에서 **실제 발주 ETA까지 확인한** Ontology Agent의 화면 예시입니다. 5-2의 공통 질문은 사용처만 비교하므로, ETA 조회까지 동일하게 실행할 필요는 없습니다.
+
+![Ontology Agent가 child Eventhouse에서 sql_request로 SQL 원본 조회를 호출하고 원료·처방·제품 조합을 설명하는 화면](../assets/screenshots/03-ontology-agent-query-execution.png)
+
+**실행 계층과 업무 데이터 원본 구분:** 화면에는 `Executing unified query on the child Eventhouse`와 `evaluate sql_request(...)`가 보입니다. 이는 Eventhouse에서 SQL 원본 조회를 호출하는 실행 형태입니다. Eventhouse가 표시됐다고 업무 데이터 원본도 Eventhouse라고 단정하거나, Ontology Agent가 항상 Graph GQL로 조회한다고 해석하지 않습니다. 호출한 SQL 원본은 전체 질의의 연결 정보와 Ontology의 `lh_cos` 바인딩을 대조해 확인합니다.
+
+**원료 수와 결과 행 수 구분:** `RM-PHE-002`는 원료 1개이지만, 활성 처방 `FV-CRM-01-03`·`FV-AMP-03-02`와 제품 `P-101`·`P-102`·`P-301`로 연결되어 **원료·처방·제품 조합은 3행**입니다. 같은 원료 코드가 반복된다는 이유만으로 중복 오류로 판정하거나 제품별 행을 제거하지 않습니다.
+
+**실제 ETA와 지연 추정 구분:** 화면의 설명에는 실제 발주 ETA `2026-11-10`이 나옵니다. Notebook DA04의 `PO-5505`와 대조하며, 같은 공급사라는 이유만으로 `RM-HA-120`의 지연이 다른 원료에도 발생했다고 추정하지 않습니다.
+
+**화면 설명과 질의 검증 구분:** Reasoning의 설명은 확인할 항목을 이해하는 데 활용하되, 조인·활성 필터가 정확하다는 증거로 대신하지 않습니다. 이 화면의 질의는 중간이 생략되어 있으므로, **전체 실행 질의와 결과**를 열어 4번의 Notebook 근거와 비교합니다.
+
+</details>
+
+### 5-4. 생성된 GQL이 실제 원료 사용처를 조회하는지 점검
+
+결과 ID가 맞아도 **같은 성분을 통한 연결**과 **해당 원료의 실제 사용**은 구분해야 합니다. 생성된 GQL이 `RawMaterialOther → Ingredient ← RawMaterialForFormula`처럼 `has_ingredient`를 왕복하면, 두 원료가 동일하다는 조건이 없는 한 같은 성분의 **다른 원료**를 쓰는 처방까지 포함할 수 있습니다.
+
+현재 데이터에서는 `ING-PHE`에 연결된 원료가 `RM-PHE-002`뿐이고, 화면에 표시된 세 조합은 기대값과 일치합니다. 그 사실만으로 생성된 질의의 의미나 실행 성공까지 확인된 것은 아닙니다. 이 우회 경로를 일반적인 사용처 판정 규칙으로 삼지 말고, **찾은 다른 원료와 처방을 `uses_material`로 직접 연결하는지** 확인합니다.
+
+<details>
+<summary>에이전트가 표시한 GQL 화면과 확인할 점</summary>
+
+![에이전트가 Graph 원본 설명과 GQL을 표시한 화면: has_ingredient 우회 경로 확인 필요](../assets/screenshots/03-graph-agent-generated-gql.png)
+
+복사한 코드가 `LET`의 변수 정의에서 끝난다면 반환 절까지 복사됐는지 확인합니다. 아래 참고 질의처럼 `RETURN`으로 결과 열을 명시해 Graph의 Code editor에서 별도로 대조할 수 있습니다.
+
+`GraphSource = 'Ingredient, RawMaterial, ...'` 같은 값은 질의에 적은 **문자열 상수**이며, 실제 Graph model 이름이나 실행 증거가 아닙니다. **Sources의 Graph model 항목과 실제 실행 단계**를 확인하고, 답변에 표시된 질의를 실행 완료된 질의로 단정하지 않습니다.
+
+</details>
+
+**직접 관계를 점검하는 참고 GQL:** 02장의 절차대로 실제 Graph 스키마의 레이블·관계명·방향과 대조한 뒤, Graph의 Code editor에서 실행해 Notebook DA04의 사용처와 비교합니다.
+
+```gql
+MATCH (origin:RawMaterial)-[:supplied_by]->(s:Supplier)
+      <-[:supplied_by]-(other:RawMaterial)
+      <-[:uses_material]-(fv:FormulaVersion)
+      <-[:made_with]-(p:`Product`)
+WHERE origin.material_code = 'RM-HA-120'
+  AND other.material_code <> origin.material_code
+  AND fv.is_active = true
+RETURN DISTINCT s.supplier_id, other.material_code, fv.version_id, p.product_id
+```
+
+이 질의는 다른 원료의 **현재 사용처**를 확인하며, 발주 ETA나 일정 지연을 판정하지 않습니다. 실제 발주 ETA는 4번의 Notebook 결과와 구분해 확인합니다.
 
 답이 다르면 Graph의 갱신 시점·투영 범위, 실제 스키마와 활성 필터를 먼저 비교합니다. Graph에서 확인할 수 없는 속성·계산은 확인 불가로 기록하고 **Ontology Agent 또는 Notebook의 Lakehouse SQL**로 검증합니다. Graph의 지원 범위 밖 질문에 답하기 위해 `da_cos_graph`에 Lakehouse를 추가하지 않습니다.
 
