@@ -66,6 +66,7 @@ Ontology Agent의 기본 반환 한도는 SQL/KQL/GQL 1,000행, DAX 200행입니
 - Agent ID가 있어도 실행은 **작성자 권한의 delegated/OBO** 경로입니다. Teams 수신자의 승인으로 실행 권한이 그 수신자로 바뀌지 않습니다. Notebook·Lakehouse·Eventhouse 권한을 작성자 기준으로 최소화합니다.
 - 활동 화면은 현재 **Activity log**로 안내됩니다. 실습 UI와 이름이 다르면 실제 실행 상태·규칙·액션 기록을 확인합니다.
 - `requested_by`는 Notebook 실행 사용자이지 Teams 승인자 증빙이 아닙니다. 실제 승인 감사는 Teams/에이전트 실행 기록과 조직 감사 정책을 별도로 확인합니다.
+- 승인 후 기록 확인은 `lh_cos`에 연결된 Notebook의 **읽기 전용 Spark SQL 조회**를 기본으로 합니다. 실습에서 `ops.review_request`가 Spark에서는 조회되지만 SQL 분석 엔드포인트에서는 `Invalid object name`이 발생했습니다. 승인 실패와 구분하고, SQL 메타데이터 동기화·노출 상태를 별도 확인합니다. 원인을 동기화 지연으로 단정하거나 확인을 위해 승인 Notebook을 재실행하지 않습니다.
 
 ## 6. SQL Serving·Purview와 확인 범위
 

@@ -18,38 +18,53 @@
 
 1. Teams의 **Fabric Operations Agent** 채팅에서 4장의 메시지를 엽니다.
 2. **Proceed**를 누르면 "Confirm details for RequestMaterialReview" 창이 열립니다.
-3. 매개 변수를 확인합니다: `event_id = SUP-20261102-RM-HA-120-r1`, `material_code = RM-HA-120`, `eventhouse_name = eh_cos`.
+3. 매개 변수를 확인합니다. `event_id`는 **승인하려는 알림의 Id와 같은 값**이어야 합니다. `material_code = RM-HA-120`, `eventhouse_name = eh_cos`도 확인합니다.
+
+   아래 화면은 `r1` 예시입니다. `r2` 알림을 승인한다면 `event_id`도 `SUP-20261102-RM-HA-120-r2`여야 합니다.
+
+   ![RequestMaterialReview의 event_id, material_code, eventhouse_name을 확인하는 Teams 승인 화면](../assets/screenshots/05-confirm-parameters.png)
+
 4. **Confirm**을 누릅니다.
 
-**확인할 결과:** "Action submitted" 메시지가 옵니다.
+   ![Teams에서 Confirm을 선택한 후 You selected Confirm으로 승인 응답이 표시된 화면](../assets/screenshots/05-confirm-selected.png)
+
+**확인할 결과:** **Action submitted** 메시지가 옵니다. 제출 완료이며, 실행 성공은 다음 단계에서 확인합니다.
+
+![RequestMaterialReview가 제공된 매개 변수로 제출되었다는 Action submitted 메시지](../assets/screenshots/05-action-submitted.png)
 
 ## 2. 실행 확인
 
-작업 영역의 **Monitor**에서 `nb_apply_review` 실행을 찾습니다.
+Fabric 왼쪽 메뉴의 **Monitor** → **Activities**에서 `nb_apply_review` 실행을 찾습니다.
 
 **예상 코드 실행 시간:** 약 1–3분(세션 준비 제외). 승인 액션은 세션을 자동으로 준비하므로 제출 후 완료까지는 더 걸릴 수 있습니다. 직접 **Connect**나 **Run all**을 누르지 않고 Monitor에서 확인합니다.
 
 **확인할 결과:** 상태가 **Succeeded**입니다.
 
-**Notebook 예상 출력**(현재 이벤트의 첫 승인 기준):
+![Monitor에서 nb_apply_review Notebook 실행 상태가 Succeeded인 화면](../assets/screenshots/05-notebook-succeeded.png)
 
-| 단계 | 출력과 확인할 결과 |
-|---|---|
-| 이벤트 상태 확인 | `SUP-20261102-RM-HA-120-r1: 최신 상태 open` |
-| 검토 요청 등록 | `PP-1101`·`PP-1102`·`ST-0711`의 표 3행, 상태 `요청됨` |
-| 조치 기록 | `SUP-20261102-RM-HA-120-r1: review_requested 기록 (3건)` |
-| 이력 조회 | 조치 이력 표 1행, 이벤트 상태 이력 표 `open` → `review_requested` 2행 |
+Monitor의 **Jobs**는 Spark 작업 목록이고, **Item snapshots**는 실행 당시 코드·매개 변수 확인용입니다. 실제 기록은 아래 조회로 확인합니다.
 
 ## 3. 기록 확인
 
-`nb_apply_review` 실행 결과(Monitor에서 열기)나 `lh_cos`의 SQL 분석 엔드포인트에서 확인합니다.
+**기본 경로는 Notebook의 Spark SQL 조회**입니다. `lh_cos`가 기본 Lakehouse로 연결된 `02_answers`를 열고, **새 코드 셀에 붙여 넣어 해당 셀만 실행**합니다. 세션 준비 시간이 추가될 수 있습니다. 기록 확인을 위해 `nb_apply_review`를 다시 실행하지 않습니다.
 
-``` sql
+아래 조회의 `event_id`는 `r1` 예시입니다. `r2` 이벤트를 승인했다면 **두 Spark SQL 셀과 KQL의 이벤트 ID를 모두** `SUP-20261102-RM-HA-120-r2`로 바꿉니다.
+
+첫 번째 새 셀에서 검토 요청을 조회합니다.
+
+```sql
+%%sql
 SELECT request_id, target_type, target_id, assignee_team, slack_days, suggestion, request_status, requested_by
-FROM ops.review_request ORDER BY target_id;
+FROM ops.review_request
+WHERE event_id = 'SUP-20261102-RM-HA-120-r1'
+ORDER BY target_id;
 ```
 
-**예상 결과:** 3행
+**조회 예상 출력:** 승인한 이벤트의 검토 요청 3행
+
+![Notebook의 Spark SQL에서 r2 이벤트의 검토 요청 3행과 요청됨 상태를 확인한 화면](../assets/screenshots/05-spark-review-requests.png)
+
+스크린샷은 `r2` 조회 예시입니다.
 
 | target_id | target_type | assignee_team | slack_days | suggestion |
 |---|---|---|---|---|
@@ -59,8 +74,14 @@ FROM ops.review_request ORDER BY target_id;
 
 `request_status`는 모두 `요청됨`입니다. `requested_by`는 Notebook 실행 컨텍스트의 사용자이며, Teams에서 승인한 사람을 증명하는 필드가 아닙니다. 실제 운영의 승인자 감사는 별도의 승인 기록과 연결해야 합니다.
 
-``` sql
-SELECT * FROM ops.action_log ORDER BY action_at;
+두 번째 새 셀에서 조치 이력을 조회합니다.
+
+```sql
+%%sql
+SELECT event_id, action, request_count, note, action_at
+FROM ops.action_log
+WHERE event_id = 'SUP-20261102-RM-HA-120-r1'
+ORDER BY action_at;
 ```
 
 **예상 결과:** `review_requested` 1행, `request_count = 3`, note `검토 요청 3건 등록. 구매 발주·처방 변경 없음`.
@@ -76,18 +97,40 @@ MaterialSupplyEvent
 
 **예상 결과:** `open` → `review_requested` 2행.
 
+<details>
+<summary>SQL 분석 엔드포인트에서 테이블을 찾지 못하는 경우</summary>
+
+SQL 분석 엔드포인트에 테이블이 노출되어 있다면 위 Spark SQL 조회에서 `%%sql` 줄을 빼고 실행할 수도 있습니다. 다만 실습에서는 **Spark에서 요청 3행이 조회되는데 SQL 분석 엔드포인트에서는 `Invalid object name 'ops.review_request'`가 발생**했습니다.
+
+![Spark에서 조회된 동일한 r2 이벤트의 review_request를 SQL 분석 엔드포인트에서는 찾지 못하는 화면](../assets/screenshots/05-sql-endpoint-table-not-found.png)
+
+이는 승인 실패와 구분합니다. 원본 데이터는 Spark에서 확인됐지만, SQL 엔드포인트에는 해당 테이블이 노출되지 않은 상태입니다. 화면만으로 메타데이터 동기화 지연인지 다른 노출 문제인지 확정하지 않습니다.
+
+SQL 엔드포인트의 테이블 목록은 아래로 확인합니다.
+
+```sql
+SELECT TABLE_SCHEMA, TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_NAME IN ('material_impact', 'review_request', 'action_log')
+ORDER BY TABLE_SCHEMA, TABLE_NAME;
+```
+
+SQL 목록에 없다면 Lakehouse 화면의 **Tables → ops**와 비교하고, SQL 엔드포인트의 동기화 상태를 확인합니다. **승인 Notebook 재실행·테이블 재생성은 하지 않습니다.** 이 장의 기록 확인은 위 Spark SQL 조회와 Eventhouse 상태 이력으로 진행합니다. Spark에서도 테이블을 찾지 못하면 `02_answers`와 승인 실행의 기본 Lakehouse가 모두 내 `lh_cos`인지부터 확인합니다.
+
+</details>
+
 ## 4. 중복 승인 확인 (선택)
 
 같은 메시지에서 다시 **Proceed** → **Confirm**하거나 `nb_apply_review`를 같은 `event_id`로 손으로 실행합니다.
 
-**확인할 결과:** "최신 상태 review_requested"가 출력되고 `ops.review_request`는 여전히 3행입니다. 승인 작업은 **여러 번 실행돼도 결과가 같도록** 만들어야 합니다.
+**확인할 결과:** "최신 상태 review_requested"가 출력되고 `ops.review_request`의 해당 이벤트 기록은 여전히 3행입니다. 승인 작업은 **여러 번 실행돼도 결과가 같도록** 만들어야 합니다.
 
 > **토론 포인트:** 이 Notebook이 한 일은 "검토 요청 등록"과 "이력 기록"뿐입니다. 실제 대체 원료 전환, 발주 변경, CN 등록 착수는 각 부서의 검토 절차를 따릅니다. 업무에 적용할 때 에이전트에게 맡길 범위와 사람의 승인이 필요한 범위를 구분합니다.
 
 ## 이 장의 완료 기준
 
 - Teams 승인 후 `nb_apply_review`가 Succeeded입니다.
-- `ops.review_request` 3행, `ops.action_log` 1행, Eventhouse 상태 이력 2행을 확인했습니다.
+- 승인한 `event_id` 기준으로 `ops.review_request` 3행, `ops.action_log` 1행, Eventhouse 상태 이력 2행을 확인했습니다.
 
 ## Troubleshooting
 
@@ -100,6 +143,7 @@ MaterialSupplyEvent
 
 - [Operations agent 작업(Actions)과 승인](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent-actions)
 - [Monitor 허브](https://learn.microsoft.com/en-us/fabric/admin/monitoring-hub)
+- [Spark 실행 상세 — Jobs와 Item snapshots](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-detail-monitoring)
 
 ## 다음 단계
 
