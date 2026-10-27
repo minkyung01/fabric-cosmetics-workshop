@@ -23,13 +23,15 @@
 1. 내 작업 영역 `cos-pNNN`에서 **+ New item**을 누릅니다.
 2. `SQL database`를 검색해 선택합니다.
 3. 이름을 `sqldb_cos`로 입력하고 **Create**를 누릅니다.
+
+   ![New SQL database 창에서 이름을 sqldb_cos로 입력하고 Create를 누르는 화면](../assets/screenshots/06-create-sql-database.png)
+
 4. 생성이 끝나고 DB의 **Home**과 **Explorer**가 열릴 때까지 기다립니다.
 5. 화면 오른쪽 위 메뉴에 **SQL database**가 표시되는지 확인합니다. **SQL analytics endpoint**로 표시된다면 해당 메뉴를 눌러 **SQL database**로 전환합니다.
+
+   ![생성된 sqldb_cos의 Home 화면에서 Explorer, New Query, T-SQL 타일과 우측 상단 SQL database 선택을 확인하는 화면](../assets/screenshots/06-sql-database-home.png)
+
 6. 화면 위쪽 도구 모음에서 **New Query**를 누릅니다. SQL을 입력할 수 있는 빈 쿼리 편집기가 열립니다.
-
-![New SQL database 창에서 이름을 sqldb_cos로 입력하고 Create를 누르는 화면](../assets/screenshots/06-create-sql-database.png)
-
-![생성된 sqldb_cos의 Home 화면에서 Explorer, New Query, T-SQL 타일과 우측 상단 SQL database 선택을 확인하는 화면](../assets/screenshots/06-sql-database-home.png)
 
 **확인할 결과:** 본인 작업 영역에 `sqldb_cos`가 생기고 쿼리 편집기를 열 수 있습니다. 생성 직후에는 테이블과 프로시저 목록이 비어 있습니다.
 
