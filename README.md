@@ -39,7 +39,7 @@ Caldova 코스메틱 연구소에 **히알루론산 원료의 입고가 35일 �
 | 준비된 항목 | 용량이 할당된 **작업 영역·접근 권한·Notebook 5개**. Lakehouse와 데이터는 참가자가 생성 |
 | 직접 만들 항목 | **00장에서 Lakehouse `lh_cos` 생성 → `01_prepare_data`에 연결 → `gold` 테이블 생성**. 나머지 Notebook은 해당 장에서 연결. **Ontology `ont_cos`는 01장, Eventhouse `eh_cos`는 04장, SQL DB `sqldb_cos`는 06장에서 직접 생성** |
 | 용량 | **유료 Fabric 용량(F SKU)**. Operations Agent는 Trial 용량을 지원하지 않습니다 |
-| Teams | **Fabric Operations Agent** Teams 앱 설치 (4장) |
+| Teams | Fabric과 같은 조직 계정 사용. **Fabric Operations Agent** 앱 수동 추가는 필요한 경우에만 진행 (4장) |
 | 브라우저 | Fabric 포털 로그인, 팝업 허용 |
 | Purview 실습 | Pro/PPU, 항목 편집 권한, 사용 가능한 게시 레이블. 수행 가능한 확장 범위는 [07장](docs/07-purview.md)에서 확인 |
 

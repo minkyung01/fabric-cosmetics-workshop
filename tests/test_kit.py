@@ -944,11 +944,17 @@ class Docs(unittest.TestCase):
 
     def test_operations_guide_explains_teams_app_setup_and_shows_eventhouse_creation(self):
         lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
-        setup = lesson.split("### Teams 알림 앱 준비", 1)[1].split("## 1.", 1)[0]
-        for requirement in ("**Teams 안에 앱을 추가**", "자동으로 설치되어 있거나",
-                            "조직 계정", "**앱(Apps) 메뉴**", "`Fabric Operations Agent`",
+        setup = lesson.split("### Teams 알림 앱 확인", 1)[1].split("## 1.", 1)[0]
+        for requirement in ("**Teams 안에 앱을 추가**", "자동으로 설치될 수 있으므로",
+                            "수동 추가가 항상 필요한 것은 아닙니다", "이미 알림을 받고 있다면",
+                            "아래 절차는 건너뜁니다", "조직 계정", "**앱(Apps) 메뉴**", "`Fabric Operations Agent`",
                             "**추가(Add) 버튼**", "Teams 관리자"):
             self.assertIn(requirement, setup)
+        setup_images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", setup)
+        self.assertEqual(setup_images, ["../assets/screenshots/04-teams-app-search.png"])
+        self.assertNotIn("앱이 설치되어 있어야 메시지를 받을 수 있습니다", lesson)
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("앱 수동 추가는 필요한 경우에만 진행", readme)
         creation = lesson.split("## 1. Eventhouse 만들기", 1)[1].split("## 2.", 1)[0]
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", creation)
         self.assertEqual(images, ["../assets/screenshots/04-create-eventhouse.png",
@@ -958,11 +964,13 @@ class Docs(unittest.TestCase):
         event_images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", events)
         self.assertEqual(event_images, ["../assets/screenshots/04-event-table-created.png",
                                         "../assets/screenshots/04-event-count-zero.png"])
-        for image in images + event_images:
+        for image in setup_images + images + event_images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
         for requirement in ("`eh_cos_queryset`", "**KQL Queryset**", "**Run**",
-                            "테이블 정의 결과", "`Count = 0`", "집계 결과가 한 행"):
+                            "테이블 정의 결과", "`Count = 0`", "집계 결과 1행입니다"):
             self.assertIn(requirement, events)
+        self.assertNotIn("이벤트가 1건 들어왔다는 뜻이 아닙니다", events)
+        self.assertNotIn("이벤트 건수는 `Count` 열의 값으로 판단", events)
 
     def test_operations_guide_shows_review_notebook_and_agent_creation(self):
         lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
@@ -985,7 +993,6 @@ class Docs(unittest.TestCase):
         self.assertIn("MaterialSupplyEvent.material_code", parameters["material_code"])
         self.assertIn("항상 eh_cos를 전달", parameters["eventhouse_name"])
         self.assertIn("**Description은 직접 입력**", creation)
-        self.assertIn("Description은 실제 이벤트 ID를 입력하는 칸이 아닙니다", creation)
         self.assertIn("**Next**", creation)
         self.assertIn("**Review and create** 단계", creation)
 

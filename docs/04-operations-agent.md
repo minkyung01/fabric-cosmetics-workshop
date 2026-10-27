@@ -21,18 +21,28 @@ flowchart LR
 - **유료 Fabric 용량**(F SKU)이 필요합니다. Operations agent는 Trial 용량을 지원하지 않습니다.
 - 내 작업 영역 `cos-pNNN`에 **Contributor 이상** 권한이 있고 Fabric 항목을 생성할 수 있어야 합니다. `eh_cos`는 이 장에서 직접 만듭니다.
 - 테넌트에서 Operations agent, Copilot·Azure OpenAI, (필요 시) 지역 간 처리 설정이 켜져 있어야 합니다(관리자 준비 사항).
-- Teams에 **Fabric Operations Agent** 앱이 설치되어 있어야 메시지를 받을 수 있습니다.
+- Teams는 Fabric과 같은 조직 계정으로 사용합니다. 앱의 수동 추가는 아래 안내에 따라 필요한 경우에만 진행합니다.
 - 규칙 질의는 **5분 주기**로 실행됩니다. 알림까지 수 분이 걸리는 것이 정상입니다.
 
-### Teams 알림 앱 준비
+### Teams 알림 앱 확인
 
-별도 프로그램을 설치하는 것이 아니라, **Teams 안에 앱을 추가**합니다. 자동으로 설치되어 있거나 이미 추가했다면 다시 설치하지 않습니다.
+**Fabric Operations Agent** 앱은 자동으로 설치될 수 있으므로 **수동 추가가 항상 필요한 것은 아닙니다.** 이미 알림을 받고 있다면 아래 절차는 건너뜁니다.
+
+<details>
+<summary>앱을 수동으로 추가해야 하는 경우</summary>
+
+알림을 받지 못하고 앱도 설치되어 있지 않다면 **Teams 안에 앱을 추가**합니다.
 
 1. Fabric에 사용하는 조직 계정으로 Teams에 로그인합니다.
 2. Teams의 **앱(Apps) 메뉴**에서 `Fabric Operations Agent`를 검색합니다.
+
+   ![Teams 앱 저장소에서 Fabric operations agent를 검색한 결과](../assets/screenshots/04-teams-app-search.png)
+
 3. **Fabric Operations Agent** 앱을 선택하고 **추가(Add) 버튼**을 누릅니다.
 
 앱이 검색되지 않거나 추가가 차단되면 Teams 관리자에게 앱 사용 허용을 요청합니다. 설치한 뒤에는 이 장에서 에이전트를 시작하고 공급 지연 이벤트를 발생시켜 메시지 수신을 확인합니다.
+
+</details>
 
 ## 1. Eventhouse 만들기
 
@@ -76,7 +86,7 @@ flowchart LR
 )
 ```
 
-**확인할 결과:** 왼쪽 **Tables** 아래에 `MaterialSupplyEvent`가 보입니다. 생성 명령의 `1 records`는 **테이블 정의 결과 1행**이며, 이벤트가 1건 들어왔다는 뜻이 아닙니다.
+**확인할 결과:** 왼쪽 **Tables** 아래에 `MaterialSupplyEvent`가 보입니다. 생성 명령의 `1 records`는 **테이블 정의 결과 1행**입니다.
 
 ![create-merge 명령 실행 후 Tables에 MaterialSupplyEvent가 나타나고 테이블 정의 결과가 반환된 화면](../assets/screenshots/04-event-table-created.png)
 
@@ -93,7 +103,7 @@ MaterialSupplyEvent
 
 ![MaterialSupplyEvent의 count 질의 결과 Count가 0인 화면](../assets/screenshots/04-event-count-zero.png)
 
-새 테이블에서는 결과 표의 `Count = 0`을 확인합니다. 화면의 `1 records`는 집계 결과가 한 행이라는 뜻이며, 이벤트 건수는 `Count` 열의 값으로 판단합니다.
+새 테이블에서는 결과 표의 `Count = 0`을 확인합니다. 화면의 `1 records`는 집계 결과 1행입니다.
 
 ## 3. 승인 후 실행할 Notebook 살펴보기
 
@@ -140,13 +150,13 @@ MaterialSupplyEvent
 4. **Actions** → **Add action** → **Fabric item** → **Browse**에서 `nb_apply_review`를 고릅니다.
    - **Action name:** `RequestMaterialReview`
    - **Action description:** `공급 지연 이벤트의 영향 대상에 원료 변경 검토 요청을 등록하고 조치 이력을 남긴다.`
-   - **Parameters**의 **Name·Type**은 Notebook 매개 변수 셀에서 불러오지만, 필수 항목인 **Description은 직접 입력**해야 합니다. 에이전트가 실행 시 어떤 값을 전달할지 알 수 있도록 아래 설명을 각 행에 입력합니다. Description은 실제 이벤트 ID를 입력하는 칸이 아닙니다.
+   - **Parameters**의 **Name·Type**은 Notebook에서 불러옵니다. **Description은 직접 입력**하며, 전달할 값을 아래처럼 설명합니다.
 
    | 매개 변수 | Description에 입력할 내용 |
    | --- | --- |
-   | `event_id` | 검토 요청을 등록할 공급 지연 이벤트의 ID. 감지한 이벤트의 MaterialSupplyEvent.event_id 값을 그대로 전달한다. |
-   | `material_code` | 검토 대상 원료 코드. 위 event_id에 해당하는 이벤트의 MaterialSupplyEvent.material_code 값을 그대로 전달한다. |
-   | `eventhouse_name` | MaterialSupplyEvent 테이블이 있는 Eventhouse와 KQL Database의 이름. 이 실습에서는 항상 eh_cos를 전달한다. |
+   | `event_id` | 감지한 이벤트의 MaterialSupplyEvent.event_id를 전달한다. |
+   | `material_code` | 같은 이벤트의 MaterialSupplyEvent.material_code를 전달한다. |
+   | `eventhouse_name` | MaterialSupplyEvent가 저장된 Eventhouse 이름. 항상 eh_cos를 전달한다. |
 
    ![Action details에서 nb_apply_review 선택 후 매개 변수별 필수 Description을 입력할 위치](../assets/screenshots/04-action-parameters.png)
 
