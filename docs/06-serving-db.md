@@ -24,7 +24,8 @@
 2. `SQL database`를 검색해 선택합니다.
 3. 이름을 `sqldb_cos`로 입력하고 **Create**를 누릅니다.
 4. 생성이 끝나고 DB의 **Home**과 **Explorer**가 열릴 때까지 기다립니다.
-5. **T-SQL** 타일 또는 새 쿼리를 열어 쓰기 가능한 **SQL database** 편집기인지 확인합니다. 항목 전환 메뉴가 있으면 SQL analytics endpoint가 아니라 **SQL database**를 선택합니다.
+5. 화면 오른쪽 위 메뉴에 **SQL database**가 표시되는지 확인합니다. **SQL analytics endpoint**로 표시된다면 해당 메뉴를 눌러 **SQL database**로 전환합니다.
+6. 화면 위쪽 도구 모음에서 **New Query**를 누릅니다. SQL을 입력할 수 있는 빈 쿼리 편집기가 열립니다.
 
 ![New SQL database 창에서 이름을 sqldb_cos로 입력하고 Create를 누르는 화면](../assets/screenshots/06-create-sql-database.png)
 
@@ -36,8 +37,8 @@
 
 ## 2. Serving 스키마 만들기
 
-1. `sqldb_cos`의 **SQL database** 쿼리 편집기를 엽니다.
-2. [serving.sql](../fabric/sql/serving.sql)의 전체 내용을 복사해 새 쿼리에 붙여 넣고 실행합니다(`GO` 포함).
+1. 앞 단계에서 **New Query**로 연 `sqldb_cos`의 쿼리 편집기를 사용합니다.
+2. [serving.sql](../fabric/sql/serving.sql)의 전체 내용을 복사해 쿼리 편집기에 붙여 넣고 실행합니다(`GO` 포함).
 3. Explorer를 새로 고쳐 다음 객체를 확인합니다.
 
 | 객체 | 용도 |
