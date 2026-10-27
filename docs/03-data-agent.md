@@ -326,16 +326,11 @@ RM-HA-120 자체는 제외하고, 그 원료를 쓰는 활성 처방과 연결�
 
 현재 데이터에서는 `ING-PHE`에 연결된 원료가 `RM-PHE-002`뿐입니다. 세 조합이 기대값과 일치하더라도 그 사실만으로 생성된 질의의 의미나 실행 성공까지 확인된 것은 아닙니다. 이 우회 경로를 일반적인 사용처 판정 규칙으로 삼지 말고, **찾은 다른 원료와 처방을 `uses_material`로 직접 연결하는지** 확인합니다.
 
-<details>
-<summary>에이전트가 표시한 GQL 화면과 확인할 점</summary>
+아래는 생성된 GQL의 `uses_material` 부분만 발췌한 화면입니다. 관계가 존재하는지만 보지 말고, 연결된 원료가 앞에서 찾은 원료와 동일한지도 확인합니다.
 
-![에이전트가 Graph 원본 설명과 GQL을 표시한 화면: has_ingredient 우회 경로 확인 필요](../assets/screenshots/03-graph-agent-generated-gql.png)
-
-복사한 코드가 `LET`의 변수 정의에서 끝난다면 반환 절까지 복사됐는지 확인합니다. 아래 참고 질의처럼 `RETURN`으로 결과 열을 명시해 Graph의 Code editor에서 별도로 대조할 수 있습니다.
+![생성된 GQL에서 RawMaterialForFormula와 FormulaVersion을 연결하는 uses_material 부분](../assets/screenshots/03-graph-agent-uses-material.png)
 
 `GraphSource = 'Ingredient, RawMaterial, ...'` 같은 값은 질의에 적은 **문자열 상수**이며, 실제 Graph model 이름이나 실행 증거가 아닙니다. **Sources의 Graph model 항목과 실제 실행 단계**를 확인하고, 답변에 표시된 질의를 실행 완료된 질의로 단정하지 않습니다.
-
-</details>
 
 **직접 관계를 점검하는 참고 GQL:** 02장의 절차대로 실제 Graph 스키마의 레이블·관계명·방향과 대조한 뒤, Graph의 Code editor에서 실행해 Notebook DA04의 사용처와 비교합니다.
 

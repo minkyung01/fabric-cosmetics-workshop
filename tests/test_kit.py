@@ -1031,7 +1031,7 @@ class Docs(unittest.TestCase):
             "../assets/screenshots/03-graph-agent-select-source.png",
             "../assets/screenshots/03-graph-agent-instructions.png",
             "../assets/screenshots/03-ontology-agent-query-execution.png",
-            "../assets/screenshots/03-graph-agent-generated-gql.png",
+            "../assets/screenshots/03-graph-agent-uses-material.png",
         ])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
@@ -1049,7 +1049,11 @@ class Docs(unittest.TestCase):
         self.assertIn("문자열 상수", optional)
         self.assertIn("실제 실행 단계", optional)
         self.assertNotIn("조회 결과 화면 예시</summary>", optional)
-        self.assertIn("GQL 화면과 확인할 점</summary>", optional)
+        gql_section = optional.split("### 5-4.", 1)[1]
+        self.assertNotIn("<details>", gql_section)
+        self.assertNotIn("복사한 코드가", gql_section)
+        self.assertNotIn("03-graph-agent-generated-gql.png", gql_section)
+        self.assertIn("03-graph-agent-uses-material.png", gql_section)
 
     def test_ontology_agent_execution_example_distinguishes_source_and_result_grain(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
