@@ -10,23 +10,27 @@
 | 이벤트 감시 | `eh_cos` | `open` → `review_requested` |
 | 업무 Serving | `sqldb_cos`의 `serving` | 담당 팀별 요청 목록과 `요청됨` → `검토중` |
 
-**SQL DB를 고른 이유:** 검토 요청·담당 팀·상태·이력은 키·제약 조건·트랜잭션으로 관리하기 좋습니다.
+검토 요청·담당 팀·상태·이력을 키·제약 조건·트랜잭션으로 일관되게 관리할 수 있도록 SQL DB를 선정했습니다.
 
 ## 시작 전 확인
 
 - 05장에서 `nb_apply_review`가 성공했고 현재 이벤트의 요청 3건이 있습니다.
-- 내 실습 작업 영역의 기본 권한은 **Contributor**입니다. SQL DB 생성과 SQL 실행 가능 여부를 이 권한으로 사전 확인한 환경에서 진행합니다. 테넌트·Purview 관리자 권한은 필요하지 않습니다.
+- 내 실습 작업 영역의 기본 권한은 **Contributor**입니다. SQL DB 생성과 SQL 실행 가능 여부를 이 권한으로 사전 확인한 환경에서 진행합니다.
 - **SQL database** 항목 `sqldb_cos`와 Serving 스키마는 이 장에서 직접 만듭니다. **Lakehouse의 SQL analytics endpoint와 다릅니다.**
 
 ## 1. SQL database 만들기
 
 1. 내 작업 영역 `cos-pNNN`에서 **+ New item**을 누릅니다.
-2. `SQL database`를 검색해 선택합니다. Fabric 포털의 **Databases → New → SQL database**로 진입한 경우에도 생성 대상이 본인 실습 작업 영역인지 확인합니다.
+2. `SQL database`를 검색해 선택합니다.
 3. 이름을 `sqldb_cos`로 입력하고 **Create**를 누릅니다.
-4. 생성이 끝나고 DB의 **Home**과 **Explorer**가 열릴 때까지 기다립니다. 샘플 데이터는 넣지 않습니다.
+4. 생성이 끝나고 DB의 **Home**과 **Explorer**가 열릴 때까지 기다립니다.
 5. **T-SQL** 타일 또는 새 쿼리를 열어 쓰기 가능한 **SQL database** 편집기인지 확인합니다. 항목 전환 메뉴가 있으면 SQL analytics endpoint가 아니라 **SQL database**를 선택합니다.
 
-**확인할 결과:** 본인 작업 영역에 `sqldb_cos`가 생기고 쿼리 편집기를 열 수 있습니다. 아직 `serving` 테이블·프로시저는 없습니다.
+![New SQL database 창에서 이름을 sqldb_cos로 입력하고 Create를 누르는 화면](../assets/screenshots/06-create-sql-database.png)
+
+![생성된 sqldb_cos의 Home 화면에서 Explorer, New Query, T-SQL 타일과 우측 상단 SQL database 선택을 확인하는 화면](../assets/screenshots/06-sql-database-home.png)
+
+**확인할 결과:** 본인 작업 영역에 `sqldb_cos`가 생기고 쿼리 편집기를 열 수 있습니다. 생성 직후에는 테이블과 프로시저 목록이 비어 있습니다.
 
 이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고 기존 항목을 엽니다. 아래 예상 결과는 첫 실행 기준이며, 반복 실습은 기존 이력을 보존하고 05장에서 승인한 새 이벤트를 사용합니다.
 

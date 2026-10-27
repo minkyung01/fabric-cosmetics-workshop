@@ -1228,7 +1228,10 @@ class Docs(unittest.TestCase):
         self.assertIn("이름을 `sqldb_cos`로 입력하고 **Create**", lesson)
         self.assertIn("기본 권한은 **Contributor**", lesson)
         self.assertNotIn("Contributor만으로는 SQL DB를 생성할 수 없습니다", lesson)
-        self.assertIn("샘플 데이터는 넣지 않습니다", lesson)
+        self.assertNotIn("샘플 데이터는 넣지 않습니다", lesson)
+        for screenshot in ("06-create-sql-database.png", "06-sql-database-home.png"):
+            self.assertIn(f"../assets/screenshots/{screenshot}", lesson)
+            self.assertTrue((ROOT / "assets" / "screenshots" / screenshot).is_file())
         self.assertIn("이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고", lesson)
         self.assertIn("3단계에서 생성한 게시 SQL을 다시 실행하고 5단계 조회를 반복", lesson)
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
