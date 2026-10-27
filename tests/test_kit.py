@@ -1105,6 +1105,25 @@ class Docs(unittest.TestCase):
             self.assertIn(role, reference)
         self.assertIn("https://learn.microsoft.com/en-us/fabric/data-science/data-agent-configurations", lesson)
 
+    def test_agent_boundary_question_distinguishes_zero_slack_caution(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        questions = {
+            question_id: (prompt, expected)
+            for question_id, prompt, expected in re.findall(
+                r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \| ([^|\n]+) \|$", lesson, re.M)
+        }
+        self.assertIn("일정 지연 여부와 추가 여유 유무를 구분", questions["DA02"][0])
+        self.assertIn("0일·일정 지연 없음", questions["DA02"][1])
+        self.assertIn("추가 여유 없음·주의", questions["DA02"][1])
+        self.assertIn("-1일·일정 1일 지연", questions["DA02"][1])
+        self.assertIn("음수는 일정 지연", lesson)
+        self.assertIn("양수는 일정상 여유 있음", lesson)
+        self.assertIn("입고·시험 시각이나 추가 작업 시간은 반영하지", lesson)
+        for section in (lesson.split("## 2.", 1)[1].split("## 3.", 1)[0],
+                        lesson.split("### 3-1.", 1)[1].split("### 3-2.", 1)[0]):
+            self.assertIn("추가 여유", section)
+            self.assertIn("주의", section)
+
     def test_purview_optional_activities_have_names_distinct_from_ontology_expansion(self):
         lesson = (ROOT / "docs" / "07-purview.md").read_text(encoding="utf-8")
         self.assertIn("## 3. 선택: DLP 정책 팁 확인", lesson)

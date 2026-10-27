@@ -108,7 +108,7 @@ SELECT * FROM on_time WHERE target_id = 'ST-0711'
 UNION ALL
 SELECT * FROM one_day_late WHERE target_id = 'ST-0711'
 ORDER BY eta""",
-  question="ST-0711에서 QC 7일을 적용할 때 RM-HA-120이 2026-11-13에 입고되는 경우와 11-14에 입고되는 경우를 판정해줘. 필요일과 여유일을 계산하고, 여유일이 0이면 영향 대상인지 설명해줘.")
+  question="ST-0711에서 QC 7일을 적용할 때 RM-HA-120이 2026-11-13에 입고되는 경우와 11-14에 입고되는 경우를 판정해줘. 필요일과 여유일을 계산하고, 여유일이 0이면 일정 지연 여부와 추가 여유 유무를 구분해서 설명해줘.")
 
 q("DA03 일정·CN 비교", """
 WITH comparison AS (
