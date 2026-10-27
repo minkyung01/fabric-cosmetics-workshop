@@ -301,21 +301,6 @@ RM-HA-120 자체는 제외하고, 그 원료를 쓰는 활성 처방과 연결�
 | `RM-PHE-002` | `FV-CRM-01-03` | `P-102` |
 | `RM-PHE-002` | `FV-AMP-03-02` | `P-301` |
 
-<details>
-<summary>조회 결과 화면 예시</summary>
-
-아래는 동일 공급사의 다른 원료와 세 제품 조합을 확인한 응답 예시입니다. 화면의 긴 경로 설명을 그대로 정답으로 간주하지 말고, 다음 절에서 원료 사용 관계도 확인합니다.
-
-![같은 공급사의 다른 원료 RM-PHE-002와 세 제품 조합을 설명하는 응답](../assets/screenshots/03-graph-agent-result-summary.png)
-
-![RM-PHE-002·FV-CRM-01-03·P-101 조합과 에이전트가 표시한 경로](../assets/screenshots/03-graph-agent-result-p101.png)
-
-![RM-PHE-002·FV-AMP-03-02·P-301 조합과 에이전트가 표시한 경로](../assets/screenshots/03-graph-agent-result-p301.png)
-
-![RM-PHE-002·FV-CRM-01-03·P-102 조합과 에이전트가 표시한 경로](../assets/screenshots/03-graph-agent-result-p102.png)
-
-</details>
-
 두 에이전트가 같은 원료·처방·제품을 찾았는지 보고, 실제 질의 원본과 언어를 확인합니다. **`da_cos_graph`는 Graph GQL**을 사용하며, Ontology Agent는 사용 가능한 원본에 따라 SQL 또는 GQL 등을 선택할 수 있습니다. `da_cos` 직접 비교를 진행했다면 **`da_cos`는 Lakehouse SQL**을 실행했는지도 확인합니다.
 
 <details>
@@ -339,7 +324,7 @@ RM-HA-120 자체는 제외하고, 그 원료를 쓰는 활성 처방과 연결�
 
 결과 ID가 맞아도 **같은 성분을 통한 연결**과 **해당 원료의 실제 사용**은 구분해야 합니다. 생성된 GQL이 `RawMaterialOther → Ingredient ← RawMaterialForFormula`처럼 `has_ingredient`를 왕복하면, 두 원료가 동일하다는 조건이 없는 한 같은 성분의 **다른 원료**를 쓰는 처방까지 포함할 수 있습니다.
 
-현재 데이터에서는 `ING-PHE`에 연결된 원료가 `RM-PHE-002`뿐이고, 화면에 표시된 세 조합은 기대값과 일치합니다. 그 사실만으로 생성된 질의의 의미나 실행 성공까지 확인된 것은 아닙니다. 이 우회 경로를 일반적인 사용처 판정 규칙으로 삼지 말고, **찾은 다른 원료와 처방을 `uses_material`로 직접 연결하는지** 확인합니다.
+현재 데이터에서는 `ING-PHE`에 연결된 원료가 `RM-PHE-002`뿐입니다. 세 조합이 기대값과 일치하더라도 그 사실만으로 생성된 질의의 의미나 실행 성공까지 확인된 것은 아닙니다. 이 우회 경로를 일반적인 사용처 판정 규칙으로 삼지 말고, **찾은 다른 원료와 처방을 `uses_material`로 직접 연결하는지** 확인합니다.
 
 <details>
 <summary>에이전트가 표시한 GQL 화면과 확인할 점</summary>

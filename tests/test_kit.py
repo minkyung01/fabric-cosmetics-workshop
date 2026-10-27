@@ -1030,10 +1030,6 @@ class Docs(unittest.TestCase):
         self.assertEqual(images, [
             "../assets/screenshots/03-graph-agent-select-source.png",
             "../assets/screenshots/03-graph-agent-instructions.png",
-            "../assets/screenshots/03-graph-agent-result-summary.png",
-            "../assets/screenshots/03-graph-agent-result-p101.png",
-            "../assets/screenshots/03-graph-agent-result-p301.png",
-            "../assets/screenshots/03-graph-agent-result-p102.png",
             "../assets/screenshots/03-ontology-agent-query-execution.png",
             "../assets/screenshots/03-graph-agent-generated-gql.png",
         ])
@@ -1052,7 +1048,7 @@ class Docs(unittest.TestCase):
         self.assertIn("RawMaterialOther → Ingredient ← RawMaterialForFormula", optional)
         self.assertIn("문자열 상수", optional)
         self.assertIn("실제 실행 단계", optional)
-        self.assertIn("조회 결과 화면 예시</summary>", optional)
+        self.assertNotIn("조회 결과 화면 예시</summary>", optional)
         self.assertIn("GQL 화면과 확인할 점</summary>", optional)
 
     def test_ontology_agent_execution_example_distinguishes_source_and_result_grain(self):
