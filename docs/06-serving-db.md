@@ -72,7 +72,7 @@
 
    ![Notebook이 생성한 EXEC serving.usp_publish_reviews 명령과 sqldb_cos에서 실행하라는 안내](../assets/screenshots/06-publish-generated-sql.png)
 
-3. `sqldb_cos` 쿼리 편집기에 붙여 넣고 실행합니다.
+3. 작업 영역에서 `sqldb_cos`를 열고 상단 **New Query**를 누릅니다. 복사한 게시 명령 전체를 쿼리 편집기에 붙여 넣고 **Run**을 누릅니다.
 
 **Notebook 예상 출력:** 승인된 요청 표 3행(`PP-1101`·`PP-1102`·`ST-0711`, 상태 `요청됨`)과 `@expected_count = 3`을 포함한 `EXEC serving.usp_publish_reviews` 명령입니다. 마지막에는 `위 EXEC 명령을 sqldb_cos에서 실행`하라는 안내가 나옵니다.
 
@@ -83,6 +83,11 @@
 > 연결·드라이버·자격 증명 배포가 핵심 실습을 가리지 않도록 **명시적인 SQL 게시**를 사용합니다. 원본은 해당 이벤트의 승인된 요청이며 하드코딩한 샘플 3행이 아닙니다. 자동 게시·CDC·역방향 동기화는 구성하지 않습니다.
 
 ## 4. 담당 팀별 조회
+
+**실행 위치:** 4–6단계는 모두 `sqldb_cos`의 **SQL database 쿼리 편집기**에서 진행합니다. Notebook이나 `eh_cos`의 KQL 쿼리 창에서 실행하지 않습니다.
+
+1. 작업 영역에서 `sqldb_cos`를 열고 상단 **New Query**를 누릅니다.
+2. 아래 SQL을 붙여 넣고 **Run**을 누릅니다. 아래쪽 **Results** 탭에서 조회 결과를 확인합니다.
 
 ```sql
 SELECT target_id, assignee_team, slack_days, suggestion, request_status
@@ -95,6 +100,8 @@ ORDER BY target_id;
 **예상 결과:** `PP-1101`, `PP-1102` 2행. 팀을 `처방개발`로 바꾸면 `ST-0711` 1행입니다. 여기의 `WHERE`는 조회 조건이지 팀별 접근 통제(RLS)가 아닙니다.
 
 ## 5. 검토 착수와 이력 확인
+
+같은 `sqldb_cos`에서 **New Query**를 누르고 아래 SQL 블록 전체(`EXEC` 1개와 `SELECT` 2개)를 붙여 넣은 뒤 **Run**을 누릅니다. **Results** 탭에서 요청 상태와 상태 변경 이력을 각각 확인합니다.
 
 ```sql
 EXEC serving.usp_start_review
@@ -116,7 +123,10 @@ ORDER BY history_id;
 
 ## 6. 재게시해도 업무 상태가 유지되는지 확인
 
-3단계에서 생성한 게시 SQL을 다시 실행하고 5단계 조회를 반복합니다.
+같은 `sqldb_cos`의 SQL 쿼리 편집기에서 다음 순서로 진행합니다.
+
+1. 3단계의 게시 명령(`EXEC serving.usp_publish_reviews ...;`)이 들어 있는 쿼리 탭을 열고 **Run**을 누릅니다.
+2. **New Query**를 눌러 5단계의 **SELECT 조회 두 개만** 복사해 실행합니다. 검토 착수 명령인 `EXEC serving.usp_start_review`는 다시 실행하지 않습니다.
 
 **예상 결과:** `inserted_count = 0`, 요청 3행, 이력 1행이며 `PP-1101`은 계속 `검토중`입니다. Lakehouse 원본은 승인 당시 `요청됨` 스냅샷을 유지합니다. 새 이벤트로 다시 진행할 때는 새 `run_tag`와 해당 `event_id`를 모든 질의에 사용합니다.
 
