@@ -1039,7 +1039,7 @@ class Docs(unittest.TestCase):
             self.assertNotIn("12문항", doc.read_text(encoding="utf-8"), doc.name)
             self.assertNotIn("중요도순", doc.read_text(encoding="utf-8"), doc.name)
         self.assertLess(lesson.index("| DA08 | 여러 데이터 통합 |"), lesson.index("<details>"))
-        self.assertIn("핵심 11개 테이블·9개 엔터티", lesson)
+        self.assertIn("현재 연결된 10개 테이블·9개 엔터티", lesson)
         self.assertIn("Clear chat", lesson)
         self.assertIn("최초 답", lesson)
         self.assertIn("0일은 일정 기준 영향 없음", lesson)
@@ -1270,7 +1270,7 @@ class Docs(unittest.TestCase):
 class DataAgentQueries(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.answers, cls.queries, cls.questions = {}, [], {}
+        cls.answers, cls.queries, cls.questions, cls.da_queries = {}, [], {}, {}
         with sqlite3.connect(":memory:") as db:
             db.row_factory = sqlite3.Row
             db.execute("ATTACH DATABASE ':memory:' AS gold")
@@ -1290,6 +1290,11 @@ class DataAgentQueries(unittest.TestCase):
                                lambda first, second: (date.fromisoformat(first) - date.fromisoformat(second)).days)
 
             def capture(title, sql, question=None):
+                if title.startswith("DA"):
+                    if not cls.da_queries:
+                        # Q3 uses the full Notebook dataset; DA questions use only the exposed sources.
+                        db.execute("DROP TABLE gold.material_alternative")
+                    cls.da_queries[title.split()[0]] = sql
                 cls.queries.append(sql)
                 cls.answers[title.split()[0]] = [dict(row) for row in db.execute(sql)]
                 if question is not None:
@@ -1339,16 +1344,31 @@ class DataAgentQueries(unittest.TestCase):
         self.assertEqual((alternatives["RM-HA-305"]["approval_status"], alternatives["RM-HA-305"]["cn_registration"]),
                          ("검토중", "완료"))
 
-    def test_boundary_and_three_candidate_conditions(self):
+    def test_boundary_and_specified_material_schedule_cn_conditions(self):
         boundary = self.answers["DA02"]
         self.assertEqual([(r["eta"], r["need_date"], r["slack_days"], r["is_impacted"]) for r in boundary],
                          [("2026-11-13", "2026-11-13", 0, 0), ("2026-11-14", "2026-11-13", -1, 1)])
-        candidates = self.answers["DA03"]
-        self.assertEqual([r["alt_material_code"] for r in candidates], ["RM-HA-210", "RM-HA-305"])
-        self.assertTrue(all(r["need_date"] == "2026-11-25" for r in candidates))
-        self.assertEqual([(r["assumed_eta"], r["slack_days"], r["approval_ok"], r["schedule_ok"], r["cn_ok"], r["all_ok"])
-                          for r in candidates],
-                         [("2026-11-12", 13, 1, 1, 0, 0), ("2026-12-14", -19, 0, 0, 1, 0)])
+        materials = self.answers["DA03"]
+        self.assertEqual([r["material_code"] for r in materials], ["RM-HA-210", "RM-HA-305"])
+        self.assertTrue(all((r["target_id"], r["product_id"], r["market"], r["planned_date"], r["need_date"]) ==
+                            ("PP-1102", "P-102", "CN", "2026-12-02", "2026-11-25") for r in materials))
+        self.assertEqual([(r["lead_time_days"], r["assumed_eta"], r["slack_days"], r["cn_registration"],
+                           r["schedule_ok"], r["cn_ok"], r["schedule_cn_ok"]) for r in materials],
+                         [(10, "2026-11-12", 13, "필요", 1, 0, 0),
+                          (42, "2026-12-14", -19, "완료", 0, 1, 0)])
+        for row in materials:
+            for column in ("alt_material_code", "approval_status", "approval_ok", "all_ok"):
+                self.assertNotIn(column, row)
+
+    def test_all_agent_queries_work_without_alternative_mapping_table(self):
+        exposed_tables = {"dev_project", "formula_line", "formula_version", "ingredient", "product",
+                          "production_plan", "purchase_order", "raw_material", "stability_test", "supplier"}
+        self.assertEqual(list(self.da_queries), [f"DA{i:02}" for i in range(1, 9)])
+        for question, sql in self.da_queries.items():
+            with self.subTest(question=question):
+                self.assertNotIn("material_alternative", sql)
+                self.assertNotIn("approval_status", sql)
+                self.assertLessEqual(set(re.findall(r"\bgold\.(\w+)", sql)), exposed_tables)
 
     def test_formula_scope_uses_active_flag_not_status(self):
         versions = {r["version_id"]: r for r in self.answers["DA01"]}
@@ -1396,12 +1416,13 @@ class DataAgentQueries(unittest.TestCase):
                           "ST-0711": ("DP-2026-07", None, -32)})
         self.assertEqual({k: r["planned_qty_ea"] for k, r in integrated.items()},
                          {"PP-1101": 30000, "PP-1102": 20000, "ST-0711": None})
-        self.assertTrue(all((r["po_id"], r["supplier_id"], r["alt_material_code"]) ==
-                            ("PO-5501", "SUP-02", "RM-HA-210") for r in integrated.values()))
+        self.assertTrue(all((r["po_id"], r["supplier_id"]) ==
+                            ("PO-5501", "SUP-02") for r in integrated.values()))
         self.assertTrue(all(r["recorded_eta"] == "2026-11-10" and r["assumed_eta"] == "2026-12-15"
                             for r in integrated.values()))
-        self.assertEqual(integrated["PP-1102"]["review_note"], "CN 등록 검토 필요")
-        self.assertTrue(all(r["condition_note"] == "파우더 용해 공정 추가 필요" for r in integrated.values()))
+        self.assertEqual(integrated["PP-1102"]["review_note"], "생산 일정·원료 확보 검토 필요")
+        self.assertEqual(integrated["ST-0711"]["review_note"], "시험 일정·원료 확보 검토 필요")
+        self.assertTrue(all("condition_note" not in r and "alt_material_code" not in r for r in integrated.values()))
 
     def test_limit_question_returns_evidence_without_claiming_feasible_production(self):
         evidence = {r["target_id"]: r for r in self.answers["DA08"]}
@@ -1412,10 +1433,12 @@ class DataAgentQueries(unittest.TestCase):
         alternative = next(row for row in rows("raw_material") if row["material_code"] == "RM-HA-210")
         for row in evidence.values():
             self.assertEqual((row["affected_planned_qty_ea"], row["affected_test_count"]), (50000, 1))
-            self.assertEqual((row["material_code"], row["alt_material_code"]), ("RM-HA-120", "RM-HA-210"))
+            self.assertEqual((row["material_code"], row["comparison_material_code"]), ("RM-HA-120", "RM-HA-210"))
             self.assertEqual(row["original_unit_price_krw"], float(original["unit_price_krw"]))
-            self.assertEqual(row["alternative_unit_price_krw"], float(alternative["unit_price_krw"]))
+            self.assertEqual(row["comparison_unit_price_krw"], float(alternative["unit_price_krw"]))
             self.assertGreater(row["original_pct_wt"], 0)
+            self.assertNotIn("approval_status", row)
+            self.assertNotIn("condition_note", row)
             self.assertNotIn("actual_producible_qty_ea", row)
             self.assertNotIn("total_additional_cost", row)
 
@@ -1435,7 +1458,7 @@ class DataAgentQueries(unittest.TestCase):
             self.assertIn(row["eta"][5:], expected["DA02"])
             self.assertIn(f'{row["slack_days"]}일', expected["DA02"])
         for row in self.answers["DA03"]:
-            self.assertIn(row["alt_material_code"], expected["DA03"])
+            self.assertIn(row["material_code"], expected["DA03"])
             self.assertIn(row["need_date"][5:], expected["DA03"])
             self.assertIn(row["assumed_eta"][5:], expected["DA03"])
         for row in self.answers["DA04"]:
@@ -1451,7 +1474,7 @@ class DataAgentQueries(unittest.TestCase):
             self.assertIn(row["need_date"][5:], expected["DA06"])
             self.assertIn(f'{row["before_slack"]} → {row["after_slack"]}일', expected["DA06"])
         for row in self.answers["DA07"]:
-            for column in ("target_id", "owner_id", "po_id", "supplier_id", "alt_material_code"):
+            for column in ("target_id", "owner_id", "po_id", "supplier_id"):
                 self.assertIn(row[column], expected["DA07"])
             self.assertIn(f'{row["slack_days"]}일', expected["DA07"])
         for row in self.answers["DA08"]:
