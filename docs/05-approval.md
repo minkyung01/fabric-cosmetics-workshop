@@ -60,7 +60,7 @@ ORDER BY target_id;
 
 **조회 예상 출력:** 승인한 이벤트의 검토 요청 3행
 
-![Notebook의 Spark SQL 조회 결과에서 검토 요청 3행과 요청됨 상태를 확인한 표](../assets/screenshots/05-spark-review-requests.png)
+![Notebook의 Spark SQL 조회 결과에서 검토 요청 3행의 suggestion 전체와 요청됨 상태를 확인한 표](../assets/screenshots/05-spark-review-requests-full-suggestions.png)
 
 | target_id | target_type | assignee_team | slack_days | suggestion |
 |---|---|---|---|---|

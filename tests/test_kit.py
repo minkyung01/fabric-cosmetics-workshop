@@ -1174,6 +1174,7 @@ class Docs(unittest.TestCase):
         self.assertNotIn("아래 조회의 `event_id`는 `r1` 예시입니다", records)
         self.assertNotIn("**두 Spark SQL 셀과 KQL의 이벤트 ID를 모두**", records)
         self.assertNotIn("스크린샷은 `r2` 조회 예시입니다.", records)
+        self.assertNotIn("../assets/screenshots/05-spark-review-requests.png", records)
         spark_queries = [query for query in re.findall(r"```sql\n(.*?)```", records, re.S)
                          if query.startswith("%%sql\n")]
         self.assertEqual(len(spark_queries), 2)
@@ -1198,7 +1199,7 @@ class Docs(unittest.TestCase):
         self.assertNotIn("INFORMATION_SCHEMA.TABLES", records)
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", records)
         self.assertEqual(images, [
-            "../assets/screenshots/05-spark-review-requests.png",
+            "../assets/screenshots/05-spark-review-requests-full-suggestions.png",
             "../assets/screenshots/05-spark-action-log.png",
             "../assets/screenshots/05-event-status-history.png",
         ])
