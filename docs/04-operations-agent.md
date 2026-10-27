@@ -135,8 +135,10 @@ Monitoring:
 - For each event_id, use the row with the latest event_time.
 - In the monitoring query, calculate open_flag = iff(event_status == "open", 1, 0).
 - open_flag is a calculated query field, not an existing table column. Do not change the table schema.
-- Create one transition rule: open_flag crosses above 0.5 for each event_id, including a change from null to 1.
-- Do not use an "Is above" state condition.
+- Create one transition rule for each event_id. Prefer open_flag crosses above 0.5, including a change from null to 1.
+- Equivalent transition conditions, such as Changes to open for a text property or Becomes true for a boolean property, are acceptable.
+- Detect the first open observation of a new event_id.
+- Do not repeatedly notify for the same event_id while its status remains open.
 - Keep non-open states in the query so they produce open_flag = 0.
 
 Notification:
@@ -185,14 +187,17 @@ Recommended action:
 1. **Generate playbook**을 누릅니다.
 2. **Business term glossary**와 **Rules**를 검토합니다.
 
-**확인할 결과:** 용어집과 Rules에서 아래 항목을 확인합니다. 생성된 속성 이름은 달라도 계산과 조건은 같아야 합니다.
+**확인할 결과:** 용어집과 Rules에서 아래 항목을 확인합니다. **속성 이름·조건 이름이 달라도, 이벤트가 새로 `open`이 될 때 알리는 동작이면 됩니다.** `Crosses above`만 정답은 아닙니다.
 
 | 항목 | 확인 기준 |
 | --- | --- |
 | 이벤트 구분·최신 행 | `event_id`별로 `event_time`이 가장 최근인 행. 생성 질의의 `summarize arg_max(event_time, *) by event_id`와 조회 시간 범위 확인 |
-| 숫자형 상태 | `OpenFlag` 또는 `open_flag`가 `iff(event_status == "open", 1, 0)`으로 계산됨. `open`이 아닌 상태도 0으로 남김 |
-| 전환 조건 | **Crosses above 0.5**. 최초 관측 `null → 1`도 포함하며, 상태가 계속 1인 동안 반복 알림을 내는 **Is above**와 구분 |
+| 상태 표현 | 기본 예시는 `OpenFlag` 또는 `open_flag`를 `iff(event_status == "open", 1, 0)`으로 계산. 문자열·불리언 속성으로 전환을 감지하는 방식도 가능 |
+| 전환 조건 | **Crosses above 0.5**, 문자열 상태의 **Changes to open**, 불리언 속성의 **Becomes true** 등 자료형에 맞는 전환 조건 사용. 새 이벤트의 첫 `open`도 감지하는지 확인(숫자형 예시는 `null → 1`) |
+| 반복 알림 | **Is above**, **Is** 같은 상태 조건은 조건을 만족하는 입력마다 알릴 수 있으므로, 같은 상태가 유지될 때 재알림이 발생하는지와 반복 설정 확인 |
 | 승인 액션 | `RequestMaterialReview`를 제안하고, 담당자 승인 후 해당 이벤트의 매개 변수로 실행 |
+
+같은 `event_id`의 `open → open`(`1 → 1`)에서는 반복 알림이 없어야 합니다. 새 `event_id`의 첫 `open`이나, 같은 이벤트가 다른 상태를 거쳐 다시 `open`이 되는 것은 별도 전환입니다.
 
 ![Business term glossary에 이벤트별 최신 행과 숫자형 OpenFlag가 생성된 예시](../assets/screenshots/04-playbook-glossary.png)
 
@@ -203,27 +208,31 @@ Recommended action:
 
 **아래 Rule은 수정 없이 사용할 수 있는 예시**입니다. 하단 설정이 `OpenFlag / Crosses Above / 0.5`이고, 질의도 이벤트별 최신 행에서 상태를 0/1로 계산합니다.
 
+`Changes to open`이나 `Becomes true` 등으로 생성됐어도, 자료형에 맞고 같은 이벤트의 상태 유지 중 반복 알림이 없다면 조건 이름만 맞추려고 수정할 필요는 없습니다.
+
 ![이벤트별 최신 행과 OpenFlag 계산 질의 및 Crosses Above 0.5 조건이 표시된 Rule](../assets/screenshots/04-playbook-rule.png)
 
 | 확인 위치 | 정상 기준 |
 | --- | --- |
 | 질의의 식별자·시각 | `Id = event_id`, `Timestamp = event_time` |
 | 최신 행 선택 | `arg_max(event_time, *)`를 `event_id`별로 적용 |
-| 상태 계산 | `open`이면 1, 그 외에는 0. `open`인 행만 미리 필터링하지 않음 |
-| 하단 Property / Condition / Value | `OpenFlag` / `Crosses Above` / `0.5` |
+| 상태 계산 | 숫자형 예시는 `open`이면 1, 그 외에는 0. 다른 방식도 상태 전환을 비교할 수 있도록 `open`인 행만 미리 필터링하지 않음 |
+| 하단 Property / Condition / Value | 숫자형 예시는 `OpenFlag` / `Crosses Above` / `0.5`. 문자열은 `Changes to` / `open`, 불리언은 `Becomes true` 등 동등한 전환 조건도 가능 |
 | Rule 설명 | Teams 알림과 검토 요청을 제안하고, 사람의 승인 후 액션 실행 |
 
 `startTime`·`endTime`은 에이전트의 조회 시간 범위 매개 변수이므로, 표시되어 있다는 이유로 제거하지 않습니다.
 
-**수정이 필요한 경우:** `Is Above`로 생성됐거나, 이벤트 대신 원료별로 묶였거나, `open` 상태만 남겨 0 상태가 사라진 경우입니다. 상단 **Copilot**을 열고 아래 영문 보완 요청을 보냅니다.
+**수정이 필요한 경우:** 상태 조건·반복 설정 때문에 같은 이벤트의 `open` 유지 중 재알림이 생기거나, 새 이벤트의 첫 `open`을 놓치거나, 이벤트 대신 원료별로 묶였거나, `open` 상태만 남겨 이전 상태와 비교할 수 없는 경우입니다. 상단 **Copilot**을 열고 아래 영문 보완 요청을 보냅니다.
 
 ```text
 Correct the existing supply-delay rule only.
 Use event_id as Id and event_time as Timestamp.
 For each event_id, use the row with the latest event_time.
-Compute OpenFlag as iff(event_status == "open", 1, 0).
-Set the condition to OpenFlag Crosses Above 0.5, including a change from null to 1.
-Keep non-open states as 0; do not filter the query to open events only.
+Use a transition condition appropriate to the property's data type; preserve an equivalent existing transition condition.
+For the numeric example, compute OpenFlag as iff(event_status == "open", 1, 0) and use OpenFlag Crosses Above 0.5, including a change from null to 1.
+Detect the first open observation of a new event_id.
+Do not repeatedly notify for the same event_id while its status remains open.
+Keep non-open states as 0 for the numeric example; do not filter the query to open events only.
 Preserve the query time-window parameters and the existing notification fields.
 Keep RequestMaterialReview as a recommendation requiring human approval.
 Pass the detected event_id and material_code, with eventhouse_name set to "eh_cos".
@@ -284,10 +293,10 @@ MaterialSupplyEvent
 
 ![Teams에서 한국어 공급 지연 알림과 RequestMaterialReview 제안을 수신하고 Proceed 승인을 기다리는 카드](../assets/screenshots/04-teams-review-notification.png)
 
-스크린샷은 `run_tag = "r2"`로 재실행한 예시입니다. 내 Notebook의 `run_tag`와 알림의 `Id`를 맞춰 봅니다.
-
 <details>
 <summary>Show details — 이벤트·규칙 상세 화면</summary>
+
+스크린샷은 `run_tag = "r2"`로 재실행한 예시입니다. 내 Notebook의 `run_tag`와 알림의 `Id`를 맞춰 봅니다.
 
 `Data Source`가 `eh_cos`인지도 확인합니다. 이 예시의 상세 화면에는 지연 일수·영향 건수가 표시되지 않습니다.
 
@@ -320,6 +329,7 @@ MaterialSupplyEvent
 - [Eventhouse 만들기·기본 KQL Database 자동 생성](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/create-eventhouse)
 - [Operations agent 만들기와 구성](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent)
 - [Operations agent 제한사항 — 지침·업무 목표의 영어 지원](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent-limitations#language-and-model-behavior-limitations)
+- [Activator 감지 조건 — 전환 조건·상태 조건·반복 평가의 차이](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/data-activator/activator-detection-conditions#conditions)
 - [Operations agent 작업(Actions)](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent-actions)
 
 ## 다음 단계

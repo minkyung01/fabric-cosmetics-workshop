@@ -1011,7 +1011,11 @@ class Docs(unittest.TestCase):
                             'open_flag = iff(event_status == "open", 1, 0)',
                             "not an existing table column", "Do not change the table schema",
                             "crosses above 0.5", "including a change from null to 1",
-                            'Do not use an "Is above"', "Keep non-open states",
+                            "Changes to open for a text property",
+                            "Becomes true for a boolean property",
+                            "Detect the first open observation of a new event_id",
+                            "Do not repeatedly notify for the same event_id while its status remains open",
+                            "Keep non-open states",
                             "Write notification titles, summaries, and recommended-action explanations in Korean.",
                             "Keep event IDs, material codes, field names, and action names unchanged.",
                             "Only after human approval", 'eventhouse_name set to "eh_cos"',
@@ -1019,7 +1023,10 @@ class Docs(unittest.TestCase):
             self.assertIn(requirement, instructions[0])
         playbook = lesson.split("## 5. Playbook 생성과 검토", 1)[1].split("## 6.", 1)[0]
         for requirement in ("arg_max(event_time, *) by event_id", "조회 시간 범위",
-                            "**Crosses above 0.5**", "**Is above**", "`null → 1`",
+                            "**Crosses above 0.5**", "**Changes to open**", "**Becomes true**",
+                            "**Is above**", "`null → 1`", "`open → open`(`1 → 1`)",
+                            "새 `event_id`의 첫 `open`",
+                            "다른 상태를 거쳐 다시 `open`이 되는 것은 별도 전환",
                             "`RequestMaterialReview`", "**용어집 생성 확인 예시**", "실제 알림은 6–7번"):
             self.assertIn(requirement, playbook)
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", playbook)
@@ -1040,7 +1047,10 @@ class Docs(unittest.TestCase):
         self.assertIn("지침과 업무 목표는 현재 영어만 지원", admin)
         self.assertIn("영문 지침에서 한국어 알림 출력을 요청", admin)
         self.assertIn("**Crosses above 0.5**", admin)
-        self.assertNotIn("**Becomes open**", admin)
+        self.assertIn("**Changes to open**", admin)
+        self.assertIn("**Becomes true**", admin)
+        self.assertIn("상태 유지 중 반복 알림 여부", admin)
+        self.assertIn("activator-detection-conditions#conditions", lesson)
 
     def test_operations_rule_example_and_correction_are_in_collapsed_toggle(self):
         lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
@@ -1053,6 +1063,8 @@ class Docs(unittest.TestCase):
         for requirement in ("**아래 Rule은 수정 없이 사용할 수 있는 예시**",
                             "04-playbook-rule.png", "`Crosses Above` / `0.5`",
                             "`Id = event_id`", "`Timestamp = event_time`",
+                            "조건 이름만 맞추려고 수정할 필요는 없습니다",
+                            "`Changes to` / `open`", "`Becomes true`",
                             "`startTime`·`endTime`", "**Copilot**",
                             "**질의와 하단 조건을 모두 확인**", "승인 실행은 05장"):
             self.assertIn(requirement, example)
@@ -1061,6 +1073,9 @@ class Docs(unittest.TestCase):
         self.assertTrue(prompts[0].isascii())
         for requirement in ("Correct the existing supply-delay rule only",
                             "OpenFlag Crosses Above 0.5", "Keep non-open states as 0",
+                            "preserve an equivalent existing transition condition",
+                            "Detect the first open observation of a new event_id",
+                            "Do not repeatedly notify for the same event_id while its status remains open",
                             "Preserve the query time-window parameters",
                             "requiring human approval", 'eventhouse_name set to "eh_cos"',
                             "Do not change the table schema or existing data"):
@@ -1097,7 +1112,13 @@ class Docs(unittest.TestCase):
         self.assertIn("숫자형 상태 값 1", notifications)
         self.assertIn("`OpenFlagValue`", notifications)
         self.assertIn("이 예시의 상세 화면에는 지연 일수·영향 건수가 표시되지 않습니다.", notifications)
-        self.assertIn('`run_tag = "r2"`로 재실행한 예시', notifications)
+        details = re.search(
+            r"<details>\s*<summary>Show details — 이벤트·규칙 상세 화면</summary>(.*?)</details>",
+            notifications, re.S,
+        )
+        self.assertIsNotNone(details)
+        self.assertIn('`run_tag = "r2"`로 재실행한 예시', details.group(1))
+        self.assertNotIn('`run_tag = "r2"`', notifications[:details.start()])
         self.assertIn("**알림 본문과 규칙 설명이 한국어로 생성된 결과**", notifications)
         self.assertIn("제목·기본 레이블·버튼은 영어로 남을 수 있습니다.", notifications)
         self.assertNotIn("미검증", notifications)
