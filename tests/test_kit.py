@@ -136,7 +136,7 @@ class Notebooks(unittest.TestCase):
             self.assertTrue(ast.literal_eval(calls[0].args[0]).startswith(question_id + " "))
             prompt = next(keyword.value for keyword in calls[0].keywords if keyword.arg == "question")
             self.assertEqual(ast.literal_eval(prompt), questions[question_id])
-        self.assertEqual(headings, [f"DA{i:02}" for i in range(1, 7)])
+        self.assertEqual(headings, [f"DA{i:02}" for i in range(1, 8)])
         self.assertEqual(re.findall(r"^## (Q\d)\.", "\n".join("".join(c["source"]) for c in cells), re.M),
                          [f"Q{i}" for i in range(1, 7)])
 
@@ -149,7 +149,7 @@ class Notebooks(unittest.TestCase):
         with redirect_stdout(output):
             namespace["q"]("DA01", "SELECT 1", question="확인할 질문")
         self.assertIn("DA01", output.getvalue())
-        self.assertIn("Data Agent에 보낼 질문:\n확인할 질문", output.getvalue())
+        self.assertIn("Agent에 보낼 질문:\n확인할 질문", output.getvalue())
         namespace["spark"].sql.assert_called_once_with("SELECT 1")
         namespace["display"].assert_called_once_with(namespace["spark"].sql.return_value)
 
@@ -976,14 +976,13 @@ class Docs(unittest.TestCase):
                             "**Ontology → ont_cos → Entity types:**",
                             "**Ontology data sources → lh_cos → Schemas → gold → Tables:**",
                             "`formula_line`", "화면에 표시된 테이블",
-                            "중복으로 추가하지 않습니다", "읽기 권한",
-                            "**SQL과 실제 Lakehouse 실행 원본**"):
+                            "중복으로 추가하지 않습니다", "읽기 권한"):
             self.assertIn(requirement, setup)
         self.assertNotIn("material_alternative", setup)
         expected_result = setup.split("**확인할 결과:**", 1)[1].strip()
         self.assertEqual(expected_result,
-                         "Sources에 `ont_cos`와 `lh_cos`가 연결됩니다. 다음 단계에서 지침을 입력하고 "
-                         "질문한 뒤, 실행 단계에 **SQL과 실제 Lakehouse 실행 원본**이 표시되는지도 확인합니다.")
+                         "Sources에 `ont_cos`와 `lh_cos`가 연결됩니다. 다음 단계에서 지침을 입력하고, "
+                         "질문 검증은 3번의 Ontology Agent에서 진행합니다.")
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", setup)
         self.assertEqual(images, ["../assets/screenshots/03-create-data-agent.png",
                                   "../assets/screenshots/03-data-agent-empty.png",
@@ -994,7 +993,8 @@ class Docs(unittest.TestCase):
 
     def test_data_agent_separates_lakehouse_basics_and_optional_graph_comparison(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
-        for requirement in ("1–4번은 Lakehouse 기반 기본 실습", "5번은 Graph 기반 선택 실습",
+        for requirement in ("1–2번은 Data Agent 구성 체험", "3–4번은 Ontology Agent 질문·Notebook 대조",
+                            "5번은 Graph 기반 선택 실습",
                             "연결된 대상·경로를 찾으려면 Graph",
                             "원본의 상세 조건과 계산을 검증하려면 Lakehouse"):
             self.assertIn(requirement, lesson)
@@ -1005,7 +1005,7 @@ class Docs(unittest.TestCase):
         for requirement in ("별도 `da_cos_graph`", "기존 `da_cos`는 그대로 유지",
                             "**Graph 원본만 연결**", "Ontology나 Lakehouse는 추가하지 않습니다",
                             "Materialize·새로 고침 시점의 데이터",
-                            "새 문항을 추가하지 않고", "기본 6문항 중 DA03",
+                            "새 문항을 추가하지 않고", "기본 7문항 중 DA04",
                             "RM-HA-120 자체는 제외", "**Clear chat**",
                             "`RM-PHE-002`", "`P-101`·`P-102`·`P-301`",
                             "**`da_cos`는 Lakehouse SQL**", "**`da_cos_graph`는 Graph GQL**",
@@ -1013,17 +1013,49 @@ class Docs(unittest.TestCase):
             self.assertIn(requirement, optional)
         self.assertNotIn("탐색 방향과 저장된 관계 방향을 구분", optional)
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
-        self.assertIn("DA03의 공급사 원료 탐색 재사용", admin)
+        self.assertIn("DA04의 공급사 원료 탐색 재사용", admin)
         self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
 
-    def test_data_agent_selects_six_questions_with_inline_answers_and_detailed_criteria(self):
+    def test_preview_lab_uses_ontology_agent_plan_after_data_agent_setup(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        intro = lesson.split("## 실습 구성과 사용 권장 기준", 1)[0]
+        for requirement in ("Ontology v2는 아직 Preview", "워크숍에서 확인한 환경",
+                            "메타데이터", "설명(description)", "동의어(synonyms)",
+                            "모든 원본 조회가 불가능하다는 뜻은 아니며", "배포 버전·환경",
+                            "Data Agent 생성·원본 연결·Agent instructions 입력까지 체험",
+                            "Ontology Agent"):
+            self.assertIn(requirement, intro)
+        priming = lesson.split("### 3-1.", 1)[1].split("### 3-2.", 1)[0]
+        for requirement in ("**Plan 모드**", "**대화 첫 메시지**",
+                            "Agent instructions는 이 대화에 자동 적용되지 않습니다",
+                            "조회만 수행하세요", "원본 데이터는 변경하지 마세요",
+                            "해당 원료를 쓰지 않는 처방은 이 목록에 넣지 마세요",
+                            "is_active = true", "개발중이어도 활성인 처방은 포함",
+                            "production_plan.planned_date - QC 리드타임",
+                            "stability_test.batch_date - QC 리드타임",
+                            "시험에만 QC를 적용하거나", "두 대상 모두 원본 일정",
+                            "계획일 또는 배치일 - 원료 필요일 = 적용한 QC 일수",
+                            "필요일과 QC를 고정", "달력일", "최종 발주일 + 리드타임 = 원료 필요일",
+                            "대체 사용 승인", "조회 실패, 정상 조회 결과 0행, 속성 미확인",
+                            "원본에 열·데이터가 없는 것을 구분", "실제 실행한 질의",
+                            "**같은 대화에서**", "새 대화·페이지 새로고침",
+                            "공통 프롬프트도 다시 보냅니다", "영구 저장하는 작업이 아닙니다"):
+            self.assertIn(requirement, priming)
+        self.assertNotRegex(priming, r"FV-CRM|PP-110[123]|ST-0711|50,000")
+        completion = lesson.split("## 이 장의 완료 기준", 1)[1].split("## ", 1)[0]
+        self.assertIn("Agent instructions 입력을 체험", completion)
+        self.assertIn("Ontology Agent의 **Plan 모드**", completion)
+        self.assertEqual(len(re.findall(r"!\[[^]]*\]\([^)]+\)", lesson)), 5)
+        self.assertIn("https://learn.microsoft.com/en-us/fabric/iq/ontology/how-to-use-ontology-agent", lesson)
+
+    def test_data_agent_selects_seven_questions_with_inline_answers_and_detailed_criteria(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \| ([^|\n]+) \|$", lesson, re.M)
-        ids = [f"DA{i:02}" for i in range(1, 7)]
+        ids = [f"DA{i:02}" for i in range(1, 8)]
         self.assertEqual([q[0] for q in questions], ids)
         self.assertEqual([q[1] for q in questions],
-                         ["대조", "규칙", "관계", "What-if",
-                          "여러 데이터 통합", "여러 데이터 통합"])
+                         ["대조", "규칙", "규칙", "관계", "What-if",
+                          "여러 데이터 통합", "의사결정 지원"])
         for _, _, prompt, expected_answer in questions:
             self.assertNotRegex(prompt, r"DA\d{2}")
             self.assertNotIn("저장된 관계 방향", prompt)
@@ -1032,7 +1064,7 @@ class Docs(unittest.TestCase):
         self.assertIn("**질문 열만 복사**", lesson)
         answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
         self.assertEqual(re.findall(r"^\| (DA\d{2}) \|", answers, re.M), ids)
-        self.assertIn("핵심 6문항을 DA01–DA06 순서대로", lesson)
+        self.assertIn("핵심 7문항을 DA01–DA07 순서대로", lesson)
         self.assertIn("Notebook에 준비된 SQL 실행 결과와 비교", lesson)
         self.assertIn("같은 번호·질문·순서", lesson)
         self.assertIn("DA01도 전용 셀", lesson)
@@ -1040,7 +1072,7 @@ class Docs(unittest.TestCase):
         for doc in (ROOT / "README.md", ROOT / "admin" / "README.md", ROOT / "docs" / "03-data-agent.md"):
             self.assertNotIn("12문항", doc.read_text(encoding="utf-8"), doc.name)
             self.assertNotIn("중요도순", doc.read_text(encoding="utf-8"), doc.name)
-        self.assertLess(lesson.index("| DA06 | 여러 데이터 통합 |"), lesson.index("<details>"))
+        self.assertLess(lesson.index("| DA07 | 의사결정 지원 |"), lesson.index("<details>"))
         self.assertIn("현재 연결된 10개 테이블·9개 엔터티", lesson)
         self.assertIn("Clear chat", lesson)
         self.assertIn("최초 답", lesson)
@@ -1319,7 +1351,7 @@ class DataAgentQueries(unittest.TestCase):
     def test_documented_output_counts_match_executed_reference_queries(self):
         for lesson, questions in (
             ("02-graph.md", ("Q1", "Q2", "Q3", "Q4", "Q5")),
-            ("03-data-agent.md", tuple(f"DA{i:02}" for i in range(1, 7))),
+            ("03-data-agent.md", tuple(f"DA{i:02}" for i in range(1, 8))),
         ):
             text = (ROOT / "docs" / lesson).read_text(encoding="utf-8")
             for question in questions:
@@ -1351,15 +1383,24 @@ class DataAgentQueries(unittest.TestCase):
         self.assertEqual([(r["eta"], r["need_date"], r["slack_days"], r["is_impacted"]) for r in boundary],
                          [("2026-11-13", "2026-11-13", 0, 0), ("2026-11-14", "2026-11-13", -1, 1)])
 
-    def test_standalone_material_comparison_is_removed_but_replacement_review_remains(self):
-        self.assertNotIn("RM-HA-305", " ".join(self.questions.values()))
-        self.assertIn("RM-HA-210으로 대체하면", self.questions["DA06"])
-        self.assertIn("comparison_unit_price_krw", self.answers["DA06"][0])
+    def test_named_material_comparison_separates_schedule_cn_and_approval(self):
+        comparison = {r["material_code"]: r for r in self.answers["DA03"]}
+        self.assertEqual(set(comparison), {"RM-HA-210", "RM-HA-305"})
+        self.assertEqual({key: (r["assumed_eta"], r["slack_days"], r["cn_registration"],
+                               r["schedule_ok"], r["cn_ok"], r["schedule_cn_ok"])
+                          for key, r in comparison.items()},
+                         {"RM-HA-210": ("2026-11-12", 13, "필요", 1, 0, 0),
+                          "RM-HA-305": ("2026-12-14", -19, "완료", 0, 1, 0)})
+        self.assertTrue(all((r["target_id"], r["product_id"], r["market"], r["scheduled_date"],
+                             r["qc_lead_days"], r["need_date"]) ==
+                            ("PP-1102", "P-102", "CN", "2026-12-02", 7, "2026-11-25")
+                            for r in comparison.values()))
+        self.assertIn("최종 발주일", self.questions["DA07"])
 
     def test_all_agent_queries_work_without_alternative_mapping_table(self):
         exposed_tables = {"dev_project", "formula_line", "formula_version", "ingredient", "product",
                           "production_plan", "purchase_order", "raw_material", "stability_test", "supplier"}
-        self.assertEqual(list(self.da_queries), [f"DA{i:02}" for i in range(1, 7)])
+        self.assertEqual(list(self.da_queries), [f"DA{i:02}" for i in range(1, 8)])
         for question, sql in self.da_queries.items():
             with self.subTest(question=question):
                 self.assertNotIn("material_alternative", sql)
@@ -1376,7 +1417,7 @@ class DataAgentQueries(unittest.TestCase):
         self.assertEqual((toner["status"], toner["is_active"], toner["impact_scope"]), ("개발중", 1, "포함"))
 
     def test_supplier_fanout_connects_material_to_active_formulas_and_products(self):
-        supplier = self.answers["DA03"]
+        supplier = self.answers["DA04"]
         self.assertEqual([r["product_id"] for r in supplier], ["P-101", "P-102", "P-301"])
         self.assertEqual({r["version_id"] for r in supplier}, {"FV-CRM-01-03", "FV-AMP-03-02"})
         self.assertTrue(all((r["supplier_id"], r["material_code"], r["po_id"], r["recorded_eta"]) ==
@@ -1384,10 +1425,10 @@ class DataAgentQueries(unittest.TestCase):
 
     def test_what_if_changes_only_the_specified_date_or_qc(self):
         dates = {r["target_id"]: (r["before_slack"], r["after_slack"], r["after_impact"])
-                 for r in self.answers["DA04"]}
+                 for r in self.answers["DA05"]}
         self.assertEqual(dates, {"PP-1101": (8, -27, 1), "PP-1102": (15, -20, 1),
                                 "PP-1103": (64, 29, 0), "ST-0711": (3, -32, 1)})
-        self.assertEqual({r["target_id"] for r in self.answers["DA04"] if r["newly_impacted"]},
+        self.assertEqual({r["target_id"] for r in self.answers["DA05"] if r["newly_impacted"]},
                          {"PP-1101", "PP-1102", "ST-0711"})
         qc7, qc14 = self.qc_comparison[7], self.qc_comparison[14]
         self.assertTrue(all(r["eta"] == "2026-11-20" for r in [*qc7.values(), *qc14.values()]))
@@ -1399,8 +1440,22 @@ class DataAgentQueries(unittest.TestCase):
             self.assertEqual((date.fromisoformat(qc7[key]["need_date"]) -
                               date.fromisoformat(qc14[key]["need_date"])).days, 7)
 
+    def test_production_and_test_schedules_both_subtract_qc_exactly_once(self):
+        for days, comparison in self.qc_comparison.items():
+            for row in comparison.values():
+                with self.subTest(qc=days, target=row["target_id"]):
+                    self.assertEqual(row["qc_lead_days"], days)
+                    self.assertEqual((date.fromisoformat(row["scheduled_date"]) -
+                                      date.fromisoformat(row["need_date"])).days, days)
+                    self.assertEqual((date.fromisoformat(row["need_date"]) -
+                                      date.fromisoformat(row["eta"])).days, row["slack_days"])
+        for row in self.answers["DA05"]:
+            self.assertEqual(row["qc_lead_days"], 7)
+            self.assertEqual((date.fromisoformat(row["scheduled_date"]) -
+                              date.fromisoformat(row["need_date"])).days, 7)
+
     def test_integration_preserves_market_unknowns_and_records_review_limits(self):
-        integrated = {r["target_id"]: r for r in self.answers["DA05"]}
+        integrated = {r["target_id"]: r for r in self.answers["DA06"]}
         self.assertEqual(set(integrated), {"PP-1101", "PP-1102", "ST-0711"})
         self.assertEqual({k: (r["owner_id"], r["market"], r["slack_days"]) for k, r in integrated.items()},
                          {"PP-1101": ("P-101", "KR", -27), "PP-1102": ("P-102", "CN", -20),
@@ -1415,63 +1470,76 @@ class DataAgentQueries(unittest.TestCase):
         self.assertEqual(integrated["ST-0711"]["review_note"], "시험 일정·원료 확보 검토 필요")
         self.assertTrue(all("condition_note" not in r and "alt_material_code" not in r for r in integrated.values()))
 
-    def test_limit_question_returns_evidence_without_claiming_feasible_production(self):
-        evidence = {r["target_id"]: r for r in self.answers["DA06"]}
-        self.assertEqual(set(evidence), {"PP-1101", "PP-1102", "ST-0711"})
-        self.assertEqual({key: row["planned_qty_ea"] for key, row in evidence.items()},
-                         {"PP-1101": 30000, "PP-1102": 20000, "ST-0711": None})
-        original = next(row for row in rows("raw_material") if row["material_code"] == "RM-HA-120")
-        alternative = next(row for row in rows("raw_material") if row["material_code"] == "RM-HA-210")
-        for row in evidence.values():
-            self.assertEqual((row["affected_planned_qty_ea"], row["affected_test_count"]), (50000, 1))
-            self.assertEqual((row["material_code"], row["comparison_material_code"]), ("RM-HA-120", "RM-HA-210"))
-            self.assertEqual(row["original_unit_price_krw"], float(original["unit_price_krw"]))
-            self.assertEqual(row["comparison_unit_price_krw"], float(alternative["unit_price_krw"]))
-            self.assertGreater(row["original_pct_wt"], 0)
+    def test_order_deadlines_use_source_lead_time_and_rank_without_approving_substitution(self):
+        deadlines = self.answers["DA07"]
+        self.assertEqual([(r["review_priority"], r["target_id"], r["need_date"],
+                           r["latest_order_date"], r["days_remaining"]) for r in deadlines],
+                         [(1, "ST-0711", "2026-11-13", "2026-11-03", 1),
+                          (2, "PP-1101", "2026-11-18", "2026-11-08", 6),
+                          (3, "PP-1102", "2026-11-25", "2026-11-15", 13)])
+        alternative = next(r for r in rows("raw_material") if r["material_code"] == "RM-HA-210")
+        for row in deadlines:
+            self.assertEqual(row["comparison_material_code"], alternative["material_code"])
+            self.assertEqual(row["lead_time_days"], int(alternative["lead_time_days"]))
+            self.assertEqual(row["cn_registration"], alternative["cn_registration"])
+            self.assertEqual(row["as_of_date"], "2026-11-02")
+            self.assertEqual(row["qc_lead_days"], 7)
+            self.assertEqual((date.fromisoformat(row["scheduled_date"]) -
+                              date.fromisoformat(row["need_date"])).days, 7)
+            self.assertEqual((date.fromisoformat(row["need_date"]) -
+                              date.fromisoformat(row["latest_order_date"])).days, row["lead_time_days"])
+            self.assertEqual((date.fromisoformat(row["latest_order_date"]) -
+                              date.fromisoformat(row["as_of_date"])).days, row["days_remaining"])
+            self.assertIn("대체 사용 승인·공정 검증 별도", row["review_note"])
             self.assertNotIn("approval_status", row)
-            self.assertNotIn("condition_note", row)
-            self.assertNotIn("actual_producible_qty_ea", row)
-            self.assertNotIn("total_additional_cost", row)
+        self.assertIsNone(deadlines[0]["market"])
+        self.assertEqual((deadlines[2]["owner_id"], deadlines[2]["market"]), ("P-102", "CN"))
+        self.assertIn("CN 등록 검토 필요", deadlines[2]["review_note"])
 
     def test_executed_questions_match_guide_in_consecutive_order(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \| [^|\n]+ \|$", lesson, re.M))
-        self.assertEqual(list(self.questions), [f"DA{i:02}" for i in range(1, 7)])
+        self.assertEqual(list(self.questions), [f"DA{i:02}" for i in range(1, 8)])
         self.assertEqual(self.questions, questions)
 
     def test_inline_expected_answers_match_reference_query_facts(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         expected = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `[^`]+` \| ([^|\n]+) \|$", lesson, re.M))
-        self.assertEqual(list(expected), [f"DA{i:02}" for i in range(1, 7)])
+        self.assertEqual(list(expected), [f"DA{i:02}" for i in range(1, 8)])
         for row in self.answers["DA01"]:
             self.assertIn(row["version_id"], expected["DA01"])
         for row in self.answers["DA02"]:
             self.assertIn(row["eta"][5:], expected["DA02"])
             self.assertIn(f'{row["slack_days"]}일', expected["DA02"])
         for row in self.answers["DA03"]:
-            for column in ("supplier_id", "material_code", "version_id", "product_id", "po_id"):
+            for column in ("material_code", "cn_registration"):
                 self.assertIn(row[column], expected["DA03"])
-            self.assertIn(row["recorded_eta"][5:], expected["DA03"])
+            self.assertIn(row["assumed_eta"][5:], expected["DA03"])
+            self.assertIn(f'{row["slack_days"]}일', expected["DA03"])
         for row in self.answers["DA04"]:
-            self.assertIn(row["target_id"], expected["DA04"])
-            self.assertIn(row["need_date"][5:], expected["DA04"])
-            self.assertIn(f'{row["before_slack"]} → {row["after_slack"]}일', expected["DA04"])
+            for column in ("supplier_id", "material_code", "version_id", "product_id", "po_id"):
+                self.assertIn(row[column], expected["DA04"])
+            self.assertIn(row["recorded_eta"][5:], expected["DA04"])
         for row in self.answers["DA05"]:
-            for column in ("target_id", "owner_id", "po_id", "supplier_id"):
-                self.assertIn(row[column], expected["DA05"])
-            self.assertIn(f'{row["slack_days"]}일', expected["DA05"])
+            self.assertIn(row["target_id"], expected["DA05"])
+            self.assertIn(row["need_date"][5:], expected["DA05"])
+            self.assertIn(f'{row["before_slack"]} → {row["after_slack"]}일', expected["DA05"])
         for row in self.answers["DA06"]:
-            self.assertIn(row["target_id"], expected["DA06"])
-            self.assertIn(f'{row["affected_planned_qty_ea"]:,}개', expected["DA06"])
-            self.assertIn(f'{row["affected_test_count"]}건', expected["DA06"])
-            if row["planned_qty_ea"] is not None:
-                self.assertIn(f'{row["planned_qty_ea"]:,}개', expected["DA06"])
-        self.assertIn("확정 불가", expected["DA06"])
+            for column in ("target_id", "owner_id", "po_id", "supplier_id"):
+                self.assertIn(row[column], expected["DA06"])
+            self.assertIn(f'{row["slack_days"]}일', expected["DA06"])
+        for row in self.answers["DA07"]:
+            self.assertIn(row["target_id"], expected["DA07"])
+            self.assertIn(row["need_date"][5:], expected["DA07"])
+            self.assertIn(row["latest_order_date"][5:], expected["DA07"])
+            self.assertIn(f'{row["days_remaining"]}일', expected["DA07"])
+        self.assertIn("CN 등록 검토 필요", expected["DA07"])
+        self.assertIn("대체 사용 승인·공정 검증 완료를 뜻하지 않음", expected["DA07"])
 
     def test_reference_queries_are_read_only_and_do_not_need_ops(self):
         self.assertEqual(self.recorded_eta, "2026-11-10")
         self.assertTrue(all(re.match(r"\s*(SELECT|WITH)\b", query) for query in self.queries))
-        self.assertEqual(len(self.queries), 11)
+        self.assertEqual(len(self.queries), 12)
 
 
 class Serving(unittest.TestCase):
