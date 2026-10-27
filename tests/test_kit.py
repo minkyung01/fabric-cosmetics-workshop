@@ -114,6 +114,45 @@ class Notebooks(unittest.TestCase):
                     compile(block, name, "exec")
                 ast.parse("\n".join(blocks))
 
+    def test_answers_show_each_agent_question_beside_its_query_in_guide_order(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \|$", lesson, re.M))
+        cells = notebook("02_answers")["cells"]
+        headings = []
+        for index, cell in enumerate(cells):
+            if cell["cell_type"] != "markdown":
+                continue
+            markdown = "".join(cell["source"])
+            heading = re.match(r"### (DA\d{2})\.", markdown)
+            if not heading:
+                continue
+            question_id = heading.group(1)
+            headings.append(question_id)
+            self.assertIn(f"> {questions[question_id]}", markdown)
+            self.assertEqual(cells[index + 1]["cell_type"], "code")
+            calls = [node for node in ast.walk(ast.parse("".join(cells[index + 1]["source"])))
+                     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "q"]
+            self.assertEqual(len(calls), 1)
+            self.assertTrue(ast.literal_eval(calls[0].args[0]).startswith(question_id + " "))
+            prompt = next(keyword.value for keyword in calls[0].keywords if keyword.arg == "question")
+            self.assertEqual(ast.literal_eval(prompt), questions[question_id])
+        self.assertEqual(headings, [f"DA{i:02}" for i in range(1, 9)])
+        self.assertEqual(re.findall(r"^## (Q\d)\.", "\n".join("".join(c["source"]) for c in cells), re.M),
+                         [f"Q{i}" for i in range(1, 7)])
+
+    def test_answer_display_prints_the_question_before_the_result(self):
+        tree = ast.parse(code("02_answers"))
+        helper = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "q")
+        namespace = {"spark": Mock(), "display": Mock()}
+        exec(compile(ast.Module(body=[helper], type_ignores=[]), "q", "exec"), namespace)
+        output = io.StringIO()
+        with redirect_stdout(output):
+            namespace["q"]("DA01", "SELECT 1", question="확인할 질문")
+        self.assertIn("DA01", output.getvalue())
+        self.assertIn("Data Agent에 보낼 질문:\n확인할 질문", output.getvalue())
+        namespace["spark"].sql.assert_called_once_with("SELECT 1")
+        namespace["display"].assert_called_once_with(namespace["spark"].sql.return_value)
+
     def test_embedded_scenario_exactly_matches_all_canonical_data(self):
         tree = ast.parse(code("01_prepare_data"))
         data = next(ast.literal_eval(n.value) for n in tree.body
@@ -966,18 +1005,20 @@ class Docs(unittest.TestCase):
         for requirement in ("별도 `da_cos_graph`", "기존 `da_cos`는 그대로 유지",
                             "**Graph 원본만 연결**", "Ontology나 Lakehouse는 추가하지 않습니다",
                             "Materialize·새로 고침 시점의 데이터",
-                            "새 문항을 추가하지 않고", "기본 8문항 중 DA07·DA08",
+                            "새 문항을 추가하지 않고", "기본 8문항 중 DA04·DA05",
                             "RM-HA-120 자체는 제외", "**Clear chat**",
                             "`RM-PHE-002`", "`P-101`·`P-102`·`P-301`",
                             "**`da_cos`는 Lakehouse SQL**", "**`da_cos_graph`는 Graph GQL**",
                             "Lakehouse를 추가하지 않습니다", "기본 실습은 완료"):
             self.assertIn(requirement, optional)
+        admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("DA04·DA05의 경로 탐색 재사용", admin)
         self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
 
     def test_data_agent_selects_eight_questions_in_id_order_with_deferred_answers(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \|$", lesson, re.M)
-        ids = ["DA01", "DA03", "DA04", "DA07", "DA08", "DA09", "DA11", "DA12"]
+        ids = [f"DA{i:02}" for i in range(1, 9)]
         self.assertEqual([q[0] for q in questions], ids)
         self.assertEqual([q[1] for q in questions],
                          ["대조", "규칙", "규칙", "관계", "관계", "What-if",
@@ -986,12 +1027,15 @@ class Docs(unittest.TestCase):
             self.assertNotRegex(prompt, r"DA\d{2}")
         answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
         self.assertEqual(re.findall(r"^\| (DA\d{2}) \|", answers, re.M), ids)
-        self.assertIn("핵심 8문항을 ID 순서대로", lesson)
+        self.assertIn("핵심 8문항을 DA01–DA08 순서대로", lesson)
         self.assertIn("Notebook에 준비된 SQL 실행 결과와 비교", lesson)
+        self.assertIn("같은 번호·질문·순서", lesson)
+        self.assertIn("DA01도 전용 셀", lesson)
+        self.assertIn("../notebooks/02_answers.ipynb", lesson)
         for doc in (ROOT / "README.md", ROOT / "admin" / "README.md", ROOT / "docs" / "03-data-agent.md"):
             self.assertNotIn("12문항", doc.read_text(encoding="utf-8"), doc.name)
             self.assertNotIn("중요도순", doc.read_text(encoding="utf-8"), doc.name)
-        self.assertLess(lesson.index("| DA12 | 여러 데이터 통합 |"), lesson.index("<details>"))
+        self.assertLess(lesson.index("| DA08 | 여러 데이터 통합 |"), lesson.index("<details>"))
         self.assertIn("핵심 11개 테이블·9개 엔터티", lesson)
         self.assertIn("Clear chat", lesson)
         self.assertIn("최초 답", lesson)
@@ -1223,7 +1267,7 @@ class Docs(unittest.TestCase):
 class DataAgentQueries(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.answers, cls.queries = {}, []
+        cls.answers, cls.queries, cls.questions = {}, [], {}
         with sqlite3.connect(":memory:") as db:
             db.row_factory = sqlite3.Row
             db.execute("ATTACH DATABASE ':memory:' AS gold")
@@ -1242,9 +1286,11 @@ class DataAgentQueries(unittest.TestCase):
             db.create_function("datediff", 2,
                                lambda first, second: (date.fromisoformat(first) - date.fromisoformat(second)).days)
 
-            def capture(title, sql):
+            def capture(title, sql, question=None):
                 cls.queries.append(sql)
                 cls.answers[title.split()[0]] = [dict(row) for row in db.execute(sql)]
+                if question is not None:
+                    cls.questions[title.split()[0]] = question
 
             source = (ROOT / "notebooks" / "src" / "02_answers.py").read_text(encoding="utf-8")
             # Execute the real query expressions with SQLite date equivalents, not the Fabric display wrapper.
@@ -1252,23 +1298,34 @@ class DataAgentQueries(unittest.TestCase):
             namespace = {"q": capture, "spark": SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda _: False))}
             with redirect_stdout(io.StringIO()):
                 exec(compile(ast.Module(body=nodes, type_ignores=[]), source, "exec"), namespace)
+            cls.qc_comparison = {
+                days: {row["target_id"]: dict(row)
+                       for row in db.execute(namespace["schedule_sql"]("2026-11-20", days))}
+                for days in (7, 14)
+            }
             cls.recorded_eta = db.execute(
                 "SELECT eta FROM gold.purchase_order WHERE po_id = 'PO-5501'").fetchone()[0]
 
     def test_documented_output_counts_match_executed_reference_queries(self):
         for lesson, questions in (
             ("02-graph.md", ("Q1", "Q2", "Q3", "Q4", "Q5")),
-            ("03-data-agent.md", ("DA05", "DA07", "DA08", "DA04", "DA03", "DA09", "DA10", "DA11")),
+            ("03-data-agent.md", tuple(f"DA{i:02}" for i in range(1, 9))),
         ):
             text = (ROOT / "docs" / lesson).read_text(encoding="utf-8")
             for question in questions:
                 with self.subTest(lesson=lesson, question=question):
-                    row = re.search(rf"^\| {question} [^|]+\| (\d+)행", text, re.M)
+                    if lesson == "02-graph.md":
+                        section = re.search(rf"^#### Notebook {question}\..*?(?=^####|^## |\Z)",
+                                            text, re.M | re.S)
+                        self.assertIsNotNone(section)
+                        row = re.search(r"\*\*(\d+)행\*\*", section.group())
+                    else:
+                        row = re.search(rf"^\| {question} [^|]+\| (\d+)행", text, re.M)
                     self.assertIsNotNone(row)
                     self.assertEqual(int(row.group(1)), len(self.answers[question]))
 
     def test_comparison_retains_excluded_versions_and_candidates(self):
-        versions = self.answers["Q1"]
+        versions = self.answers["DA01"]
         self.assertEqual(len(versions), 4)
         self.assertEqual({r["version_id"] for r in versions if r["is_active"]},
                          {"FV-CRM-01-03", "FV-TON-02-01", "FV-AMP-03-02"})
@@ -1280,32 +1337,32 @@ class DataAgentQueries(unittest.TestCase):
                          ("검토중", "완료"))
 
     def test_boundary_and_three_candidate_conditions(self):
-        boundary = self.answers["DA03"]
+        boundary = self.answers["DA02"]
         self.assertEqual([(r["eta"], r["need_date"], r["slack_days"], r["is_impacted"]) for r in boundary],
                          [("2026-11-13", "2026-11-13", 0, 0), ("2026-11-14", "2026-11-13", -1, 1)])
-        candidates = self.answers["DA04"]
+        candidates = self.answers["DA03"]
         self.assertEqual([r["alt_material_code"] for r in candidates], ["RM-HA-210", "RM-HA-305"])
         self.assertTrue(all(r["need_date"] == "2026-11-25" for r in candidates))
         self.assertEqual([(r["assumed_eta"], r["slack_days"], r["approval_ok"], r["schedule_ok"], r["cn_ok"], r["all_ok"])
                           for r in candidates],
                          [("2026-11-12", 13, 1, 1, 0, 0), ("2026-12-14", -19, 0, 0, 1, 0)])
 
-    def test_terms_distinguish_one_ingredient_and_three_materials(self):
-        materials = self.answers["DA05"]
-        self.assertEqual({r["ingredient_id"] for r in materials}, {"ING-HA"})
-        self.assertEqual({r["material_code"]: r["supplier_id"] for r in materials},
-                         {"RM-HA-120": "SUP-02", "RM-HA-210": "SUP-01", "RM-HA-305": "SUP-04"})
-        self.assertEqual({r["inci_name"] for r in materials}, {"Sodium Hyaluronate"})
-        toner = next(r for r in self.answers["Q1"] if r["version_id"] == "FV-TON-02-01")
-        self.assertEqual((toner["status"], toner["is_active"]), ("개발중", 1))
+    def test_formula_scope_uses_active_flag_not_status(self):
+        versions = {r["version_id"]: r for r in self.answers["DA01"]}
+        self.assertEqual((versions["FV-CRM-01-02"]["impact_scope"], versions["FV-CRM-01-02"]["scope_reason"]),
+                         ("제외", "비활성 처방"))
+        self.assertTrue(all(r["impact_scope"] == "포함" and r["scope_reason"] == "활성 처방"
+                            for r in versions.values() if r["is_active"]))
+        toner = versions["FV-TON-02-01"]
+        self.assertEqual((toner["status"], toner["is_active"], toner["impact_scope"]), ("개발중", 1, "포함"))
 
     def test_relationship_paths_and_supplier_fanout(self):
-        paths = {r["target_id"]: r for r in self.answers["DA07"]}
+        paths = {r["target_id"]: r for r in self.answers["DA04"]}
         self.assertEqual(set(paths), {"PP-1102", "ST-0711"})
         self.assertEqual((paths["PP-1102"]["product_id"], paths["PP-1102"]["version_id"]), ("P-102", "FV-CRM-01-03"))
         self.assertEqual((paths["ST-0711"]["project_id"], paths["ST-0711"]["version_id"]), ("DP-2026-07", "FV-TON-02-01"))
         self.assertTrue(all(r["material_code"] == "RM-HA-120" for r in paths.values()))
-        supplier = self.answers["DA08"]
+        supplier = self.answers["DA05"]
         self.assertEqual([r["product_id"] for r in supplier], ["P-101", "P-102", "P-301"])
         self.assertEqual({r["version_id"] for r in supplier}, {"FV-CRM-01-03", "FV-AMP-03-02"})
         self.assertTrue(all((r["supplier_id"], r["material_code"], r["po_id"], r["recorded_eta"]) ==
@@ -1313,19 +1370,23 @@ class DataAgentQueries(unittest.TestCase):
 
     def test_what_if_changes_only_the_specified_date_or_qc(self):
         dates = {r["target_id"]: (r["before_slack"], r["after_slack"], r["after_impact"])
-                 for r in self.answers["DA09"]}
+                 for r in self.answers["DA06"]}
         self.assertEqual(dates, {"PP-1101": (8, -27, 1), "PP-1102": (15, -20, 1),
                                 "PP-1103": (64, 29, 0), "ST-0711": (3, -32, 1)})
-        qc = {r["target_id"]: r for r in self.answers["DA10"]}
-        self.assertTrue(all(r["eta"] == "2026-11-20" for r in qc.values()))
-        self.assertEqual({k: (r["slack_qc7"], r["slack_qc14"]) for k, r in qc.items()},
+        self.assertEqual({r["target_id"] for r in self.answers["DA06"] if r["newly_impacted"]},
+                         {"PP-1101", "PP-1102", "ST-0711"})
+        qc7, qc14 = self.qc_comparison[7], self.qc_comparison[14]
+        self.assertTrue(all(r["eta"] == "2026-11-20" for r in [*qc7.values(), *qc14.values()]))
+        self.assertEqual({key: (qc7[key]["slack_days"], qc14[key]["slack_days"]) for key in qc7},
                          {"PP-1101": (-2, -9), "PP-1102": (5, -2), "PP-1103": (54, 47), "ST-0711": (-7, -14)})
-        self.assertEqual({k for k, r in qc.items() if not r["impact_qc7"] and r["impact_qc14"]}, {"PP-1102"})
-        for row in qc.values():
-            self.assertEqual((date.fromisoformat(row["need_qc7"]) - date.fromisoformat(row["need_qc14"])).days, 7)
+        self.assertEqual({key for key in qc7 if not qc7[key]["is_impacted"] and qc14[key]["is_impacted"]},
+                         {"PP-1102"})
+        for key in qc7:
+            self.assertEqual((date.fromisoformat(qc7[key]["need_date"]) -
+                              date.fromisoformat(qc14[key]["need_date"])).days, 7)
 
     def test_integration_preserves_market_unknowns_and_records_review_limits(self):
-        integrated = {r["target_id"]: r for r in self.answers["DA11"]}
+        integrated = {r["target_id"]: r for r in self.answers["DA07"]}
         self.assertEqual(set(integrated), {"PP-1101", "PP-1102", "ST-0711"})
         self.assertEqual({k: (r["owner_id"], r["market"], r["slack_days"]) for k, r in integrated.items()},
                          {"PP-1101": ("P-101", "KR", -27), "PP-1102": ("P-102", "CN", -20),
@@ -1338,6 +1399,28 @@ class DataAgentQueries(unittest.TestCase):
                             for r in integrated.values()))
         self.assertEqual(integrated["PP-1102"]["review_note"], "CN 등록 검토 필요")
         self.assertTrue(all(r["condition_note"] == "파우더 용해 공정 추가 필요" for r in integrated.values()))
+
+    def test_limit_question_returns_evidence_without_claiming_feasible_production(self):
+        evidence = {r["target_id"]: r for r in self.answers["DA08"]}
+        self.assertEqual(set(evidence), {"PP-1101", "PP-1102", "ST-0711"})
+        self.assertEqual({key: row["planned_qty_ea"] for key, row in evidence.items()},
+                         {"PP-1101": 30000, "PP-1102": 20000, "ST-0711": None})
+        original = next(row for row in rows("raw_material") if row["material_code"] == "RM-HA-120")
+        alternative = next(row for row in rows("raw_material") if row["material_code"] == "RM-HA-210")
+        for row in evidence.values():
+            self.assertEqual((row["affected_planned_qty_ea"], row["affected_test_count"]), (50000, 1))
+            self.assertEqual((row["material_code"], row["alt_material_code"]), ("RM-HA-120", "RM-HA-210"))
+            self.assertEqual(row["original_unit_price_krw"], float(original["unit_price_krw"]))
+            self.assertEqual(row["alternative_unit_price_krw"], float(alternative["unit_price_krw"]))
+            self.assertGreater(row["original_pct_wt"], 0)
+            self.assertNotIn("actual_producible_qty_ea", row)
+            self.assertNotIn("total_additional_cost", row)
+
+    def test_executed_questions_match_guide_in_consecutive_order(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \|$", lesson, re.M))
+        self.assertEqual(list(self.questions), [f"DA{i:02}" for i in range(1, 9)])
+        self.assertEqual(self.questions, questions)
 
     def test_reference_queries_are_read_only_and_do_not_need_ops(self):
         self.assertEqual(self.recorded_eta, "2026-11-10")

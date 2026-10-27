@@ -12,8 +12,10 @@ qc_lead_days = 7
 from datetime import date
 
 
-def q(title, sql):
+def q(title, sql, question=None):
     print(f"\n### {title}")
+    if question is not None:
+        print(f"Data Agent에 보낼 질문:\n{question}\n")
     display(spark.sql(sql))
 
 m = material_code.replace("'", "''")
@@ -117,76 +119,57 @@ else:
     print("ops.material_impact가 아직 없습니다. 4장에서 03_supply_change를 실행한 뒤 다시 확인하세요.")
 
 # %% [markdown]
-# ## 03장 DA01–DA12의 근거 확인
+# ## 03장 Data Agent — DA01–DA08 질문과 확인 결과
 #
-# Q1은 DA01·DA06의 처방 상태, Q3은 DA02·DA06의 대체 후보 상태를 확인합니다.
-# 아래는 용어·관계·조건·What-if·통합 질문의 추가 근거입니다. 문항 ID는 Notebook Q번호와 다릅니다.
-# 모든 추가 질의는 읽기 전용이며, `03_supply_change`나 `ops` 테이블 없이 실행합니다.
-# DA03·DA09–DA11은 질문에 고정한 날짜·QC로 계산하므로 현재 발주 ETA와 혼동하지 않습니다.
-# 정답 대조는 기본 매개변수 `material_code=RM-HA-120`, `qc_lead_days=7`로 진행합니다.
+# 가이드와 같은 질문·번호·순서로 확인합니다. 각 문항의 질문을 Data Agent에 보내고,
+# 바로 아래 코드 셀을 실행해 대상 ID·날짜·판정을 비교합니다. 실행 출력에도 질문이 표시됩니다.
+# 앞의 Q1–Q6은 01–02장 비교용이며, 이 절에서는 다른 Q번호를 찾아갈 필요가 없습니다.
+# 모든 DA 질의는 읽기 전용이며 `03_supply_change`나 `ops` 테이블 없이 실행합니다.
+# 정답 비교는 기본 매개변수 `material_code=RM-HA-120`, `qc_lead_days=7`로 진행합니다.
 
 # %% [markdown]
-# ### DA05. 성분과 원료 — DA12의 단가 근거도 확인
-# 기대: ING-HA 아래 서로 다른 원료 3개, 공급사 SUP-02/SUP-01/SUP-04.
-# 단가가 있어도 1% 용액과 파우더의 소요량을 그대로 치환하거나 총 비용을 확정할 수는 없습니다.
+# ### DA01. 전체 처방과 활성 처방
+#
+# > RM-HA-120을 쓰는 전체 처방 버전과 영향 분석에 포함되는 처방 버전을 대조해줘. version_id·status·is_active·포함/제외 이유를 보여줘.
+#
+# 확인: 전체 4개 중 활성 3개. 폐기·비활성 `FV-CRM-01-02`만 제외합니다.
 
 # %%
-q("DA05 성분과 원료", f"""
-SELECT i.ingredient_id, i.inci_name, r.material_code, r.material_name, r.unit_price_krw,
-       s.supplier_id, s.supplier_name
-FROM gold.raw_material origin
-JOIN gold.ingredient i ON i.ingredient_id = origin.ingredient_id
-JOIN gold.raw_material r ON r.ingredient_id = i.ingredient_id
-JOIN gold.supplier s ON s.supplier_id = r.supplier_id
-WHERE origin.material_code = '{m}' ORDER BY r.material_code""")
+q("DA01 전체·활성 처방", f"""
+SELECT fv.version_id, fv.formula_name, fv.status, fv.is_active,
+       CASE WHEN fv.is_active THEN '포함' ELSE '제외' END AS impact_scope,
+       CASE WHEN fv.is_active THEN '활성 처방' ELSE '비활성 처방' END AS scope_reason
+FROM gold.formula_line fl JOIN gold.formula_version fv ON fl.version_id = fv.version_id
+WHERE fl.material_code = '{m}' ORDER BY fv.version_id""",
+  question="RM-HA-120을 쓰는 전체 처방 버전과 영향 분석에 포함되는 처방 버전을 대조해줘. version_id·status·is_active·포함/제외 이유를 보여줘.")
 
 # %% [markdown]
-# ### DA07. 생산과 시험의 두 업무 경로
-# 저장 방향: PP-1102 → P-102 → FV-CRM-01-03 → RM-HA-120,
-# ST-0711 → FV-TON-02-01 → RM-HA-120 및 ST-0711 → DP-2026-07.
-# 실제 관계 이름·저장 방향은 01장의 정의와 대조합니다.
+# ### DA02. 여유일 0의 경계
+#
+# > ST-0711에서 QC 7일을 적용할 때 RM-HA-120이 2026-11-13에 입고되는 경우와 11-14에 입고되는 경우를 판정해줘. 필요일과 여유일을 계산하고, 여유일이 0이면 영향 대상인지 설명해줘.
+#
+# 확인: 필요일 11-13. 당일 입고는 여유 0·영향 없음, 다음 날 입고는 -1·영향 있음입니다.
 
 # %%
-q("DA07 업무 경로", f"""
-SELECT pp.plan_id AS target_id, p.product_id, fv.version_id, fl.material_code,
-       CAST(NULL AS STRING) AS project_id
-FROM gold.production_plan pp JOIN gold.product p ON p.product_id = pp.product_id
-JOIN gold.formula_version fv ON fv.version_id = p.version_id AND fv.is_active
-JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
-WHERE pp.plan_id = 'PP-1102'
+q("DA02 경계 판정", f"""
+WITH on_time AS ({schedule_sql('2026-11-13', 7)}),
+one_day_late AS ({schedule_sql('2026-11-14', 7)})
+SELECT * FROM on_time WHERE target_id = 'ST-0711'
 UNION ALL
-SELECT st.test_id, NULL, fv.version_id, fl.material_code, dp.project_id
-FROM gold.stability_test st
-JOIN gold.formula_version fv ON fv.version_id = st.version_id AND fv.is_active
-JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
-JOIN gold.dev_project dp ON dp.project_id = st.project_id
-WHERE st.test_id = 'ST-0711' AND st.status = '예정'
-ORDER BY target_id""")
+SELECT * FROM one_day_late WHERE target_id = 'ST-0711'
+ORDER BY eta""",
+  question="ST-0711에서 QC 7일을 적용할 때 RM-HA-120이 2026-11-13에 입고되는 경우와 11-14에 입고되는 경우를 판정해줘. 필요일과 여유일을 계산하고, 여유일이 0이면 영향 대상인지 설명해줘.")
 
 # %% [markdown]
-# ### DA08. 같은 공급사 → 다른 원료 → 활성 처방 → 제품
-# 기대: RM-PHE-002, FV-CRM-01-03/FV-AMP-03-02, P-101/P-102/P-301의 3행.
-# PO-5505의 ETA는 2026-11-10입니다. 연결 관계가 추가 지연의 증거는 아닙니다.
-
-# %%
-q("DA08 공급사 경로", f"""
-SELECT s.supplier_id, s.supplier_name, other.material_code, fv.version_id, p.product_id,
-       po.po_id, po.eta AS recorded_eta
-FROM gold.raw_material origin JOIN gold.supplier s ON s.supplier_id = origin.supplier_id
-JOIN gold.raw_material other ON other.supplier_id = s.supplier_id AND other.material_code <> origin.material_code
-JOIN gold.formula_line fl ON fl.material_code = other.material_code
-JOIN gold.formula_version fv ON fv.version_id = fl.version_id AND fv.is_active
-JOIN gold.product p ON p.version_id = fv.version_id
-LEFT JOIN gold.purchase_order po ON po.material_code = other.material_code AND po.supplier_id = s.supplier_id
-WHERE origin.material_code = '{m}' ORDER BY p.product_id""")
-
-# %% [markdown]
-# ### DA04. CN 계획에 대한 대체 후보의 세 조건
-# 기대: PP-1102 필요일 11-25. RM-HA-210은 승인/일정 통과·CN 미충족,
+# ### DA03. CN 계획에 대한 대체 후보의 세 조건
+#
+# > 2026-11-02에 대체 원료를 발주한다고 가정해줘. CN 제품 P-102의 PP-1102에 대해 RM-HA-210과 RM-HA-305가 승인·필요일 이내 입고·CN 등록 조건을 각각 충족하는지 표로 판정해줘. 세 조건을 모두 만족하는 후보가 있나?
+#
+# 확인: PP-1102 필요일 11-25. RM-HA-210은 승인/일정 통과·CN 미충족,
 # RM-HA-305는 CN만 통과합니다. 세 조건을 모두 통과하는 후보는 없습니다.
 
 # %%
-q("DA04 후보 조건", f"""
+q("DA03 후보 조건", f"""
 WITH targets AS ({schedule_sql('2026-12-15', 7)}),
 candidates AS (
   SELECT d.target_id, d.market, d.need_date, a.alt_material_code, a.approval_status,
@@ -201,54 +184,87 @@ SELECT *, datediff(need_date, assumed_eta) AS slack_days,
        approval_status = '승인' AS approval_ok, assumed_eta <= need_date AS schedule_ok,
        cn_registration = '완료' AS cn_ok,
        approval_status = '승인' AND assumed_eta <= need_date AND cn_registration = '완료' AS all_ok
-FROM candidates ORDER BY alt_material_code""")
+FROM candidates ORDER BY alt_material_code""",
+  question="2026-11-02에 대체 원료를 발주한다고 가정해줘. CN 제품 P-102의 PP-1102에 대해 RM-HA-210과 RM-HA-305가 승인·필요일 이내 입고·CN 등록 조건을 각각 충족하는지 표로 판정해줘. 세 조건을 모두 만족하는 후보가 있나?")
 
 # %% [markdown]
-# ### DA03. 여유일 0의 경계
-# 기대: ST-0711 필요일 11-13, 입고 11-13은 여유 0·영향 없음, 11-14는 -1·영향 있음.
+# ### DA04. 생산과 시험의 두 업무 경로
+#
+# > RM-HA-120에서 PP-1102까지와 ST-0711·DP-2026-07까지의 연결 경로를 보여줘. 중간 처방 버전·제품 ID와 관계 이름을 표시하고, 탐색 방향과 Ontology에 저장된 관계 방향을 구분해줘.
+#
+# 확인: PP-1102 → P-102 → FV-CRM-01-03 → RM-HA-120,
+# ST-0711 → FV-TON-02-01 → RM-HA-120 및 ST-0711 → DP-2026-07.
+# 저장된 관계는 각각 produces → made_with → uses_material, tests_version → uses_material,
+# for_project입니다. 실제 모델의 관계 이름·저장 방향은 01장의 정의와 비교합니다.
 
 # %%
-q("DA03 경계 판정", f"""
-WITH on_time AS ({schedule_sql('2026-11-13', 7)}),
-one_day_late AS ({schedule_sql('2026-11-14', 7)})
-SELECT * FROM on_time WHERE target_id = 'ST-0711'
+q("DA04 업무 경로", f"""
+SELECT pp.plan_id AS target_id, p.product_id, fv.version_id, fl.material_code,
+       CAST(NULL AS STRING) AS project_id
+FROM gold.production_plan pp JOIN gold.product p ON p.product_id = pp.product_id
+JOIN gold.formula_version fv ON fv.version_id = p.version_id AND fv.is_active
+JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
+WHERE pp.plan_id = 'PP-1102'
 UNION ALL
-SELECT * FROM one_day_late WHERE target_id = 'ST-0711'
-ORDER BY eta""")
+SELECT st.test_id, NULL, fv.version_id, fl.material_code, dp.project_id
+FROM gold.stability_test st
+JOIN gold.formula_version fv ON fv.version_id = st.version_id AND fv.is_active
+JOIN gold.formula_line fl ON fl.version_id = fv.version_id AND fl.material_code = '{m}'
+JOIN gold.dev_project dp ON dp.project_id = st.project_id
+WHERE st.test_id = 'ST-0711' AND st.status = '예정'
+ORDER BY target_id""",
+  question="RM-HA-120에서 PP-1102까지와 ST-0711·DP-2026-07까지의 연결 경로를 보여줘. 중간 처방 버전·제품 ID와 관계 이름을 표시하고, 탐색 방향과 Ontology에 저장된 관계 방향을 구분해줘.")
 
 # %% [markdown]
-# ### DA09. 입고일만 바꾸기 — 원본 갱신 없이 비교
-# 기대: PP-1101/PP-1102/PP-1103/ST-0711 여유일 8/15/64/3 → -27/-20/29/-32.
+# ### DA05. 같은 공급사 → 다른 원료 → 활성 처방 → 제품
+#
+# > RM-HA-120의 공급사가 공급하는 다른 원료를 찾고, 그 원료를 쓰는 활성 처방과 제품까지 연결해줘. 같은 공급사라는 이유만으로 그 원료도 지연됐다고 판단해도 되는지 실제 발주 ETA와 구분해줘.
+#
+# 확인: RM-PHE-002 → FV-CRM-01-03/FV-AMP-03-02 → P-101/P-102/P-301의 3행.
+# PO-5505의 ETA는 2026-11-10입니다. 연결 관계가 추가 지연의 증거는 아닙니다.
 
 # %%
-q("DA09 입고일 비교", f"""
+q("DA05 공급사 경로", f"""
+SELECT s.supplier_id, s.supplier_name, other.material_code, fv.version_id, p.product_id,
+       po.po_id, po.eta AS recorded_eta
+FROM gold.raw_material origin JOIN gold.supplier s ON s.supplier_id = origin.supplier_id
+JOIN gold.raw_material other ON other.supplier_id = s.supplier_id AND other.material_code <> origin.material_code
+JOIN gold.formula_line fl ON fl.material_code = other.material_code
+JOIN gold.formula_version fv ON fv.version_id = fl.version_id AND fv.is_active
+JOIN gold.product p ON p.version_id = fv.version_id
+LEFT JOIN gold.purchase_order po ON po.material_code = other.material_code AND po.supplier_id = s.supplier_id
+WHERE origin.material_code = '{m}' ORDER BY p.product_id""",
+  question="RM-HA-120의 공급사가 공급하는 다른 원료를 찾고, 그 원료를 쓰는 활성 처방과 제품까지 연결해줘. 같은 공급사라는 이유만으로 그 원료도 지연됐다고 판단해도 되는지 실제 발주 ETA와 구분해줘.")
+
+# %% [markdown]
+# ### DA06. 입고일만 바꾸기 — 원본 갱신 없이 비교
+#
+# > RM-HA-120의 입고일을 2026-11-10과 2026-12-15로 각각 가정해 비교해줘. QC는 7일로 고정하고 활성 처방에 연결된 생산 계획·예정 시험별 필요일·여유일·영향 여부와 새로 영향을 받는 대상을 보여줘.
+#
+# 확인: PP-1101/PP-1102/PP-1103/ST-0711 여유일 8/15/64/3 → -27/-20/29/-32.
+# newly_impacted가 true인 PP-1101·PP-1102·ST-0711이 새 영향 대상입니다.
+
+# %%
+q("DA06 입고일 비교", f"""
 WITH baseline AS ({schedule_sql('2026-11-10', 7)}),
 delayed AS ({schedule_sql('2026-12-15', 7)})
 SELECT b.target_id, b.owner_id, b.version_id, b.market, b.need_date,
        b.eta AS baseline_eta, b.slack_days AS before_slack, b.is_impacted AS before_impact,
-       d.eta AS assumed_eta, d.slack_days AS after_slack, d.is_impacted AS after_impact
-FROM baseline b JOIN delayed d ON d.target_id = b.target_id ORDER BY b.target_id""")
+       d.eta AS assumed_eta, d.slack_days AS after_slack, d.is_impacted AS after_impact,
+       NOT b.is_impacted AND d.is_impacted AS newly_impacted
+FROM baseline b JOIN delayed d ON d.target_id = b.target_id ORDER BY b.target_id""",
+  question="RM-HA-120의 입고일을 2026-11-10과 2026-12-15로 각각 가정해 비교해줘. QC는 7일로 고정하고 활성 처방에 연결된 생산 계획·예정 시험별 필요일·여유일·영향 여부와 새로 영향을 받는 대상을 보여줘.")
 
 # %% [markdown]
-# ### DA10. QC만 바꾸기 — 입고일은 11-20 고정
-# 기대: QC 7일 → 14일에 PP-1102가 새 영향. PP-1103은 여유 47일로 영향 없음.
+# ### DA07. 여러 데이터를 연결한 검토표
+#
+# > RM-HA-120이 2026-12-15에 입고된다고 가정하고 QC 7일을 적용해, 영향받는 생산 계획과 예정 시험을 하나의 검토표로 만들어줘. 제품/과제·시장·처방 버전·원 발주/공급사·필요일·여유일·승인된 대체 후보와 추가 검토 조건을 연결해줘. 시험의 시장은 추정하지 마.
+#
+# 확인: PP-1101·PP-1102·ST-0711의 3행. 원본 ETA와 가정 ETA를 분리합니다.
+# 대체 후보는 사용 승인 결론이 아닙니다. DA03의 일정 조건과 공정 검토도 함께 봅니다.
 
 # %%
-q("DA10 QC 비교", f"""
-WITH qc7 AS ({schedule_sql('2026-11-20', 7)}),
-qc14 AS ({schedule_sql('2026-11-20', 14)})
-SELECT a.target_id, a.eta, a.need_date AS need_qc7, a.slack_days AS slack_qc7,
-       a.is_impacted AS impact_qc7, b.need_date AS need_qc14, b.slack_days AS slack_qc14,
-       b.is_impacted AS impact_qc14
-FROM qc7 a JOIN qc14 b ON b.target_id = a.target_id ORDER BY a.target_id""")
-
-# %% [markdown]
-# ### DA11. 여러 데이터를 연결한 검토표
-# 기대: PP-1101·PP-1102·ST-0711의 3행. 원본 ETA와 가정 ETA를 분리합니다.
-# 대체 후보는 사용 승인 결론이 아닙니다. DA04의 일정 조건과 공정 검토도 함께 봅니다.
-
-# %%
-q("DA11 통합 검토표", f"""
+q("DA07 통합 검토표", f"""
 WITH targets AS ({schedule_sql('2026-12-15', 7)})
 SELECT d.target_id, d.owner_id, d.market, d.version_id,
        COALESCE(p.product_name, dp.project_name) AS owner_name, pp.qty_ea AS planned_qty_ea,
@@ -269,12 +285,36 @@ LEFT JOIN gold.production_plan pp ON pp.plan_id = d.target_id AND d.target_type 
 LEFT JOIN gold.dev_project dp ON dp.project_id = d.owner_id AND d.target_type = '안정성시험'
 LEFT JOIN gold.material_alternative a ON a.material_code = r.material_code AND a.approval_status = '승인'
 LEFT JOIN gold.raw_material alt ON alt.material_code = a.alt_material_code
-WHERE d.is_impacted ORDER BY d.target_id""")
+WHERE d.is_impacted ORDER BY d.target_id""",
+  question="RM-HA-120이 2026-12-15에 입고된다고 가정하고 QC 7일을 적용해, 영향받는 생산 계획과 예정 시험을 하나의 검토표로 만들어줘. 제품/과제·시장·처방 버전·원 발주/공급사·필요일·여유일·승인된 대체 후보와 추가 검토 조건을 연결해줘. 시험의 시장은 추정하지 마.")
 
 # %% [markdown]
-# ### DA12. 판단 한계
-# DA05의 원료 단가, Q1의 배합비, DA11의 계획 수량과 일정은 확인할 수 있습니다.
-# 영향받는 생산 계획은 30,000개 + 20,000개 = 50,000개이며, 시험은 별도 1건입니다.
-# 그러나 총 비용·생산 가능 수량·품질/공정 검증 완료를 확정하는 질의는 만들지 않습니다.
-# 농도·제형 환산, 생산 단위별 실제 소요량, 할당 가능한 재고, 추가 공정 비용·검증 결과가 부족합니다.
-# 데이터가 없는 값을 0으로 채우거나, 영향받는 계획 수량을 곧바로 생산 가능 수량으로 보고하지 않습니다.
+# ### DA08. 계획 수량과 판단 한계
+#
+# > RM-HA-120 입고일을 2026-12-15, QC를 7일로 가정할게. RM-HA-210으로 대체하면 영향받는 생산 계획 물량을 전부 생산하고 ST-0711도 일정대로 진행할 수 있나? 계획 수량과 실제 생산 가능 수량을 구분하고, 총 추가 비용까지 확정할 수 있는지 확인되는 사실과 부족한 근거를 농도·제형 환산·공정 검증 관점에서 설명해줘.
+#
+# 확인: 영향받는 생산 계획은 30,000개 + 20,000개 = 50,000개이며, 시험은 별도 1건입니다.
+# 아래 표의 원료 단가·배합비·계획 수량은 확인 가능한 사실이지 실제 생산 가능 수량이나 총 비용이 아닙니다.
+# 농도·제형 환산, 실제 소요량·재고 할당·추가 공정 비용·검증 결과가 부족하므로 수행 가능 여부는 확정할 수 없습니다.
+# 데이터가 없는 값을 0으로 채우거나, 1% 용액과 파우더 단가를 그대로 빼서 총 비용을 계산하지 않습니다.
+
+# %%
+q("DA08 계획·원료 근거", f"""
+WITH targets AS ({schedule_sql('2026-12-15', 7)})
+SELECT d.target_id, d.target_type, d.owner_id, d.market, d.version_id, d.need_date, d.slack_days,
+       pp.qty_ea AS planned_qty_ea,
+       SUM(pp.qty_ea) OVER () AS affected_planned_qty_ea,
+       SUM(CASE WHEN d.target_type = '안정성시험' THEN 1 ELSE 0 END) OVER () AS affected_test_count,
+       fl.pct_wt AS original_pct_wt, origin.material_code, origin.material_name,
+       origin.unit_price_krw AS original_unit_price_krw,
+       a.alt_material_code, alt.material_name AS alternative_material_name,
+       alt.unit_price_krw AS alternative_unit_price_krw, a.approval_status,
+       alt.cn_registration, a.condition_note
+FROM targets d
+JOIN gold.formula_line fl ON fl.version_id = d.version_id AND fl.material_code = d.material_code
+JOIN gold.raw_material origin ON origin.material_code = d.material_code
+LEFT JOIN gold.production_plan pp ON pp.plan_id = d.target_id AND d.target_type = '생산계획'
+LEFT JOIN gold.material_alternative a ON a.material_code = d.material_code AND a.alt_material_code = 'RM-HA-210'
+LEFT JOIN gold.raw_material alt ON alt.material_code = a.alt_material_code
+WHERE d.is_impacted ORDER BY d.target_id""",
+  question="RM-HA-120 입고일을 2026-12-15, QC를 7일로 가정할게. RM-HA-210으로 대체하면 영향받는 생산 계획 물량을 전부 생산하고 ST-0711도 일정대로 진행할 수 있나? 계획 수량과 실제 생산 가능 수량을 구분하고, 총 추가 비용까지 확정할 수 있는지 확인되는 사실과 부족한 근거를 농도·제형 환산·공정 검증 관점에서 설명해줘.")
