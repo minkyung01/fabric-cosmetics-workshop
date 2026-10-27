@@ -116,7 +116,7 @@ class Notebooks(unittest.TestCase):
 
     def test_answers_show_each_agent_question_beside_its_query_in_guide_order(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
-        questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \|$", lesson, re.M))
+        questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \| [^|\n]+ \|$", lesson, re.M))
         cells = notebook("02_answers")["cells"]
         headings = []
         for index, cell in enumerate(cells):
@@ -1015,16 +1015,19 @@ class Docs(unittest.TestCase):
         self.assertIn("DA04·DA05의 경로 탐색 재사용", admin)
         self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
 
-    def test_data_agent_selects_eight_questions_in_id_order_with_deferred_answers(self):
+    def test_data_agent_selects_eight_questions_with_inline_answers_and_detailed_criteria(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
-        questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \|$", lesson, re.M)
+        questions = re.findall(r"^\| (DA\d{2}) \| ([^|]+) \| `([^`]+)` \| ([^|\n]+) \|$", lesson, re.M)
         ids = [f"DA{i:02}" for i in range(1, 9)]
         self.assertEqual([q[0] for q in questions], ids)
         self.assertEqual([q[1] for q in questions],
                          ["대조", "규칙", "규칙", "관계", "관계", "What-if",
                           "여러 데이터 통합", "여러 데이터 통합"])
-        for _, _, prompt in questions:
+        for _, _, prompt, expected_answer in questions:
             self.assertNotRegex(prompt, r"DA\d{2}")
+            self.assertTrue(expected_answer.strip())
+        self.assertIn("| ID | 유형 | 질문 | 기대 답변 |", lesson)
+        self.assertIn("**질문 열만 복사**", lesson)
         answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
         self.assertEqual(re.findall(r"^\| (DA\d{2}) \|", answers, re.M), ids)
         self.assertIn("핵심 8문항을 DA01–DA08 순서대로", lesson)
@@ -1418,9 +1421,46 @@ class DataAgentQueries(unittest.TestCase):
 
     def test_executed_questions_match_guide_in_consecutive_order(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
-        questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \|$", lesson, re.M))
+        questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \| [^|\n]+ \|$", lesson, re.M))
         self.assertEqual(list(self.questions), [f"DA{i:02}" for i in range(1, 9)])
         self.assertEqual(self.questions, questions)
+
+    def test_inline_expected_answers_match_reference_query_facts(self):
+        lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
+        expected = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `[^`]+` \| ([^|\n]+) \|$", lesson, re.M))
+        self.assertEqual(list(expected), [f"DA{i:02}" for i in range(1, 9)])
+        for row in self.answers["DA01"]:
+            self.assertIn(row["version_id"], expected["DA01"])
+        for row in self.answers["DA02"]:
+            self.assertIn(row["eta"][5:], expected["DA02"])
+            self.assertIn(f'{row["slack_days"]}일', expected["DA02"])
+        for row in self.answers["DA03"]:
+            self.assertIn(row["alt_material_code"], expected["DA03"])
+            self.assertIn(row["need_date"][5:], expected["DA03"])
+            self.assertIn(row["assumed_eta"][5:], expected["DA03"])
+        for row in self.answers["DA04"]:
+            for column in ("target_id", "product_id", "version_id", "material_code", "project_id"):
+                if row[column] is not None:
+                    self.assertIn(row[column], expected["DA04"])
+        for row in self.answers["DA05"]:
+            for column in ("supplier_id", "material_code", "version_id", "product_id", "po_id"):
+                self.assertIn(row[column], expected["DA05"])
+            self.assertIn(row["recorded_eta"][5:], expected["DA05"])
+        for row in self.answers["DA06"]:
+            self.assertIn(row["target_id"], expected["DA06"])
+            self.assertIn(row["need_date"][5:], expected["DA06"])
+            self.assertIn(f'{row["before_slack"]} → {row["after_slack"]}일', expected["DA06"])
+        for row in self.answers["DA07"]:
+            for column in ("target_id", "owner_id", "po_id", "supplier_id", "alt_material_code"):
+                self.assertIn(row[column], expected["DA07"])
+            self.assertIn(f'{row["slack_days"]}일', expected["DA07"])
+        for row in self.answers["DA08"]:
+            self.assertIn(row["target_id"], expected["DA08"])
+            self.assertIn(f'{row["affected_planned_qty_ea"]:,}개', expected["DA08"])
+            self.assertIn(f'{row["affected_test_count"]}건', expected["DA08"])
+            if row["planned_qty_ea"] is not None:
+                self.assertIn(f'{row["planned_qty_ea"]:,}개', expected["DA08"])
+        self.assertIn("확정 불가", expected["DA08"])
 
     def test_reference_queries_are_read_only_and_do_not_need_ops(self):
         self.assertEqual(self.recorded_eta, "2026-11-10")
