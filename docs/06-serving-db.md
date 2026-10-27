@@ -65,12 +65,20 @@
 **예상 코드 실행 시간:** 약 1–2분(세션 준비 제외). SQL DB에서 게시 명령을 실행하는 시간은 별도입니다.
 
 1. `04_publish_serving`을 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). `event_id`가 05장에서 승인한 이벤트인지 확인합니다. 세션이 연결되어 있지 않다면 **Connect**로 시작하고, 연결 완료 후 **Run all**을 누릅니다.
+
+   ![04_publish_serving의 승인 결과 확인 출력에서 검토 요청 3행과 요청됨 상태를 확인한 표](../assets/screenshots/06-publish-approved-requests.png)
+
 2. 출력의 `EXEC serving.usp_publish_reviews ...;` 명령 전체를 복사합니다. 승인 조치·요청 수가 다르거나 승인 전이면 Notebook이 오류로 멈춥니다.
+
+   ![Notebook이 생성한 EXEC serving.usp_publish_reviews 명령과 sqldb_cos에서 실행하라는 안내](../assets/screenshots/06-publish-generated-sql.png)
+
 3. `sqldb_cos` 쿼리 편집기에 붙여 넣고 실행합니다.
 
 **Notebook 예상 출력:** 승인된 요청 표 3행(`PP-1101`·`PP-1102`·`ST-0711`, 상태 `요청됨`)과 `@expected_count = 3`을 포함한 `EXEC serving.usp_publish_reviews` 명령입니다. 마지막에는 `위 EXEC 명령을 sqldb_cos에서 실행`하라는 안내가 나옵니다.
 
 **SQL 실행 후 예상 결과:** `inserted_count = 3`, `source_count = 3`. Notebook을 실행한 것만으로 DB에 게시되는 것은 아닙니다.
+
+![sqldb_cos에서 게시 명령을 실행한 결과 inserted_count와 source_count가 모두 3으로 표시된 표](../assets/screenshots/06-publish-sql-result.png)
 
 > 연결·드라이버·자격 증명 배포가 핵심 실습을 가리지 않도록 **명시적인 SQL 게시**를 사용합니다. 원본은 해당 이벤트의 승인된 요청이며 하드코딩한 샘플 3행이 아닙니다. 자동 게시·CDC·역방향 동기화는 구성하지 않습니다.
 

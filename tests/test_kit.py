@@ -1229,7 +1229,9 @@ class Docs(unittest.TestCase):
         self.assertIn("기본 권한은 **Contributor**", lesson)
         self.assertNotIn("Contributor만으로는 SQL DB를 생성할 수 없습니다", lesson)
         self.assertNotIn("샘플 데이터는 넣지 않습니다", lesson)
-        for screenshot in ("06-create-sql-database.png", "06-sql-database-home.png"):
+        for screenshot in ("06-create-sql-database.png", "06-sql-database-home.png",
+                           "06-publish-approved-requests.png", "06-publish-generated-sql.png",
+                           "06-publish-sql-result.png"):
             self.assertIn(f"../assets/screenshots/{screenshot}", lesson)
             self.assertTrue((ROOT / "assets" / "screenshots" / screenshot).is_file())
         self.assertIn("이미 `sqldb_cos`가 있다면 중복 생성하거나 삭제하지 않고", lesson)
