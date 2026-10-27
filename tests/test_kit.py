@@ -1012,6 +1012,8 @@ class Docs(unittest.TestCase):
                             "not an existing table column", "Do not change the table schema",
                             "crosses above 0.5", "including a change from null to 1",
                             'Do not use an "Is above"', "Keep non-open states",
+                            "Write notification titles, summaries, and recommended-action explanations in Korean.",
+                            "Keep event IDs, material codes, field names, and action names unchanged.",
                             "Only after human approval", 'eventhouse_name set to "eh_cos"',
                             "Do not change purchase orders or formulas"):
             self.assertIn(requirement, instructions[0])
@@ -1036,6 +1038,7 @@ class Docs(unittest.TestCase):
         self.assertIn("operations-agent-limitations#language-and-model-behavior-limitations", lesson)
         admin = (ROOT / "admin" / "preview-limitations.md").read_text(encoding="utf-8")
         self.assertIn("지침과 업무 목표는 현재 영어만 지원", admin)
+        self.assertIn("영문 지침에서 한국어 알림 출력을 요청", admin)
         self.assertIn("**Crosses above 0.5**", admin)
         self.assertNotIn("**Becomes open**", admin)
 
@@ -1062,6 +1065,50 @@ class Docs(unittest.TestCase):
                             "requiring human approval", 'eventhouse_name set to "eh_cos"',
                             "Do not change the table schema or existing data"):
             self.assertIn(requirement, prompts[0])
+
+    def test_operations_guide_shows_supply_change_parameters_and_outputs(self):
+        lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        supply_change = lesson.split("## 6. 공급 지연 발생시키기", 1)[1].split("## 7.", 1)[0]
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", supply_change)
+        self.assertEqual(images, ["../assets/screenshots/04-supply-change-notebook.png",
+                                  "../assets/screenshots/04-supply-delay-result.png",
+                                  "../assets/screenshots/04-material-impact-result.png",
+                                  "../assets/screenshots/04-open-event-result.png",
+                                  "../assets/screenshots/04-kql-open-event.png"])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        for requirement in ("**Run all**", "`impacted = true` 3행",
+                            "SUP-20261102-RM-HA-120-r1", "`event_status = open`", "`impacted_count = 3`"):
+            self.assertIn(requirement, supply_change)
+        outputs = re.findall(r"^- \*\*([1-3])\. [^*]+\*\* (.+)$", supply_change, re.M)
+        self.assertEqual([number for number, _ in outputs], ["1", "2", "3"])
+        self.assertIn("PO-5501", outputs[0][1])
+        self.assertIn("ops.material_impact", outputs[1][1])
+        self.assertIn("영향 3건", outputs[1][1])
+        self.assertIn("MaterialSupplyEvent에 open 추가", outputs[2][1])
+        self.assertIn("이벤트 조회 표 1행", outputs[2][1])
+
+    def test_operations_guide_shows_teams_recommendation_without_requiring_manual_app_add(self):
+        lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        notifications = lesson.split("## 7. Teams 알림 받기", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        self.assertIn("**앱을 수동으로 추가할 필요는 없습니다.**", notifications)
+        self.assertIn("**Show details**", notifications)
+        self.assertIn("**아직 Proceed를 누르지 않습니다**", notifications)
+        self.assertIn("숫자형 상태 값 1", notifications)
+        self.assertIn("`OpenFlagValue`", notifications)
+        self.assertIn("이 예시의 상세 화면에는 지연 일수·영향 건수가 표시되지 않습니다.", notifications)
+        self.assertIn('`run_tag = "r2"`로 재실행한 예시', notifications)
+        self.assertIn("**알림 본문과 규칙 설명이 한국어로 생성된 결과**", notifications)
+        self.assertIn("제목·기본 레이블·버튼은 영어로 남을 수 있습니다.", notifications)
+        self.assertNotIn("미검증", notifications)
+        self.assertNotIn("기본 실습에는 포함하지 않습니다", notifications)
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", notifications)
+        self.assertEqual(images, [
+            "../assets/screenshots/04-teams-review-notification.png",
+            "../assets/screenshots/04-teams-notification-details.png",
+        ])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
 
     def test_sql_database_is_created_by_participants_before_schema_and_publishing(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

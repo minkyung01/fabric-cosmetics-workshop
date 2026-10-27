@@ -124,7 +124,7 @@ MaterialSupplyEvent
 
    ![New Operations agent 창에서 Name은 oa_cos, Location은 내 작업 영역으로 선택하고 Create](../assets/screenshots/04-create-operations-agent.png)
 
-2. **Agent instructions**에 아래 영문 지침을 붙여 넣습니다. **현재 Operations Agent의 지침과 업무 목표는 영어만 지원합니다.**
+2. **Agent instructions**에 아래 영문 지침을 붙여 넣습니다. **현재 Operations Agent의 지침과 업무 목표는 영어만 지원합니다.** 영문 지침 안에서 한국어 알림 출력을 요청합니다.
 
 ``` text
 Goal: Notify the responsible user when a new supply-delay event requires review.
@@ -140,6 +140,8 @@ Monitoring:
 - Keep non-open states in the query so they produce open_flag = 0.
 
 Notification:
+- Write notification titles, summaries, and recommended-action explanations in Korean.
+- Keep event IDs, material codes, field names, and action names unchanged.
 - Include material_code, material_name, supplier_name, original_eta, new_eta, delay_days, impacted_count, and impacted_targets.
 - Use impacted_targets as provided. Do not invent additional impacts.
 
@@ -245,14 +247,22 @@ Do not change the table schema or existing data.
 **예상 코드 실행 시간:** 약 2–4분(세션 준비 제외). 실행 후 Teams 알림 대기는 별도입니다.
 
 1. `03_supply_change`를 열고 내 작업 영역의 `lh_cos`를 기본 Lakehouse로 연결·저장합니다([연결 절차](00-scenario.md#4-notebook에-기본-lakehouse-연결)). 매개 변수를 확인합니다: `material_code = "RM-HA-120"`, `delay_days = 35`, `run_tag = "r1"`.
+
+   ![03_supply_change에 lh_cos가 연결되고 공급 지연 실습의 기본 매개 변수가 설정된 화면](../assets/screenshots/04-supply-change-notebook.png)
+
 2. 세션이 연결되어 있지 않다면 **Connect**로 시작하고, 연결 완료 후 **Run all**을 누릅니다.
 
-**예상 출력**(기본 매개 변수·첫 이벤트 기준):
+**예상 출력**(기본 매개 변수·첫 이벤트 기준, Notebook의 1–3번 구간 순서):
 
-- `PO-5501 RM-HA-120 2026-11-10 → 2026-12-15 (지연 35일)`
-- `ops.material_impact` 4행 중 `impacted = true` 3행 — `PP-1101`(-27일), `PP-1102`(-20일), `ST-0711`(-32일). `PP-1103`은 여유 29일.
-- `SUP-20261102-RM-HA-120-r1: 영향 3건`
-- `SUP-20261102-RM-HA-120-r1: MaterialSupplyEvent에 open 추가`와 이벤트 조회 표 1행
+- **1. 공급 지연 반영:** `PO-5501 RM-HA-120 2026-11-10 → 2026-12-15 (지연 35일)`
+- **2. 영향 분석:** `ops.material_impact` 4행 중 `impacted = true` 3행 — `PP-1101`(-27일), `PP-1102`(-20일), `ST-0711`(-32일). `PP-1103`은 여유 29일. 표 아래에 `SUP-20261102-RM-HA-120-r1: 영향 3건` 출력.
+- **3. Eventhouse로 보내기:** `SUP-20261102-RM-HA-120-r1: MaterialSupplyEvent에 open 추가`와 이벤트 조회 표 1행.
+
+![PO-5501의 입고 예정일을 2026-11-10에서 2026-12-15로 35일 지연 반영한 출력](../assets/screenshots/04-supply-delay-result.png)
+
+![ops.material_impact의 생산 계획·안정성 시험 4행과 영향 3건 요약](../assets/screenshots/04-material-impact-result.png)
+
+![MaterialSupplyEvent에 추가된 open 이벤트와 impacted_count 3을 확인한 Notebook 출력](../assets/screenshots/04-open-event-result.png)
 
 `eh_cos`에서도 KQL로 확인합니다. 아직 승인하지 않았으므로 첫 이벤트의 `event_status = open`, `impacted_count = 3`입니다.
 
@@ -262,11 +272,30 @@ MaterialSupplyEvent
 | order by event_time asc
 ```
 
+![eh_cos의 KQL 질의에서 open 상태 이벤트와 impacted_count 3을 확인한 결과](../assets/screenshots/04-kql-open-event.png)
+
 ## 7. Teams 알림 받기
 
 5–10분 안에 Teams의 **Fabric Operations Agent** 채팅에 메시지가 옵니다. **Show details**로 근거를 펼쳐 봅니다.
 
-**확인할 결과:** 메시지에 `RM-HA-120`, 지연 35일, 영향 3건과 대상별 제안(`PP-1102`는 `RM-HA-210 CN 등록 필요`)이 들어 있습니다. **아직 Proceed를 누르지 않습니다** — 다음 장에서 함께 승인합니다.
+메시지가 이미 도착했다면 **앱을 수동으로 추가할 필요는 없습니다.**
+
+**확인할 결과:** 알림의 `RM-HA-120`과 `RequestMaterialReview` 제안, 상세 화면의 `Id`와 숫자형 상태 값 1(`OpenFlag`, `OpenFlagValue` 등)을 확인합니다. 지연 35일·영향 3건과 대상별 제안은 6번의 KQL 결과와 대조합니다. **아직 Proceed를 누르지 않습니다** — 다음 장에서 함께 승인합니다.
+
+![Teams에서 한국어 공급 지연 알림과 RequestMaterialReview 제안을 수신하고 Proceed 승인을 기다리는 카드](../assets/screenshots/04-teams-review-notification.png)
+
+스크린샷은 `run_tag = "r2"`로 재실행한 예시입니다. 내 Notebook의 `run_tag`와 알림의 `Id`를 맞춰 봅니다.
+
+<details>
+<summary>Show details — 이벤트·규칙 상세 화면</summary>
+
+`Data Source`가 `eh_cos`인지도 확인합니다. 이 예시의 상세 화면에는 지연 일수·영향 건수가 표시되지 않습니다.
+
+![Teams 알림의 Show details에서 이벤트 Id, OpenFlagValue 1, MaterialCode, 한국어 Rule Condition과 Data Source eh_cos를 확인하는 화면](../assets/screenshots/04-teams-notification-details.png)
+
+</details>
+
+4번 지침으로 **알림 본문과 규칙 설명이 한국어로 생성된 결과**입니다. 제목·기본 레이블·버튼은 영어로 남을 수 있습니다.
 
 ## 이 장의 완료 기준
 
