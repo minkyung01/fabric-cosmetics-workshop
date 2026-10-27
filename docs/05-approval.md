@@ -20,8 +20,6 @@
 2. **Proceed**를 누르면 "Confirm details for RequestMaterialReview" 창이 열립니다.
 3. 매개 변수를 확인합니다. `event_id`는 **승인하려는 알림의 Id와 같은 값**이어야 합니다. `material_code = RM-HA-120`, `eventhouse_name = eh_cos`도 확인합니다.
 
-   아래 화면은 `r1` 예시입니다. `r2` 알림을 승인한다면 `event_id`도 `SUP-20261102-RM-HA-120-r2`여야 합니다.
-
    ![RequestMaterialReview의 event_id, material_code, eventhouse_name을 확인하는 Teams 승인 화면](../assets/screenshots/05-confirm-parameters.png)
 
 4. **Confirm**을 누릅니다.
@@ -46,11 +44,11 @@ Monitor의 **Jobs**는 Spark 작업 목록이고, **Item snapshots**는 실행 �
 
 ## 3. 기록 확인
 
-**기본 경로는 Notebook의 Spark SQL 조회**입니다. `lh_cos`가 기본 Lakehouse로 연결된 `02_answers`를 열고, **새 코드 셀에 붙여 넣어 해당 셀만 실행**합니다. 세션 준비 시간이 추가될 수 있습니다. 기록 확인을 위해 `nb_apply_review`를 다시 실행하지 않습니다.
+### 3-1. `02_answers` Notebook — 새 코드 셀 2개 추가
 
-아래 조회의 `event_id`는 `r1` 예시입니다. `r2` 이벤트를 승인했다면 **두 Spark SQL 셀과 KQL의 이벤트 ID를 모두** `SUP-20261102-RM-HA-120-r2`로 바꿉니다.
+**실행 위치: `02_answers` Notebook**입니다. `lh_cos`가 기본 Lakehouse로 연결된 `02_answers`를 열고, 맨 아래에 **새 코드 셀 2개**를 추가합니다. 아래 두 조회를 **각 셀에 하나씩 붙여 넣고, 새로 만든 두 셀만 각각 실행**합니다. **Run all은 누르지 않습니다.** 세션 준비 시간이 추가될 수 있습니다. 기록 확인을 위해 `nb_apply_review`를 다시 실행하지 않습니다.
 
-첫 번째 새 셀에서 검토 요청을 조회합니다.
+**첫 번째 새 코드 셀 — 검토 요청 조회**
 
 ```sql
 %%sql
@@ -62,9 +60,7 @@ ORDER BY target_id;
 
 **조회 예상 출력:** 승인한 이벤트의 검토 요청 3행
 
-![Notebook의 Spark SQL에서 r2 이벤트의 검토 요청 3행과 요청됨 상태를 확인한 화면](../assets/screenshots/05-spark-review-requests.png)
-
-스크린샷은 `r2` 조회 예시입니다.
+![Notebook의 Spark SQL 조회 결과에서 검토 요청 3행과 요청됨 상태를 확인한 표](../assets/screenshots/05-spark-review-requests.png)
 
 | target_id | target_type | assignee_team | slack_days | suggestion |
 |---|---|---|---|---|
@@ -74,7 +70,7 @@ ORDER BY target_id;
 
 `request_status`는 모두 `요청됨`입니다. `requested_by`는 Notebook 실행 컨텍스트의 사용자이며, Teams에서 승인한 사람을 증명하는 필드가 아닙니다. 실제 운영의 승인자 감사는 별도의 승인 기록과 연결해야 합니다.
 
-두 번째 새 셀에서 조치 이력을 조회합니다.
+**두 번째 새 코드 셀 — 조치 이력 조회**
 
 ```sql
 %%sql
@@ -86,7 +82,11 @@ ORDER BY action_at;
 
 **예상 결과:** `review_requested` 1행, `request_count = 3`, note `검토 요청 3건 등록. 구매 발주·처방 변경 없음`.
 
-`eh_cos`에서 상태 이력을 확인합니다.
+![두 번째 새 코드 셀의 Spark SQL 조회 결과에서 review_requested 1행과 request_count 3을 확인한 표](../assets/screenshots/05-spark-action-log.png)
+
+### 3-2. `eh_cos` Eventhouse — KQL로 상태 이력 확인
+
+**여기부터는 Notebook이 아니라 `eh_cos`에서 실행합니다.** 작업 영역의 **Eventhouse `eh_cos`**를 열고, 왼쪽의 **KQL Database `eh_cos` → `eh_cos_queryset`**을 선택합니다. 아래 KQL을 붙여 넣고 **Run**을 누릅니다.
 
 ``` kql
 MaterialSupplyEvent
@@ -97,27 +97,9 @@ MaterialSupplyEvent
 
 **예상 결과:** `open` → `review_requested` 2행.
 
-<details>
-<summary>SQL 분석 엔드포인트에서 테이블을 찾지 못하는 경우</summary>
+아래 화면은 `open` 1행만 조회된 예시입니다. 이 경우 승인한 알림의 `Id`와 조회의 `event_id`가 같은지 확인합니다.
 
-SQL 분석 엔드포인트에 테이블이 노출되어 있다면 위 Spark SQL 조회에서 `%%sql` 줄을 빼고 실행할 수도 있습니다. 다만 실습에서는 **Spark에서 요청 3행이 조회되는데 SQL 분석 엔드포인트에서는 `Invalid object name 'ops.review_request'`가 발생**했습니다.
-
-![Spark에서 조회된 동일한 r2 이벤트의 review_request를 SQL 분석 엔드포인트에서는 찾지 못하는 화면](../assets/screenshots/05-sql-endpoint-table-not-found.png)
-
-이는 승인 실패와 구분합니다. 원본 데이터는 Spark에서 확인됐지만, SQL 엔드포인트에는 해당 테이블이 노출되지 않은 상태입니다. 화면만으로 메타데이터 동기화 지연인지 다른 노출 문제인지 확정하지 않습니다.
-
-SQL 엔드포인트의 테이블 목록은 아래로 확인합니다.
-
-```sql
-SELECT TABLE_SCHEMA, TABLE_NAME
-FROM INFORMATION_SCHEMA.TABLES
-WHERE TABLE_NAME IN ('material_impact', 'review_request', 'action_log')
-ORDER BY TABLE_SCHEMA, TABLE_NAME;
-```
-
-SQL 목록에 없다면 Lakehouse 화면의 **Tables → ops**와 비교하고, SQL 엔드포인트의 동기화 상태를 확인합니다. **승인 Notebook 재실행·테이블 재생성은 하지 않습니다.** 이 장의 기록 확인은 위 Spark SQL 조회와 Eventhouse 상태 이력으로 진행합니다. Spark에서도 테이블을 찾지 못하면 `02_answers`와 승인 실행의 기본 Lakehouse가 모두 내 `lh_cos`인지부터 확인합니다.
-
-</details>
+![eh_cos의 KQL 조회 결과에서 event_status가 open인 1행만 표시된 상태](../assets/screenshots/05-event-status-history.png)
 
 ## 4. 중복 승인 확인 (선택)
 

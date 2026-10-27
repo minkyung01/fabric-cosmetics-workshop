@@ -1136,8 +1136,8 @@ class Docs(unittest.TestCase):
         approval = lesson.split("## 1. Teams에서 승인", 1)[1].split("## 2.", 1)[0]
         execution = lesson.split("## 2. 실행 확인", 1)[1].split("## 3.", 1)[0]
         self.assertIn("**승인하려는 알림의 Id와 같은 값**", approval)
-        self.assertIn("`r2` 알림을 승인한다면", approval)
-        self.assertIn("`SUP-20261102-RM-HA-120-r2`", approval)
+        self.assertNotIn("아래 화면은 `r1` 예시입니다", approval)
+        self.assertNotIn("`r2` 알림을 승인한다면", approval)
         self.assertIn("**Confirm**", approval)
         self.assertIn("제출 완료이며, 실행 성공은 다음 단계에서 확인", approval)
         self.assertIn("**Monitor** → **Activities**", execution)
@@ -1156,11 +1156,17 @@ class Docs(unittest.TestCase):
     def test_approval_record_checks_use_read_only_event_scoped_spark_sql(self):
         lesson = (ROOT / "docs" / "05-approval.md").read_text(encoding="utf-8")
         records = lesson.split("## 3. 기록 확인", 1)[1].split("## 4.", 1)[0]
-        self.assertIn("**기본 경로는 Notebook의 Spark SQL 조회**", records)
+        self.assertIn("### 3-1. `02_answers` Notebook — 새 코드 셀 2개 추가", records)
         self.assertIn("`lh_cos`가 기본 Lakehouse로 연결된 `02_answers`", records)
-        self.assertIn("**새 코드 셀에 붙여 넣어 해당 셀만 실행**", records)
+        self.assertIn("**새 코드 셀 2개**", records)
+        self.assertIn("**각 셀에 하나씩 붙여 넣고, 새로 만든 두 셀만 각각 실행**", records)
+        self.assertIn("**Run all은 누르지 않습니다.**", records)
+        self.assertIn("**첫 번째 새 코드 셀 — 검토 요청 조회**", records)
+        self.assertIn("**두 번째 새 코드 셀 — 조치 이력 조회**", records)
         self.assertIn("`nb_apply_review`를 다시 실행하지 않습니다", records)
-        self.assertIn("**두 Spark SQL 셀과 KQL의 이벤트 ID를 모두**", records)
+        self.assertNotIn("아래 조회의 `event_id`는 `r1` 예시입니다", records)
+        self.assertNotIn("**두 Spark SQL 셀과 KQL의 이벤트 ID를 모두**", records)
+        self.assertNotIn("스크린샷은 `r2` 조회 예시입니다.", records)
         spark_queries = [query for query in re.findall(r"```sql\n(.*?)```", records, re.S)
                          if query.startswith("%%sql\n")]
         self.assertEqual(len(spark_queries), 2)
@@ -1171,28 +1177,31 @@ class Docs(unittest.TestCase):
             self.assertNotRegex(query, r"\b(?:INSERT|UPDATE|DELETE|CREATE|DROP|MERGE)\b")
         kql = re.search(r"``` kql\n(.*?)```", records, re.S).group(1)
         self.assertIn("where event_id == 'SUP-20261102-RM-HA-120-r1'", kql)
+        self.assertIn("### 3-2. `eh_cos` Eventhouse — KQL로 상태 이력 확인", records)
+        self.assertIn("**여기부터는 Notebook이 아니라 `eh_cos`에서 실행합니다.**", records)
+        self.assertIn("**KQL Database `eh_cos` → `eh_cos_queryset`**", records)
+        self.assertIn("`open` → `review_requested` 2행", records)
+        self.assertIn("아래 화면은 `open` 1행만 조회된 예시", records)
+        self.assertIn("승인한 알림의 `Id`와 조회의 `event_id`가 같은지 확인", records)
         self.assertNotIn("Monitor에서 열기", lesson)
         self.assertIn("**Jobs**는 Spark 작업 목록", lesson)
         self.assertIn("**Item snapshots**는 실행 당시 코드·매개 변수 확인용", lesson)
-        diagnostic = re.search(
-            r"<details>\s*<summary>SQL 분석 엔드포인트에서 테이블을 찾지 못하는 경우</summary>"
-            r"(.*?)</details>", records, re.S,
-        )
-        self.assertIsNotNone(diagnostic)
-        self.assertIn("Invalid object name 'ops.review_request'", diagnostic.group(1))
-        self.assertIn("INFORMATION_SCHEMA.TABLES", diagnostic.group(1))
-        self.assertIn("확정하지 않습니다", diagnostic.group(1))
-        self.assertIn("**승인 Notebook 재실행·테이블 재생성은 하지 않습니다.**", diagnostic.group(1))
+        self.assertNotIn("SQL 분석 엔드포인트", lesson)
+        self.assertNotIn("Invalid object name", lesson)
+        self.assertNotIn("INFORMATION_SCHEMA.TABLES", records)
         images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", records)
         self.assertEqual(images, [
             "../assets/screenshots/05-spark-review-requests.png",
-            "../assets/screenshots/05-sql-endpoint-table-not-found.png",
+            "../assets/screenshots/05-spark-action-log.png",
+            "../assets/screenshots/05-event-status-history.png",
         ])
         for image in images:
             self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
         admin = (ROOT / "admin" / "preview-limitations.md").read_text(encoding="utf-8")
         self.assertIn("**읽기 전용 Spark SQL 조회**", admin)
-        self.assertIn("SQL 메타데이터 동기화·노출 상태를 별도 확인", admin)
+        self.assertIn("`02_answers` Notebook에 **새 코드 셀 2개**", admin)
+        self.assertIn("**Eventhouse `eh_cos`의 KQL Queryset**", admin)
+        self.assertNotIn("Invalid object name", admin)
 
     def test_sql_database_is_created_by_participants_before_schema_and_publishing(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
