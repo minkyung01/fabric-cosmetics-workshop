@@ -39,9 +39,15 @@
 
 ## 2. Serving 스키마 만들기
 
-1. 앞 단계에서 **New Query**로 연 `sqldb_cos`의 쿼리 편집기를 사용합니다.
-2. [serving.sql](../fabric/sql/serving.sql)의 전체 내용을 복사해 쿼리 편집기에 붙여 넣고 실행합니다(`GO` 포함).
-3. Explorer를 새로 고쳐 다음 객체를 확인합니다.
+1. [serving.sql](../fabric/sql/serving.sql)의 전체 내용을 복사해 쿼리 편집기에 붙여 넣고 **Run**을 누릅니다(`GO` 포함).
+
+   ![sqldb_cos의 쿼리 편집기에 serving.sql을 붙여 넣은 화면과 Run 버튼](../assets/screenshots/06-serving-schema-query.png)
+
+2. 실행이 끝나면 왼쪽 **Explorer**에서 `sqldb_cos` 옆 **… → Refresh**를 누릅니다.
+
+   ![Explorer에서 sqldb_cos 옆 메뉴를 열어 Refresh를 선택하는 화면](../assets/screenshots/06-serving-explorer-refresh.png)
+
+3. `sqldb_cos` → `serving`을 펼친 뒤 **Tables**와 **Stored Procedures**에서 다음 객체를 확인합니다.
 
 | 객체 | 용도 |
 |---|---|
@@ -49,6 +55,8 @@
 | `serving.workflow_history` | 상태 변경 전후, 실제 SQL 로그인, UTC 시간 |
 | `serving.usp_publish_reviews` | 승인 결과를 신규 요청만 추가하는 방식으로 게시 |
 | `serving.usp_start_review` | 요청 상태를 확인하고 상태 변경·이력을 한 트랜잭션으로 기록 |
+
+![serving 스키마의 테이블 2개와 프로시저 2개, 쿼리 실행 Succeeded 상태가 표시된 화면](../assets/screenshots/06-serving-schema-created.png)
 
 **확인할 결과:** 테이블 2개·프로시저 2개가 있고 첫 실행에서는 테이블이 비어 있습니다. 스키마 스크립트 재실행은 기존 데이터를 지우지 않습니다.
 
