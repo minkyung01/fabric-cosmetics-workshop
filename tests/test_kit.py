@@ -407,7 +407,9 @@ class Docs(unittest.TestCase):
                     continue
                 if fence:
                     continue
-                for span in re.finditer(r"(?<!\\)\*\*([^*\n]+)\*\*([^\W_])", line):
+                for span in re.finditer(r"(?<!\\)\*\*([^*\n]+)\*\*", line):
+                    if not re.match(r"[^\W_]", line[span.end():]):
+                        continue
                     last = span[1][-1]
                     with self.subTest(document=md.relative_to(ROOT), line=number, span=span[0]):
                         self.assertFalse(last in string.punctuation or unicodedata.category(last).startswith("P"),
@@ -1155,7 +1157,9 @@ class Docs(unittest.TestCase):
 
     def test_approval_record_checks_use_read_only_event_scoped_spark_sql(self):
         lesson = (ROOT / "docs" / "05-approval.md").read_text(encoding="utf-8")
-        records = lesson.split("## 3. 기록 확인", 1)[1].split("## 4.", 1)[0]
+        records = lesson.split("## 3. 기록 확인", 1)[1].split("## 이 장의 완료 기준", 1)[0]
+        self.assertNotIn("중복 승인 확인", lesson)
+        self.assertNotIn("## 4.", lesson)
         self.assertIn("### 3-1. `02_answers` Notebook — 새 코드 셀 2개 추가", records)
         self.assertIn("`lh_cos`가 기본 Lakehouse로 연결된 `02_answers`", records)
         self.assertIn("**새 코드 셀 2개**", records)
@@ -1179,10 +1183,10 @@ class Docs(unittest.TestCase):
         self.assertIn("where event_id == 'SUP-20261102-RM-HA-120-r1'", kql)
         self.assertIn("### 3-2. `eh_cos` Eventhouse — KQL로 상태 이력 확인", records)
         self.assertIn("**여기부터는 Notebook이 아니라 `eh_cos`에서 실행합니다.**", records)
-        self.assertIn("**KQL Database `eh_cos` → `eh_cos_queryset`**", records)
+        self.assertIn("**KQL Database** `eh_cos` → `eh_cos_queryset`", records)
         self.assertIn("`open` → `review_requested` 2행", records)
-        self.assertIn("아래 화면은 `open` 1행만 조회된 예시", records)
-        self.assertIn("승인한 알림의 `Id`와 조회의 `event_id`가 같은지 확인", records)
+        self.assertNotIn("`open` 1행만 조회된 예시", records)
+        self.assertIn("open과 review_requested 상태 이력 2행", records)
         self.assertNotIn("Monitor에서 열기", lesson)
         self.assertIn("**Jobs**는 Spark 작업 목록", lesson)
         self.assertIn("**Item snapshots**는 실행 당시 코드·매개 변수 확인용", lesson)

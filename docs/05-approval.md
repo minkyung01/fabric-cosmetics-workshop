@@ -86,7 +86,7 @@ ORDER BY action_at;
 
 ### 3-2. `eh_cos` Eventhouse — KQL로 상태 이력 확인
 
-**여기부터는 Notebook이 아니라 `eh_cos`에서 실행합니다.** 작업 영역의 **Eventhouse `eh_cos`**를 열고, 왼쪽의 **KQL Database `eh_cos` → `eh_cos_queryset`**을 선택합니다. 아래 KQL을 붙여 넣고 **Run**을 누릅니다.
+**여기부터는 Notebook이 아니라 `eh_cos`에서 실행합니다.** 작업 영역의 **Eventhouse** `eh_cos`를 열고, 왼쪽의 **KQL Database** `eh_cos` → `eh_cos_queryset`을 선택합니다. 아래 KQL을 붙여 넣고 **Run**을 누릅니다.
 
 ``` kql
 MaterialSupplyEvent
@@ -97,17 +97,7 @@ MaterialSupplyEvent
 
 **예상 결과:** `open` → `review_requested` 2행.
 
-아래 화면은 `open` 1행만 조회된 예시입니다. 이 경우 승인한 알림의 `Id`와 조회의 `event_id`가 같은지 확인합니다.
-
-![eh_cos의 KQL 조회 결과에서 event_status가 open인 1행만 표시된 상태](../assets/screenshots/05-event-status-history.png)
-
-## 4. 중복 승인 확인 (선택)
-
-같은 메시지에서 다시 **Proceed** → **Confirm**하거나 `nb_apply_review`를 같은 `event_id`로 손으로 실행합니다.
-
-**확인할 결과:** "최신 상태 review_requested"가 출력되고 `ops.review_request`의 해당 이벤트 기록은 여전히 3행입니다. 승인 작업은 **여러 번 실행돼도 결과가 같도록** 만들어야 합니다.
-
-> **토론 포인트:** 이 Notebook이 한 일은 "검토 요청 등록"과 "이력 기록"뿐입니다. 실제 대체 원료 전환, 발주 변경, CN 등록 착수는 각 부서의 검토 절차를 따릅니다. 업무에 적용할 때 에이전트에게 맡길 범위와 사람의 승인이 필요한 범위를 구분합니다.
+![eh_cos의 KQL 조회 결과에서 open과 review_requested 상태 이력 2행 및 검토 요청 3건 등록 기록을 확인한 표](../assets/screenshots/05-event-status-history.png)
 
 ## 이 장의 완료 기준
 
