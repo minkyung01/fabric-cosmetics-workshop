@@ -117,6 +117,12 @@ class Notebooks(unittest.TestCase):
     def test_answers_show_each_agent_question_beside_its_query_in_guide_order(self):
         lesson = (ROOT / "docs" / "03-data-agent.md").read_text(encoding="utf-8")
         questions = dict(re.findall(r"^\| (DA\d{2}) \| [^|]+ \| `([^`]+)` \| [^|\n]+ \|$", lesson, re.M))
+        verification = lesson.split("## 4. 답과 근거 검증하기", 1)[1].split("<details>", 1)[0]
+        output_titles = {
+            title.split()[0]: title.strip()
+            for title in re.findall(r"^\| (DA\d{2} [^|]+) \| \d+행", verification, re.M)
+        }
+        self.assertEqual(list(output_titles), list(questions))
         cells = notebook("02_answers")["cells"]
         headings = []
         for index, cell in enumerate(cells):
@@ -134,6 +140,7 @@ class Notebooks(unittest.TestCase):
                      if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "q"]
             self.assertEqual(len(calls), 1)
             self.assertTrue(ast.literal_eval(calls[0].args[0]).startswith(question_id + " "))
+            self.assertEqual(ast.literal_eval(calls[0].args[0]), output_titles[question_id])
             prompt = next(keyword.value for keyword in calls[0].keywords if keyword.arg == "question")
             self.assertEqual(ast.literal_eval(prompt), questions[question_id])
         self.assertEqual(headings, [f"DA{i:02}" for i in range(1, 8)])
@@ -1013,7 +1020,7 @@ class Docs(unittest.TestCase):
             self.assertIn(requirement, optional)
         self.assertNotIn("탐색 방향과 저장된 관계 방향을 구분", optional)
         admin = (ROOT / "admin" / "README.md").read_text(encoding="utf-8")
-        self.assertIn("DA04의 공급사 원료 탐색 재사용", admin)
+        self.assertIn("DA04의 다른 원료 사용처 확인 부분 재사용", admin)
         self.assertLess(lesson.index("## 4. 답과 근거 검증하기"), lesson.index("## 5. 선택 실습"))
 
     def test_preview_lab_uses_ontology_agent_plan_after_data_agent_setup(self):
@@ -1060,6 +1067,8 @@ class Docs(unittest.TestCase):
             self.assertNotRegex(prompt, r"DA\d{2}")
             self.assertNotIn("저장된 관계 방향", prompt)
             self.assertTrue(expected_answer.strip())
+        self.assertNotIn("공급사 경로", lesson)
+        self.assertIn("3-2의 질문 7개를 기준으로 같은 ID·질문·순서", lesson)
         self.assertIn("| ID | 유형 | 질문 | 기대 답변 |", lesson)
         self.assertIn("**질문 열만 복사**", lesson)
         answers = lesson.split("<details>", 1)[1].split("</details>", 1)[0]
@@ -1450,12 +1459,18 @@ class DataAgentQueries(unittest.TestCase):
         toner = versions["FV-TON-02-01"]
         self.assertEqual((toner["status"], toner["is_active"], toner["impact_scope"]), ("개발중", 1, "포함"))
 
-    def test_supplier_fanout_connects_material_to_active_formulas_and_products(self):
+    def test_other_material_uses_and_actual_eta_match_the_business_question(self):
+        source = (ROOT / "notebooks" / "src" / "02_answers.py").read_text(encoding="utf-8")
+        self.assertNotIn("공급사 경로", source)
+        self.assertIn('q("DA04 다른 원료 사용처·발주 ETA"', source)
+        self.assertIn("실제 발주 ETA와 구분", self.questions["DA04"])
         supplier = self.answers["DA04"]
         self.assertEqual([r["product_id"] for r in supplier], ["P-101", "P-102", "P-301"])
         self.assertEqual({r["version_id"] for r in supplier}, {"FV-CRM-01-03", "FV-AMP-03-02"})
         self.assertTrue(all((r["supplier_id"], r["material_code"], r["po_id"], r["recorded_eta"]) ==
                             ("SUP-02", "RM-PHE-002", "PO-5505", "2026-11-10") for r in supplier))
+        self.assertEqual({(row["material_code"], row["version_id"]) for row in self.answers["Q4"]},
+                         {("RM-PHE-002", "FV-CRM-01-03"), ("RM-PHE-002", "FV-AMP-03-02")})
 
     def test_what_if_changes_only_the_specified_date_or_qc(self):
         dates = {r["target_id"]: (r["before_slack"], r["after_slack"], r["after_impact"])

@@ -186,7 +186,7 @@ Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, �
 | 01 보강 | 생산·개발 일정과 대체 검토 질문으로 빈틈 진단 → Plan 변경안 → Act 적용. 핵심 참고 9개/10개 경로와 `is_active`, `cn_registration` 바인딩·Plan 질의 확인 |
 | 02 | Graph Q1 4행 → `is_active` 필터 3행, 생산 계획 `PP-1101`·`PP-1102`·`PP-1103`, `ST-0711` |
 | 02 | `02_answers` Q5 지연 전 여유 8·15·64·3일 |
-| 03 | `da_cos` 생성·`ont_cos`/`lh_cos` 연결·Agent instructions 입력까지 체험. 현재 Preview의 설명·동의어 등 메타데이터 연계 제약을 안내하고, Ontology Agent의 Plan 모드에 공통 프롬프트를 전달해 DA01–DA07을 Notebook과 대조. 생산·시험 공통 QC와 DA07의 발주 기한 역산 확인. 선택 Graph 실습은 DA04의 공급사 원료 탐색 재사용 |
+| 03 | `da_cos` 생성·`ont_cos`/`lh_cos` 연결·Agent instructions 입력까지 체험. 현재 Preview의 설명·동의어 등 메타데이터 연계 제약을 안내하고, Ontology Agent의 Plan 모드에 공통 프롬프트를 전달해 DA01–DA07을 Notebook과 대조. 생산·시험 공통 QC와 DA07의 발주 기한 역산 확인. 선택 Graph 실습은 DA04의 다른 원료 사용처 확인 부분 재사용 |
 | 04 생성 | 참가자 계정으로 Eventhouse·기본 KQL Database를 모두 `eh_cos` 이름으로 생성. `MaterialSupplyEvent` 13개 열·초기 0행, Notebook 쓰기 확인 |
 | 04 | `03_supply_change`: `ops.material_impact` 4행 중 영향 3행(-27·-20·-32일), 이벤트 `SUP-20261102-RM-HA-120-r1` open 1행, Teams 메시지 5–10분 |
 | 05 | `nb_apply_review` Succeeded, `ops.review_request` 3행, `ops.action_log` 1행, `open → review_requested` |

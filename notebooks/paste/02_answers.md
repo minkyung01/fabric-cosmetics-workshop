@@ -127,7 +127,7 @@ SELECT *, datediff(need_date, assumed_eta) AS slack_days,
 FROM comparison ORDER BY material_code""",
   question="2026-11-02에 발주한다고 가정해줘. CN 제품 P-102의 PP-1102에 대해 RM-HA-210과 RM-HA-305의 예상 입고일·여유일·CN 등록 상태를 비교해줘. QC는 7일로 적용하고, 일정과 CN 등록을 모두 충족하는 원료가 있는지 설명해줘. 이 결과만으로 대체 사용을 확정할 수 있나?")
 
-q("DA04 공급사 경로", f"""
+q("DA04 다른 원료 사용처·발주 ETA", f"""
 SELECT s.supplier_id, s.supplier_name, other.material_code, fv.version_id, p.product_id,
        po.po_id, po.eta AS recorded_eta
 FROM gold.raw_material origin JOIN gold.supplier s ON s.supplier_id = origin.supplier_id

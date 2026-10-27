@@ -194,15 +194,15 @@ FROM comparison ORDER BY material_code""",
   question="2026-11-02에 발주한다고 가정해줘. CN 제품 P-102의 PP-1102에 대해 RM-HA-210과 RM-HA-305의 예상 입고일·여유일·CN 등록 상태를 비교해줘. QC는 7일로 적용하고, 일정과 CN 등록을 모두 충족하는 원료가 있는지 설명해줘. 이 결과만으로 대체 사용을 확정할 수 있나?")
 
 # %% [markdown]
-# ### DA04. 같은 공급사 → 다른 원료 → 활성 처방 → 제품
+# ### DA04. 다른 원료 사용처·발주 ETA 확인
 #
 # > RM-HA-120의 공급사가 공급하는 다른 원료를 찾고, 그 원료를 쓰는 활성 처방과 제품까지 연결해줘. 같은 공급사라는 이유만으로 그 원료도 지연됐다고 판단해도 되는지 실제 발주 ETA와 구분해줘.
 #
 # 확인: RM-PHE-002 → FV-CRM-01-03/FV-AMP-03-02 → P-101/P-102/P-301의 3행.
-# PO-5505의 ETA는 2026-11-10입니다. 연결 관계가 추가 지연의 증거는 아닙니다.
+# PO-5505의 ETA는 2026-11-10입니다. 같은 공급사라는 사실만으로 다른 원료의 지연을 확정하지 않습니다.
 
 # %%
-q("DA04 공급사 경로", f"""
+q("DA04 다른 원료 사용처·발주 ETA", f"""
 SELECT s.supplier_id, s.supplier_name, other.material_code, fv.version_id, p.product_id,
        po.po_id, po.eta AS recorded_eta
 FROM gold.raw_material origin JOIN gold.supplier s ON s.supplier_id = origin.supplier_id
