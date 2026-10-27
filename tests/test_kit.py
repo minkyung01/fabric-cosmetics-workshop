@@ -999,6 +999,70 @@ class Docs(unittest.TestCase):
         self.assertIn("**Review and create** 단계", creation)
         self.assertIn("**Action connected**", creation)
 
+    def test_operations_guide_uses_english_instructions_and_numeric_transition(self):
+        lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        creation = lesson.split("## 4. Operations Agent 만들기", 1)[1].split("## 5.", 1)[0]
+        instructions = re.findall(r"``` text\n(.*?)```", creation, re.S)
+        self.assertEqual(len(instructions), 1)
+        self.assertTrue(instructions[0].isascii())
+        self.assertIn("지침과 업무 목표는 영어만 지원", creation)
+        for requirement in ("Each event_id identifies a separate business object",
+                            "the row with the latest event_time",
+                            'open_flag = iff(event_status == "open", 1, 0)',
+                            "not an existing table column", "Do not change the table schema",
+                            "crosses above 0.5", "including a change from null to 1",
+                            'Do not use an "Is above"', "Keep non-open states",
+                            "Only after human approval", 'eventhouse_name set to "eh_cos"',
+                            "Do not change purchase orders or formulas"):
+            self.assertIn(requirement, instructions[0])
+        playbook = lesson.split("## 5. Playbook 생성과 검토", 1)[1].split("## 6.", 1)[0]
+        for requirement in ("arg_max(event_time, *) by event_id", "조회 시간 범위",
+                            "**Crosses above 0.5**", "**Is above**", "`null → 1`",
+                            "`RequestMaterialReview`", "**용어집 생성 확인 예시**", "실제 알림은 6–7번"):
+            self.assertIn(requirement, playbook)
+        images = re.findall(r"!\[[^]]*\]\(([^)]+)\)", playbook)
+        self.assertEqual(images, ["../assets/screenshots/04-playbook-glossary.png",
+                                  "../assets/screenshots/04-playbook-rule.png",
+                                  "../assets/screenshots/04-playbook-saved.png",
+                                  "../assets/screenshots/04-agent-started.png"])
+        for image in images:
+            self.assertTrue((ROOT / "docs" / image).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+        self.assertIn("**Configuration saved successfully** 메시지가 나오면 **Start**를 누를 수 있습니다",
+                      playbook)
+        self.assertIn("**Agent started successfully**", playbook)
+        self.assertIn("**Stop** 버튼이 활성화", playbook)
+        self.assertLess(playbook.index("**Configuration saved successfully**"),
+                        playbook.index("**Agent started successfully**"))
+        self.assertIn("operations-agent-limitations#language-and-model-behavior-limitations", lesson)
+        admin = (ROOT / "admin" / "preview-limitations.md").read_text(encoding="utf-8")
+        self.assertIn("지침과 업무 목표는 현재 영어만 지원", admin)
+        self.assertIn("**Crosses above 0.5**", admin)
+        self.assertNotIn("**Becomes open**", admin)
+
+    def test_operations_rule_example_and_correction_are_in_collapsed_toggle(self):
+        lesson = (ROOT / "docs" / "04-operations-agent.md").read_text(encoding="utf-8")
+        playbook = lesson.split("## 5. Playbook 생성과 검토", 1)[1].split("## 6.", 1)[0]
+        toggles = re.findall(r"<details>\s*<summary>([^<]+)</summary>(.*?)</details>", playbook, re.S)
+        self.assertEqual(len(toggles), 1)
+        title, example = toggles[0]
+        self.assertEqual(title, "Rule 정상 예시와 다르게 생성됐을 때 수정 방법")
+        self.assertNotIn("<details open", playbook)
+        for requirement in ("**아래 Rule은 수정 없이 사용할 수 있는 예시**",
+                            "04-playbook-rule.png", "`Crosses Above` / `0.5`",
+                            "`Id = event_id`", "`Timestamp = event_time`",
+                            "`startTime`·`endTime`", "**Copilot**",
+                            "**질의와 하단 조건을 모두 확인**", "승인 실행은 05장"):
+            self.assertIn(requirement, example)
+        prompts = re.findall(r"```text\n(.*?)```", example, re.S)
+        self.assertEqual(len(prompts), 1)
+        self.assertTrue(prompts[0].isascii())
+        for requirement in ("Correct the existing supply-delay rule only",
+                            "OpenFlag Crosses Above 0.5", "Keep non-open states as 0",
+                            "Preserve the query time-window parameters",
+                            "requiring human approval", 'eventhouse_name set to "eh_cos"',
+                            "Do not change the table schema or existing data"):
+            self.assertIn(requirement, prompts[0])
+
     def test_sql_database_is_created_by_participants_before_schema_and_publishing(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         prepared = next(line for line in readme.splitlines() if line.startswith("| 준비된 항목 |"))

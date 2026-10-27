@@ -124,28 +124,36 @@ MaterialSupplyEvent
 
    ![New Operations agent 창에서 Name은 oa_cos, Location은 내 작업 영역으로 선택하고 Create](../assets/screenshots/04-create-operations-agent.png)
 
-2. **Agent instructions**에 아래 지침을 붙여 넣습니다. 열은 `Table.column` 형식으로 적어야 규칙이 정확히 만들어집니다.
+2. **Agent instructions**에 아래 영문 지침을 붙여 넣습니다. **현재 Operations Agent의 지침과 업무 목표는 영어만 지원합니다.**
 
 ``` text
-목표: 원료 공급 지연으로 생산 계획이나 안정성 시험 일정에 영향이 생기면 담당자에게 먼저 알리고 검토 요청을 제안한다.
+Goal: Notify the responsible user when a new supply-delay event requires review.
 
-감시 대상
-- MaterialSupplyEvent.event_status 가 'open' 으로 바뀌면(becomes) 공급 지연 이벤트가 새로 발생한 것이다.
-- 같은 MaterialSupplyEvent.event_id 의 최신 행만 본다.
+Monitoring:
+- Use the MaterialSupplyEvent table.
+- Each event_id identifies a separate business object.
+- For each event_id, use the row with the latest event_time.
+- In the monitoring query, calculate open_flag = iff(event_status == "open", 1, 0).
+- open_flag is a calculated query field, not an existing table column. Do not change the table schema.
+- Create one transition rule: open_flag crosses above 0.5 for each event_id, including a change from null to 1.
+- Do not use an "Is above" state condition.
+- Keep non-open states in the query so they produce open_flag = 0.
 
-알릴 내용
-- MaterialSupplyEvent.material_code, MaterialSupplyEvent.material_name, MaterialSupplyEvent.supplier_name
-- MaterialSupplyEvent.original_eta → MaterialSupplyEvent.new_eta (MaterialSupplyEvent.delay_days 일 지연)
-- MaterialSupplyEvent.impacted_count 건, 대상 목록은 MaterialSupplyEvent.impacted_targets 를 그대로 보여 준다.
+Notification:
+- Include material_code, material_name, supplier_name, original_eta, new_eta, delay_days, impacted_count, and impacted_targets.
+- Use impacted_targets as provided. Do not invent additional impacts.
 
-제안
-- 영향 대상에 원료 변경 검토 요청을 등록하자고 제안한다. 승인되면 RequestMaterialReview 작업을 MaterialSupplyEvent.event_id 와 MaterialSupplyEvent.material_code 로 실행한다.
-- 구매 발주나 처방을 직접 바꾸라고 제안하지 않는다. 대체 원료는 impacted_targets 의 제안 문구만 전달한다.
+Recommended action:
+- Recommend RequestMaterialReview.
+- Only after human approval, run it with event_id and material_code from the detected event, and eventhouse_name set to "eh_cos".
+- Do not change purchase orders or formulas.
 ```
+
+`open_flag`는 `open`이면 1, 그 외에는 0인 **질의 계산 필드**입니다. 테이블에 열을 추가하지 않습니다.
 
 3. **Knowledge** → **Add data** → **Add from OneLake catalog**에서 `eh_cos` KQL Database를 고릅니다.
 
-> 테넌트에서 Ontology를 Operations agent 원본으로 쓸 수 있다면 `ont_cos`를 추가해 볼 수 있습니다. 이 워크숍의 기본 경로는 상태 변화를 감지하기 쉬운 Eventhouse입니다.
+> Operations Agent는 원본을 한 번에 하나만 지원합니다. Eventhouse 대신 Ontology를 선택할 수도 있지만, 이 워크숍에서는 `eh_cos`만 연결합니다.
 
 4. **Actions** → **Add action** → **Fabric item** → **Browse**에서 `nb_apply_review`를 고릅니다.
    - **Action name:** `RequestMaterialReview`
@@ -175,9 +183,62 @@ MaterialSupplyEvent
 1. **Generate playbook**을 누릅니다.
 2. **Business term glossary**와 **Rules**를 검토합니다.
 
-**확인할 결과:** 규칙 조건이 `event_status`가 `open`으로 **바뀔 때**(Becomes / Changes to)로 만들어졌는지 확인합니다. 조건이 `Is open`이면 같은 이벤트로 5분마다 알림이 반복될 수 있으므로 지침 문장을 고쳐 다시 생성합니다. 규칙 작업에 `RequestMaterialReview`가 연결되어 있는지도 확인합니다.
+**확인할 결과:** 용어집과 Rules에서 아래 항목을 확인합니다. 생성된 속성 이름은 달라도 계산과 조건은 같아야 합니다.
 
-3. 저장한 뒤 **Start**를 누릅니다.
+| 항목 | 확인 기준 |
+| --- | --- |
+| 이벤트 구분·최신 행 | `event_id`별로 `event_time`이 가장 최근인 행. 생성 질의의 `summarize arg_max(event_time, *) by event_id`와 조회 시간 범위 확인 |
+| 숫자형 상태 | `OpenFlag` 또는 `open_flag`가 `iff(event_status == "open", 1, 0)`으로 계산됨. `open`이 아닌 상태도 0으로 남김 |
+| 전환 조건 | **Crosses above 0.5**. 최초 관측 `null → 1`도 포함하며, 상태가 계속 1인 동안 반복 알림을 내는 **Is above**와 구분 |
+| 승인 액션 | `RequestMaterialReview`를 제안하고, 담당자 승인 후 해당 이벤트의 매개 변수로 실행 |
+
+![Business term glossary에 이벤트별 최신 행과 숫자형 OpenFlag가 생성된 예시](../assets/screenshots/04-playbook-glossary.png)
+
+화면은 **용어집 생성 확인 예시**입니다. Rules의 조건·질의를 검토한 뒤, 실제 알림은 6–7번에서 확인합니다.
+
+<details>
+<summary>Rule 정상 예시와 다르게 생성됐을 때 수정 방법</summary>
+
+**아래 Rule은 수정 없이 사용할 수 있는 예시**입니다. 하단 설정이 `OpenFlag / Crosses Above / 0.5`이고, 질의도 이벤트별 최신 행에서 상태를 0/1로 계산합니다.
+
+![이벤트별 최신 행과 OpenFlag 계산 질의 및 Crosses Above 0.5 조건이 표시된 Rule](../assets/screenshots/04-playbook-rule.png)
+
+| 확인 위치 | 정상 기준 |
+| --- | --- |
+| 질의의 식별자·시각 | `Id = event_id`, `Timestamp = event_time` |
+| 최신 행 선택 | `arg_max(event_time, *)`를 `event_id`별로 적용 |
+| 상태 계산 | `open`이면 1, 그 외에는 0. `open`인 행만 미리 필터링하지 않음 |
+| 하단 Property / Condition / Value | `OpenFlag` / `Crosses Above` / `0.5` |
+| Rule 설명 | Teams 알림과 검토 요청을 제안하고, 사람의 승인 후 액션 실행 |
+
+`startTime`·`endTime`은 에이전트의 조회 시간 범위 매개 변수이므로, 표시되어 있다는 이유로 제거하지 않습니다.
+
+**수정이 필요한 경우:** `Is Above`로 생성됐거나, 이벤트 대신 원료별로 묶였거나, `open` 상태만 남겨 0 상태가 사라진 경우입니다. 상단 **Copilot**을 열고 아래 영문 보완 요청을 보냅니다.
+
+```text
+Correct the existing supply-delay rule only.
+Use event_id as Id and event_time as Timestamp.
+For each event_id, use the row with the latest event_time.
+Compute OpenFlag as iff(event_status == "open", 1, 0).
+Set the condition to OpenFlag Crosses Above 0.5, including a change from null to 1.
+Keep non-open states as 0; do not filter the query to open events only.
+Preserve the query time-window parameters and the existing notification fields.
+Keep RequestMaterialReview as a recommendation requiring human approval.
+Pass the detected event_id and material_code, with eventhouse_name set to "eh_cos".
+Do not change the table schema or existing data.
+```
+
+수정 후 Rule을 다시 펼쳐 **질의와 하단 조건을 모두 확인**하고 저장합니다. 실제 알림 수신은 6–7번, 승인 실행은 05장에서 확인합니다.
+
+</details>
+
+3. 왼쪽 위 **저장 아이콘**을 누릅니다. **Configuration saved successfully** 메시지가 나오면 **Start**를 누를 수 있습니다.
+
+   ![Configuration saved successfully 메시지와 활성화된 Start 버튼](../assets/screenshots/04-playbook-saved.png)
+
+4. **Start**를 누르고 **Agent started successfully** 메시지를 확인합니다. 시작되면 **Stop** 버튼이 활성화됩니다.
+
+   ![Agent started successfully 메시지와 활성화된 Stop 버튼으로 에이전트 시작 확인](../assets/screenshots/04-agent-started.png)
 
 ## 6. 공급 지연 발생시키기
 
@@ -215,6 +276,7 @@ MaterialSupplyEvent
 
 ## Troubleshooting
 
+- `No playbook generated`와 `numeric-style condition` 오류가 나오면 4번의 영문 지침으로 다시 생성하고, 숫자형 `OpenFlag`와 전환 조건을 확인합니다.
 - 메시지가 오지 않으면 `oa_cos`의 **View activity**에서 규칙 실행 기록을 봅니다. 규칙이 실행되지 않았으면 **Start** 상태인지, 실행됐는데 조건이 안 맞았으면 Playbook 규칙 조건을 확인합니다.
 - `03_supply_change`가 "이미 보낸 이벤트"라고 하면 `run_tag`를 `r2`처럼 바꿔 다시 실행합니다. 지연 일수는 원래 ETA 기준으로 계산하므로 다시 실행해도 누적되지 않습니다.
 - "MaterialSupplyEvent 테이블이 없다"는 오류가 나면 2단계를 먼저 실행합니다.
@@ -228,6 +290,7 @@ MaterialSupplyEvent
 
 - [Eventhouse 만들기·기본 KQL Database 자동 생성](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/create-eventhouse)
 - [Operations agent 만들기와 구성](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent)
+- [Operations agent 제한사항 — 지침·업무 목표의 영어 지원](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent-limitations#language-and-model-behavior-limitations)
 - [Operations agent 작업(Actions)](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent-actions)
 
 ## 다음 단계
