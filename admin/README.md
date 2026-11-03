@@ -4,14 +4,18 @@
 
 Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참가자는 보지 않아도 됩니다. 예시는 `p001` 기준이며 참가자마다 `pNNN`을 바꿔 반복합니다. 데이터 구조와 정답은 [데이터 설계](data-design.md)를 봅니다.
 
-**사전 필독:** [미리 보기 제약·호환성](preview-limitations.md). Ontology 새/기존 경험과 API 정의 호환성, **2027-01-31 기존 경험 종료**, Graph 선택 투영·적격성, Data Agent 문맥 갱신·권한, Operations Agent 감시·실행 권한을 확인합니다. [엔터티 확장 선택 실습](extended-model.md)을 제공한다면 00장 첫 실행 전에 `include_extended = True`로 설정하도록 안내하고, 모델 확장은 07장 Purview 완료 이후에만 진행합니다.
+**사전 필독:** [미리 보기 제약·호환성](preview-limitations.md)에서 Ontology UI·API 호환성, Graph 투영, Data Agent 문맥 갱신·권한, Operations Agent 실행 권한을 확인합니다.
+
+> **2027-01-31 종료 대상은 구형 Ontology 경험입니다.** Fabric 서비스나 Ontology 기능 전체가 종료되는 것이 아닙니다. 이 워크샵의 기본 과정은 새 Ontology 경험을 사용합니다. API 기반 비교·복구 모델을 재사용한다면 [구형 항목의 이전·호환성](preview-limitations.md#2-새-ontology-경험과-api-배포-정의의-호환성)을 확인합니다.
+
+**선택 확장 실습:** [엔터티 확장](extended-model.md)을 제공한다면 00장 첫 실행 전에 `include_extended = True`로 설정하도록 안내합니다. 모델 확장은 07장 Purview 완료 이후에만 진행합니다.
 
 ## 준비할 리소스
 
 | 리소스 | 값 |
 |---|---|
-| Microsoft Fabric 용량 | **유료 F 용량**. 생성 예시: 리전 **Korea Central**, SKU **F16**. Operations agent는 Trial 용량을 지원하지 않습니다. 12명 동시 실습 기준 F64 이상 권장 |
-| 참가자 작업 영역 | 용량이 할당된 `cos-pNNN`에 **Notebook 5개만 준비**. 참가자에게 **본인 실습 작업 영역의 Contributor** 부여 |
+| Microsoft Fabric 용량 | **실습자 1명당 전용 유료 F16 용량 1개** 권장. 리전 **Korea Central**. Operations agent는 Trial 용량을 지원하지 않음 |
+| 참가자 작업 영역 | `cos-pNNN`에 **해당 실습자의 전용 용량** 연결 → 참가자에게 **Contributor** 부여 → **Notebook 5개만 준비** |
 | Lakehouse·데이터 | 참가자가 00장에서 스키마 지원 `lh_cos` 생성 → 코드에 포함된 고정 데이터로 `gold` 11개(선택 확장 포함 시 28개) 생성 |
 | Notebook | 관리자가 모든 참가자 작업 영역에 `.ipynb` 5개를 미리 가져옴. 실행하지 않으며 기본 Lakehouse는 참가자가 연결 |
 | Eventhouse | 사전 생성하지 않음. 참가자가 04장에서 `eh_cos` 생성, 같은 이름의 기본 KQL Database 자동 생성·이벤트 테이블 구성 |
@@ -28,8 +32,8 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 
 | 항목 | 준비 사항 |
 |---|---|
-| 참가자·예비 계정 | 확정 참가자 수보다 **1–2개 넉넉하게** 만들어 추가 참가자 및 계정 오류에 대비합니다. 예비 계정에도 동일한 라이선스·작업 영역·Contributor 권한·Notebook을 준비합니다. |
-| 관리자 테스트 계정 | 환경을 구성하는 관리자 계정과 별도로 **참가자와 동일한 환경의 테스트 계정**을 만듭니다. 참가자와 같은 라이선스·그룹·정책 및 본인 실습 작업 영역의 Contributor 권한만 부여하고, 테넌트 관리자 권한 없이 전체 실습을 리허설합니다. |
+| 참가자·예비 계정 | 확정 참가자 수보다 **1–2개 넉넉하게** 만들어 추가 참가자 및 계정 오류에 대비합니다. 예비 계정에도 동일한 라이선스·전용 용량·작업 영역·Contributor 권한·Notebook을 준비합니다. |
+| 관리자 테스트 계정 | 환경을 구성하는 관리자 계정과 별도로 **참가자와 동일한 환경의 테스트 계정**을 만듭니다. 같은 Korea Central / F16 전용 용량·라이선스·그룹·정책을 적용하고, 본인 실습 작업 영역의 Contributor 권한만 부여합니다. 테넌트 관리자 권한 없이 전체 실습을 리허설합니다. |
 | 최초 로그인·MFA | 최초 로그인 시 MFA 설정이 필요하므로 **적어도 워크샵 1일 전**에 승인된 보안 채널로 계정 정보를 공유하고, 참가자가 MFA 등록과 로그인을 마치도록 안내합니다. 계정 정보·비밀번호는 저장소에 넣지 않습니다. |
 | 고객사 접속 정책 | 고객사 정책에 따라 실습 테넌트 접속을 위한 사전 **허용 목록 등록**(whitelisting)이 필요할 수 있습니다. 고객사 보안팀 또는 인프라팀에 대상 테넌트·서비스 접속 허용 여부를 미리 확인합니다. |
 | Teams 라이선스 | Teams가 필요한 04–05장 실습은 [admin.microsoft.com](https://admin.microsoft.com)의 **Users → Active users → 해당 사용자 → Licenses and apps**에서 Teams 사용에 필요한 라이선스·서비스를 사전 부여합니다. 참가자와 예비·테스트 계정 모두 같은 계정으로 Teams 로그인과 앱 접근을 확인합니다. |
@@ -38,12 +42,37 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 
 ## Fabric Capacity 생성·운영 일정
 
-Azure Portal에서 **Microsoft Fabric → Create**로 용량을 만들 때 **리전: Korea Central**, **SKU: F16**을 생성 예시로 사용할 수 있습니다. 이는 모든 참가자가 공유할 용량의 크기나 전체 실습 성능을 보장하는 최소 사양이 아닙니다. 실제 참가자 수·동시 실행량과 기능의 지역 지원을 리허설에서 확인하며, 이 키트의 **12명 동시 실습 기준 F64 이상 권장**과 구분합니다.
+### 권장 구성: 실습자 1명 ↔ 전용 Capacity 1개 ↔ 개인 Workspace
 
-1. 작업 영역에 용량을 할당하고 Notebook 사전 준비·리허설을 마친 뒤, **참가자용 Fabric Capacity는 모두 Pause**(일시 중지)해 둡니다. 일시 중지 중에는 해당 용량을 사용하는 실습이 불가능하므로 사전 로그인·MFA 등록과 실습 실행 점검을 구분합니다.
-2. **세션 시작 30분–1시간 전**에 관리자가 Azure Portal에서 참가자용 용량을 모두 **Resume**(다시 시작)합니다. 여러 세션에 나누어 사용한다면 각 세션 시작을 기준으로 운영합니다.
-3. 용량이 활성 상태인지 확인하고, 참가자와 동일한 테스트 계정으로 Fabric 로그인 → 본인 작업 영역 접근 → 별도 리허설 작업 영역의 Notebook 실행을 확인합니다. 참가자용 작업 영역은 Notebook 5개만 준비된 상태로 유지합니다.
-4. 워크샵 종료 후 필요한 결과 보존과 정리를 마치고, 보관할 참가자용 용량은 다시 Pause합니다. 운영 환경과 공유하는 용량은 임의로 중지하지 말고 담당자와 사전 조율합니다.
+Agent·Notebook·Eventhouse 등 여러 기능을 함께 사용하므로, **여러 실습자가 작은 공유 용량을 나눠 쓰기보다 실습자별 전용 용량을 권장**합니다. 참가자 간 컴퓨트 경합을 줄이고 개인별 실습 여유를 확보하기 위한 운영 구성입니다.
+
+| 설정 | 권장값 |
+|---|---|
+| 용량 수 | 실습자당 1개. 예비·관리자 테스트 계정도 같은 구성으로 별도 준비 |
+| 리전 | **Korea Central** |
+| SKU | **F16** — 개인 실습용 유료 Fabric 용량 |
+| 작업 영역 연결 | **개인 Workspace에 해당 실습자의 전용 Capacity 할당** |
+| 참가자 권한 | 본인 Workspace의 **Contributor**. Azure 용량 관리 권한과 구분 |
+
+예를 들어 `p001`은 전용 용량 `cosp001` → 작업 영역 `cos-p001`, `p002`는 별도 용량 `cosp002` → 작업 영역 `cos-p002`로 연결합니다. **12명이면 F16 용량 12개가 기본 권장 구성**이며, 예비·테스트 계정용 용량은 별도입니다. F16 하나를 12명이 공유하는 구성이 아닙니다.
+
+### 생성·연결 순서
+
+1. 관리자가 Azure Portal의 **Microsoft Fabric → Create**에서 실습자별 용량을 만듭니다. 각각 **Korea Central / F16**으로 설정합니다.
+2. Fabric에서 개인 Workspace `cos-pNNN`을 만들고, **Workspace settings의 라이선스·용량 설정**에서 해당 실습자에게 준비한 전용 Capacity를 선택합니다.
+3. 해당 참가자에게 본인 Workspace의 **Contributor**를 부여하고 Notebook 5개를 가져옵니다. 참가자별 용량 ID와 Workspace 연결이 맞는지 확인합니다.
+4. 같은 구성의 별도 테스트 환경에서 Agent·Notebook·Eventhouse를 함께 실행해 봅니다. **F16은 이 워크샵의 개인별 권장 구성이지 성능을 보장하는 공식 최소 사양은 아닙니다.** 기능의 지역 지원과 용량 사용량·스로틀링을 확인하고 부족하면 SKU를 상향합니다.
+
+### Pause / Resume 일정
+
+| 시점 | 관리자 작업 |
+|---|---|
+| 사전 준비·리허설 완료 후 | 참가자용 Capacity **모두 Pause** |
+| 세션 시작 **30분–1시간 전** | 참가자용 Capacity **모두 Resume** → 활성 상태·Workspace 연결 확인 |
+| 시작 전 최종 점검 | 테스트 계정으로 Fabric 로그인·Workspace 접근 및 별도 리허설 Workspace의 Notebook 실행 확인 |
+| 워크샵 종료 후 | 필요한 결과 보존·정리 후 보관할 Capacity **다시 Pause** |
+
+Pause 중에는 해당 용량을 사용하는 실습이 불가능합니다. 사전 로그인·MFA 등록과 실습 실행 점검을 구분하고, 참가자용 Workspace는 **Notebook 5개만 준비된 상태**로 유지합니다. 여러 세션에 나누어 사용한다면 각 세션 시작에 맞춰 Resume합니다. 운영 환경과 공유하는 용량은 임의로 중지하지 말고 담당자와 사전 조율합니다.
 
 ## 1. Fabric 테넌트 설정
 
@@ -80,12 +109,16 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
     p002,p002@example.com
     ```
 
-3.  `--dry-run`으로 대상을 확인한 뒤 실제로 실행합니다.
+3.  **참가자마다 해당 전용 용량 ID로 따로 실행**합니다. `--dry-run`으로 대상을 확인한 뒤 실제로 실행합니다.
 
     ``` bash
-    python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv --role Contributor --dry-run
-    python admin/provision.py --capacity <capacity-id> --participants p001-p012 --users users.csv --role Contributor
+    python admin/provision.py --capacity <p001-capacity-id> --participants p001 --users users.csv --role Contributor --dry-run
+    python admin/provision.py --capacity <p001-capacity-id> --participants p001 --users users.csv --role Contributor
+    python admin/provision.py --capacity <p002-capacity-id> --participants p002 --users users.csv --role Contributor --dry-run
+    python admin/provision.py --capacity <p002-capacity-id> --participants p002 --users users.csv --role Contributor
     ```
+
+    `--capacity`는 한 번 실행할 때 하나의 용량만 받습니다. `--participants p001-p012`처럼 범위를 지정하면 새 작업 영역 모두에 같은 용량이 할당되므로, **개인별 전용 용량 구성에서는 참가자를 한 명씩 지정**합니다. 스크립트는 용량 자체를 생성하지 않으며, 기존 작업 영역의 용량도 자동으로 바꾸지 않습니다.
 
 4. 각 작업 영역에서 **Import → Notebook**으로 `notebooks` 폴더의 `.ipynb` 5개를 가져옵니다. 이름은 `01_prepare_data`, `02_answers`, `03_supply_change`, `nb_apply_review`, `04_publish_serving`으로 유지합니다. **Notebook을 실행하거나 Lakehouse를 사전 생성하지 않습니다.**
 
@@ -95,7 +128,7 @@ Teams 관리 센터에서 **Fabric Operations Agent** 앱을 참가자에게 허
 
 **기존 환경 재사용:** 기본 재실행은 CSV·Notebook·기존 항목·`gold`·`ops` 상태를 변경하지 않습니다. 준비된 Notebook을 중복 가져오거나 덮어쓰지 않고 버전·매개변수 셀을 확인합니다. 진행 중인 데이터가 있다면 삭제하지 말고 별도 실습 환경을 제공합니다. 기존 작업 영역의 용량은 포털에서 확인합니다.
 
-**수동 준비:** 참가자별 작업 영역 생성 → 유료 F 용량 할당 → Contributor 부여 → Notebook 5개 가져오기. 참가자는 Lakehouse 생성·기본 연결·데이터 생성을 수행합니다. 동일한 Notebook 버전과 `include_extended` 설정을 안내합니다.
+**수동 준비:** 실습자별 전용 용량 생성(Korea Central / F16) → 개인 작업 영역 생성 → 해당 전용 용량 할당 → Contributor 부여 → Notebook 5개 가져오기. 참가자는 Lakehouse 생성·기본 연결·데이터 생성을 수행합니다. 동일한 Notebook 버전과 `include_extended` 설정을 안내합니다.
 
 ### 선택: 관리자 리허설·복구용 항목 사전 준비
 
@@ -202,7 +235,8 @@ Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, �
 | 장 | 확인할 값 |
 |---|---|
 | 계정·접속 | 참가자 수 + 예비 1–2개 계정과 별도 참가자 환경 테스트 계정 준비. 최소 1일 전 계정 공유·MFA 등록, 고객사 허용 목록 및 Teams 라이선스·로그인 확인. Azure Portal 리소스 표시와 별개로 Fabric 작업 영역 접근 확인 |
-| 용량 운영 | 생성 예시 Korea Central / F16과 실제 동시 실습 용량 산정 구분. 사전 준비 후 참가자용 용량 모두 Pause → 세션 시작 30분–1시간 전 모두 Resume 및 활성 상태 확인 |
+| 용량 구성 | 실습자별 전용 **Korea Central / F16** 생성 및 해당 개인 Workspace 연결 확인. 예비·테스트 계정도 같은 구성으로 준비하고 공유 용량 컴퓨트 경합 방지 |
+| 용량 운영 | 사전 준비 후 참가자용 용량 모두 Pause → 세션 시작 30분–1시간 전 모두 Resume 및 활성 상태 확인 |
 | 준비 | 유료 F 용량·Contributor 접근 권한·테넌트/Teams/Purview 공통 조건. Notebook 5개를 모든 참가자 작업 영역에 가져왔으며 Lakehouse·데이터는 미생성 |
 | 00 | Notebook 5개 확인 → 스키마 지원 `lh_cos` 생성 → `01_prepare_data`에만 기본 연결 → 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA·original_eta 모두 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
 | 01 초안 | 참가자 계정으로 빈 항목 생성 → 업무 질문·처방→원료 직접 관계 기준으로 Plan 초안 생성 → 샘플 근거·미확인·미실행 기록 → 관계 매핑과 참고 설계 대조 → 누락·범위 차이 보완 → Act 적용 → 저장된 키·바인딩·표시 행 확인. 샘플로 전체 건수·제품 부재를 판정하지 않으며 전체 처방은 02_answers Q1에서 확인 |
