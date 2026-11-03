@@ -10,19 +10,40 @@ Workshop 환경을 준비하고 정리하는 관리자용 문서입니다. 참�
 
 | 리소스 | 값 |
 |---|---|
-| Microsoft Fabric 용량 | **유료 F 용량**. Operations agent는 Trial 용량을 지원하지 않습니다. 12명 동시 실습 기준 F64 이상 권장 |
+| Microsoft Fabric 용량 | **유료 F 용량**. 생성 예시: 리전 **Korea Central**, SKU **F16**. Operations agent는 Trial 용량을 지원하지 않습니다. 12명 동시 실습 기준 F64 이상 권장 |
 | 참가자 작업 영역 | 용량이 할당된 `cos-pNNN`에 **Notebook 5개만 준비**. 참가자에게 **본인 실습 작업 영역의 Contributor** 부여 |
 | Lakehouse·데이터 | 참가자가 00장에서 스키마 지원 `lh_cos` 생성 → 코드에 포함된 고정 데이터로 `gold` 11개(선택 확장 포함 시 28개) 생성 |
 | Notebook | 관리자가 모든 참가자 작업 영역에 `.ipynb` 5개를 미리 가져옴. 실행하지 않으며 기본 Lakehouse는 참가자가 연결 |
 | Eventhouse | 사전 생성하지 않음. 참가자가 04장에서 `eh_cos` 생성, 같은 이름의 기본 KQL Database 자동 생성·이벤트 테이블 구성 |
 | Ontology | 기본 준비에서는 **생성하지 않음**. 참가자가 01장에서 핵심 `ont_cos` 생성·보강. 07장 이후 선택 실습은 같은 항목을 확장하며 별도 완성 모델은 비교·복구용 |
-| Microsoft Teams | 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
+| Microsoft Teams | [Microsoft 365 관리 센터](https://admin.microsoft.com)에서 Teams 사용에 필요한 라이선스 사전 부여 및 앱 **Fabric Operations Agent** 허용. 참가자는 Fabric과 **같은 계정**으로 Teams에 로그인 |
 | SQL database | 사전 생성하지 않음. 참가자가 06장에서 본인 실습 작업 영역에 `sqldb_cos`와 Serving 스키마 직접 생성 |
 | Microsoft Purview (07장) | 참가자 Pro/PPU·레이블 사용 권한·게시 정책. 선택 활동인 DLP 정책 팁 확인·카탈로그 자산 검색은 아래 별도 조건 확인 |
 
 용량·테넌트 기능·Teams 앱·Purview 레이블/정책과 라이선스를 준비합니다. [실습 파일 ZIP](https://raw.githubusercontent.com/minkyung01/fabric-cosmetics-workshop/main/downloads/workshop-files.zip)의 `notebooks` 폴더에서 `.ipynb` 5개를 사용합니다. Lakehouse·데이터·Ontology·Eventhouse·SQL DB는 참가자가 직접 만듭니다.
 
 **고객사 파일 정책:** Notebook 가져오기는 조직에서 허용된 관리자 환경에서 미리 수행합니다. 참가자는 파일을 업로드하거나 Notebook 코드를 복사하지 않으며, 준비 Notebook도 외부 파일을 다운로드하지 않습니다. 항목 정의 API를 파일 정책의 우회 수단으로 사용하지 않습니다. 가져오기 자체가 허용되지 않으면 `notebooks/paste`의 코드를 사용해 관리자가 대체 준비하고 매개변수 셀을 지정합니다.
+
+## 계정 활성화·접속 사전 준비
+
+| 항목 | 준비 사항 |
+|---|---|
+| 참가자·예비 계정 | 확정 참가자 수보다 **1–2개 넉넉하게** 만들어 추가 참가자 및 계정 오류에 대비합니다. 예비 계정에도 동일한 라이선스·작업 영역·Contributor 권한·Notebook을 준비합니다. |
+| 관리자 테스트 계정 | 환경을 구성하는 관리자 계정과 별도로 **참가자와 동일한 환경의 테스트 계정**을 만듭니다. 참가자와 같은 라이선스·그룹·정책 및 본인 실습 작업 영역의 Contributor 권한만 부여하고, 테넌트 관리자 권한 없이 전체 실습을 리허설합니다. |
+| 최초 로그인·MFA | 최초 로그인 시 MFA 설정이 필요하므로 **적어도 워크샵 1일 전**에 승인된 보안 채널로 계정 정보를 공유하고, 참가자가 MFA 등록과 로그인을 마치도록 안내합니다. 계정 정보·비밀번호는 저장소에 넣지 않습니다. |
+| 고객사 접속 정책 | 고객사 정책에 따라 실습 테넌트 접속을 위한 사전 **허용 목록 등록**(whitelisting)이 필요할 수 있습니다. 고객사 보안팀 또는 인프라팀에 대상 테넌트·서비스 접속 허용 여부를 미리 확인합니다. |
+| Teams 라이선스 | Teams가 필요한 04–05장 실습은 [admin.microsoft.com](https://admin.microsoft.com)의 **Users → Active users → 해당 사용자 → Licenses and apps**에서 Teams 사용에 필요한 라이선스·서비스를 사전 부여합니다. 참가자와 예비·테스트 계정 모두 같은 계정으로 Teams 로그인과 앱 접근을 확인합니다. |
+
+**Azure Portal과 Fabric 접근 권한은 별개입니다.** 참가자에게 Azure 구독·리소스 조회 권한이 없어 [Azure Portal](https://portal.azure.com)에 리소스가 보이지 않아도, 용량·라이선스·작업 영역 권한이 정상적으로 설정되어 있으면 [app.fabric.microsoft.com](https://app.fabric.microsoft.com) 로그인과 본인 작업 영역 접근이 가능합니다. Azure 리소스가 안 보인다는 이유만으로 참가자에게 Azure 관리 권한을 추가하지 않습니다. Fabric 접근이 안 되면 로그인한 계정·테넌트, 작업 영역 역할, 라이선스와 용량 상태를 확인합니다.
+
+## Fabric Capacity 생성·운영 일정
+
+Azure Portal에서 **Microsoft Fabric → Create**로 용량을 만들 때 **리전: Korea Central**, **SKU: F16**을 생성 예시로 사용할 수 있습니다. 이는 모든 참가자가 공유할 용량의 크기나 전체 실습 성능을 보장하는 최소 사양이 아닙니다. 실제 참가자 수·동시 실행량과 기능의 지역 지원을 리허설에서 확인하며, 이 키트의 **12명 동시 실습 기준 F64 이상 권장**과 구분합니다.
+
+1. 작업 영역에 용량을 할당하고 Notebook 사전 준비·리허설을 마친 뒤, **참가자용 Fabric Capacity는 모두 Pause**(일시 중지)해 둡니다. 일시 중지 중에는 해당 용량을 사용하는 실습이 불가능하므로 사전 로그인·MFA 등록과 실습 실행 점검을 구분합니다.
+2. **세션 시작 30분–1시간 전**에 관리자가 Azure Portal에서 참가자용 용량을 모두 **Resume**(다시 시작)합니다. 여러 세션에 나누어 사용한다면 각 세션 시작을 기준으로 운영합니다.
+3. 용량이 활성 상태인지 확인하고, 참가자와 동일한 테스트 계정으로 Fabric 로그인 → 본인 작업 영역 접근 → 별도 리허설 작업 영역의 Notebook 실행을 확인합니다. 참가자용 작업 영역은 Notebook 5개만 준비된 상태로 유지합니다.
+4. 워크샵 종료 후 필요한 결과 보존과 정리를 마치고, 보관할 참가자용 용량은 다시 Pause합니다. 운영 환경과 공유하는 용량은 임의로 중지하지 말고 담당자와 사전 조율합니다.
 
 ## 1. Fabric 테넌트 설정
 
@@ -180,6 +201,8 @@ Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, �
 
 | 장 | 확인할 값 |
 |---|---|
+| 계정·접속 | 참가자 수 + 예비 1–2개 계정과 별도 참가자 환경 테스트 계정 준비. 최소 1일 전 계정 공유·MFA 등록, 고객사 허용 목록 및 Teams 라이선스·로그인 확인. Azure Portal 리소스 표시와 별개로 Fabric 작업 영역 접근 확인 |
+| 용량 운영 | 생성 예시 Korea Central / F16과 실제 동시 실습 용량 산정 구분. 사전 준비 후 참가자용 용량 모두 Pause → 세션 시작 30분–1시간 전 모두 Resume 및 활성 상태 확인 |
 | 준비 | 유료 F 용량·Contributor 접근 권한·테넌트/Teams/Purview 공통 조건. Notebook 5개를 모든 참가자 작업 영역에 가져왔으며 Lakehouse·데이터는 미생성 |
 | 00 | Notebook 5개 확인 → 스키마 지원 `lh_cos` 생성 → `01_prepare_data`에만 기본 연결 → 최초 실행. `gold` 11개/28개, `ops` 결과 테이블 없음. `PO-5501` ETA·original_eta 모두 11-10·확정. 기본 재실행이 쓰기 전에 중지하는지 확인 |
 | 01 초안 | 참가자 계정으로 빈 항목 생성 → 업무 질문·처방→원료 직접 관계 기준으로 Plan 초안 생성 → 샘플 근거·미확인·미실행 기록 → 관계 매핑과 참고 설계 대조 → 누락·범위 차이 보완 → Act 적용 → 저장된 키·바인딩·표시 행 확인. 샘플로 전체 건수·제품 부재를 판정하지 않으며 전체 처방은 02_answers Q1에서 확인 |
@@ -208,3 +231,4 @@ Notebook·다운로드 ZIP·Ontology·아키텍처 산출물의 최신 여부, �
 2. 실습용 DLP 정책의 작업 영역 범위를 해제하고, 수업을 위해 만든 정책·레이블만 조직 승인 절차에 따라 정리합니다. 기존 운영 정책·레이블은 변경하지 않습니다.
 3. 작업 영역 `cos-pNNN` 삭제 전 SQL DB의 실습 이력이 더 이상 필요 없는지 확인합니다. 삭제로 Ontology, Graph, Data agent, Operations agent, Eventhouse, Lakehouse, SQL DB가 함께 삭제 대상이 됩니다.
 4. Purview 스캔·카탈로그 실습 자산과 별도 자원을 정리합니다. Teams·테넌트 설정은 수업을 위해 변경한 것만 승인받아 복원합니다.
+5. 결과 보존 후 유지할 참가자용 Fabric Capacity는 모두 **Pause**합니다. 다음 세션이 있으면 시작 30분–1시간 전 **Resume** 일정을 지정하며, 운영 환경과 공유하는 용량은 담당자 승인 없이 중지하지 않습니다.
